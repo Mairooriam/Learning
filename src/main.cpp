@@ -7,7 +7,6 @@ int main()
     ResourceManager& resourceManager = ResourceManager::getInstance();
     
     std::cout << resourceManager << "\n";
-
     WindowManager windowManager;
     windowManager.run();
     
