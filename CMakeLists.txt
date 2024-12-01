@@ -1,39 +1,32 @@
 cmake_minimum_required(VERSION 3.28)
 project(CMakeSFMLProject LANGUAGES CXX)
 
-set(This Example)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-project(${This} C CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# Enable colored output
-set(CMAKE_COLOR_MAKEFILE ON)
-
-enable_testing()
-# Add include directories
-include_directories(${CMAKE_SOURCE_DIR}/include)
-# Set the path to the local Google Test directory
-set(GTEST_DIR ${CMAKE_SOURCE_DIR}/external/googletest-1.15.2)
-add_subdirectory(${GTEST_DIR})
-
-# SFML STUFF
+# Set the path to the local SFML directory
 set(SFML_DIR ${CMAKE_SOURCE_DIR}/external/SFML-2.6.2)
+
+# Add include directories
 include_directories(${SFML_DIR}/include)
+
+# Link directories
 link_directories(${SFML_DIR}/lib)
 
+# Add the main executable
+add_executable(main src/main.cpp)
+target_compile_definitions(main PRIVATE SFML_STATIC)
+target_link_libraries(main PRIVATE sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32)
+target_include_directories(main PRIVATE ${SFML_DIR}/include)
+target_compile_features(main PRIVATE cxx_std_17)
 
-
-set(Headers
-    include/Example.hpp
-    include/WindowManager.hpp
-)
-set(Sources
-    src/Example.cpp
-    src/WindowManager.cpp
-)
-
-add_library(${This} STATIC ${Sources} ${Header})
-
-add_subdirectory(tests)
+if(WIN32)
+    add_custom_command(
+        TARGET main
+        COMMENT "Copy OpenAL DLL"
+        PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_DIR}/bin/openal32.dll"
+        $<TARGET_FILE_DIR:main>
+        VERBATIM
+    )
+endif()
