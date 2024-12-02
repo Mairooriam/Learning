@@ -37,18 +37,21 @@ public:
     ResourceManager(const ResourceManager&) = delete;
     ResourceManager& operator=(const ResourceManager&) = delete;
 
-    sf::Sprite createSprite16x16(const size_t index, std::string textureFileName);
-
+    sf::Sprite createSprite(const size_t index, std::string textureFileName);
+    sf::Font& getFont(const std::string& fileName);
+    sf::Texture& getTexture(const std::string& fileName);
     friend std::ostream& operator<<(std::ostream& os, const ResourceManager& rm);
 private:
     ResourceManager(const resourceManagerConfig& config);
     ResourceManager();
 
     sf::IntRect getTextureRect(const size_t index);
-
+    bool isTextureValid(sf::Texture texture);
     void loadTextures(std::string resourceDir, std::unordered_map<std::string,sf::Texture>* target);
     void loadFonts(std::string resourceDir, std::unordered_map<std::string,sf::Font>* target);
 
+
+    
     std::unordered_map<std::string, sf::Texture> textures;
     std::unordered_map<std::string, sf::Font> fonts;
     resourceManagerConfig config;

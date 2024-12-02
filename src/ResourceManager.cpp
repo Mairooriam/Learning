@@ -17,17 +17,45 @@ sf::IntRect ResourceManager::getTextureRect(size_t index)
     return sf::IntRect(x*size, y*size, size,size);
 }
 
-sf::Sprite ResourceManager::createSprite16x16(const size_t index, std::string textureFileName)
+bool ResourceManager::isTextureValid(sf::Texture texture)
 {
-    
-    if (textures.find(textureFileName) != textures.end()){
+    return texture.getSize().x == config.textureResolution && texture.getSize().y == config.textureResolution;
+}
+
+sf::Texture &ResourceManager::getTexture(const std::string &fileName)
+{
+    auto it = textures.find(fileName);
+    if (it == textures.end()) {
+        spdlog::error("Texture not found: {}", fileName);
+        static sf::Texture emptyTexture;
+        return emptyTexture;
+    }
+    return it->second;
+}
+
+sf::Font &ResourceManager::getFont(const std::string &fileName)
+{
+    auto it = fonts.find(fileName);
+    if (it == fonts.end()) {
+        spdlog::error("Font not found: {}", fileName);
+        static sf::Font emptyFont;
+        return emptyFont;
+    }
+    return it->second;
+}
+
+sf::Sprite ResourceManager::createSprite(const size_t index, std::string textureFileName)
+{
+    sf::Texture texture = getTexture(textureFileName);
+    if (isTextureValid(texture)){
         sf::IntRect textureRect = getTextureRect(index);
         sf::Sprite sprite;
         sprite.setTexture(textures[textureFileName]);
         sprite.setTextureRect(textureRect);
+        spdlog::debug("ResourceManager::createSprite: Created sprite {} from {}", textureFileName, index);
         return sprite;
     }else {
-        spdlog::error("ResourceManager::createSprite16x16: {} was not found in {}", textureFileName, textures);
+        spdlog::error("ResourceManager::createSprite: {} was not found in Textures", textureFileName);
         return sf::Sprite();
     }
 }
@@ -77,8 +105,8 @@ std::ostream& operator<<(std::ostream& os, const ResourceManager& rm) {
     os << "############# RESOURCE MANAGER PRINT #############\n";
     os << "  ########### ResourceManager config ###########\n";
     os << std::setw(20) << std::left << "Texture size:" << rm.config.textureSize << "\n";
-    os << std::setw(20) << std::left << "Texture area size:" << rm.config.textureAreaSize << "\n";
-    os << std::setw(20) << std::left << "Texture max row:" << rm.config.textureMaxRow << "\n";
+    os << std::setw(20) << std::left << "Texture area size:" << rm.config.textureResolution << "\n";
+    os << std::setw(20) << std::left << "Texture max row:" << rm.config.textureMaxRows << "\n";
     os << std::setw(20) << std::left << "Textures path:" << rm.config.texturesPath << "\n";
     os << std::setw(20) << std::left << "Fonts path:" << rm.config.fontsPath << "\n";
     os << std::setw(20) << std::left << "Logging enabled:" << std::boolalpha << rm.config.enableLogging << "\n\n";
