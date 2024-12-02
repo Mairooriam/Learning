@@ -9,16 +9,18 @@ namespace fs = std::filesystem;
 
 
 
-sf::IntRect ResourceManager::getTextureRect(size_t index)
+sf::IntRect ResourceManager::createTextureRect(size_t index, resourceManagerConfig config)
 {
     int x = index % config.textureMaxRows; // Column index
     int y = index / config.textureMaxRows; // Row index
     int size = config.textureSize;
+    spdlog::info("ResourceManager::createTextureRect: Created textureRect x:{} y:{} size:{}",x,y,size);
     return sf::IntRect(x*size, y*size, size,size);
 }
 
 bool ResourceManager::isTextureValid(sf::Texture texture)
 {
+    spdlog::info("ResourceManager::isTextureValid: Texture size x:{} y:{}", texture.getSize().x, texture.getSize().y);
     return texture.getSize().x == config.textureResolution && texture.getSize().y == config.textureResolution;
 }
 
@@ -26,7 +28,7 @@ sf::Texture &ResourceManager::getTexture(const std::string &fileName)
 {
     auto it = textures.find(fileName);
     if (it == textures.end()) {
-        spdlog::error("Texture not found: {}", fileName);
+        spdlog::error("ResourceManager::getTexture Texture not found: {}", fileName);
         static sf::Texture emptyTexture;
         return emptyTexture;
     }
@@ -44,22 +46,47 @@ sf::Font &ResourceManager::getFont(const std::string &fileName)
     return it->second;
 }
 
-sf::Sprite ResourceManager::createSprite(const size_t index, std::string textureFileName)
+sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& texture, resourceManagerConfig config)
 {
-    sf::Texture texture = getTexture(textureFileName);
     if (isTextureValid(texture)){
-        sf::IntRect textureRect = getTextureRect(index);
         sf::Sprite sprite;
-        sprite.setTexture(textures[textureFileName]);
-        sprite.setTextureRect(textureRect);
-        spdlog::debug("ResourceManager::createSprite: Created sprite {} from {}", textureFileName, index);
+        sprite.setTexture(texture);
+        sprite.setTextureRect(createTextureRect(index, config));
+        spdlog::info("ResourceManager::createSprite: Created sprite from index {}", index);
         return sprite;
-    }else {
-        spdlog::error("ResourceManager::createSprite: {} was not found in Textures", textureFileName);
-        return sf::Sprite();
+    } else {
+        spdlog::error("ResourceManager::createSprite: texture provided is not valid... Using errorTexture ");
+        sf::Sprite sprite;
+        sprite.setTexture(errorTexture);
+        sprite.setTextureRect(createTextureRect(index, config));
+        return sprite;
     }
 }
 
+sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& texture)
+{
+    return createSprite(index, texture, this->config);
+}
+sf::Texture ResourceManager::createCheckerboardTexture(resourceManagerConfig config)
+{
+    const int size = config.textureResolution;
+    sf::Image image;
+    image.create(size, size, sf::Color::Black); // Initialize the image with black color
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            sf::Color color = ((x + y) % 2 == 0) ? sf::Color::Magenta : sf::Color::Black;
+            image.setPixel(x, y, color);
+        }
+    }
+
+    sf::Texture texture;
+    if (!texture.loadFromImage(image)) {
+        spdlog::error("ResourceManager::createCheckerboardTexture: Failed to load texture from image");
+    }
+    spdlog::warn("ResourceManager::createCheckerboardTexture: Error texture might be visible somewhere!");
+    return texture;
+}
 ResourceManager::ResourceManager(const resourceManagerConfig& config) : config(config) {
     // Set the flush level to info
     spdlog::flush_on(spdlog::level::info);
@@ -67,6 +94,7 @@ ResourceManager::ResourceManager(const resourceManagerConfig& config) : config(c
 
     loadTextures(config.texturesPath, &this->textures);
     loadFonts(config.fontsPath, &this->fonts);
+    errorTexture = createCheckerboardTexture(this->config);
 }
 
 

@@ -6,12 +6,12 @@
 class WindowManager {
 public:
     WindowManager();
-    void run();
+    void run(sf::Sprite sprite);
 
 private:
     void processEvents();
     void update();
-    void render();
+    void render(sf::Sprite sprite);
 
     sf::RenderWindow window;
 };

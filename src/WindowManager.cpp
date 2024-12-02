@@ -4,11 +4,11 @@ WindowManager::WindowManager()
     : window(sf::VideoMode(800, 600), "SFML Window") {
 }
 
-void WindowManager::run() {
+void WindowManager::run(sf::Sprite sprite) {
     while (window.isOpen()) {
         processEvents();
         update();
-        render();
+        render(sprite);
     }
 }
 
@@ -25,8 +25,8 @@ void WindowManager::update() {
     // Update game logic here
 }
 
-void WindowManager::render() {
+void WindowManager::render(sf::Sprite sprite) {
     window.clear();
-    // Draw your objects here
+    window.draw(sprite);
     window.display();
 }
