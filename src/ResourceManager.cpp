@@ -9,7 +9,7 @@ namespace fs = std::filesystem;
 
 
 
-sf::IntRect ResourceManager::createTextureRect(size_t index, resourceManagerConfig config)
+sf::IntRect ResourceManager::createTextureRect(size_t index, ResourceManagerConfig config)
 {
     int x = index % config.textureMaxRows; // Column index
     int y = index / config.textureMaxRows; // Row index
@@ -46,13 +46,13 @@ sf::Font &ResourceManager::getFont(const std::string &fileName)
     return it->second;
 }
 
-sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& texture, resourceManagerConfig config)
+sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& texture, ResourceManagerConfig config)
 {
     if (isTextureValid(texture)){
         sf::Sprite sprite;
         sprite.setTexture(texture);
         sprite.setTextureRect(createTextureRect(index, config));
-        spdlog::info("ResourceManager::createSprite: Created sprite from index {}", index);
+        spdlog::debug("ResourceManager::createSprite: Created sprite from index {}", index);
         return sprite;
     } else {
         spdlog::error("ResourceManager::createSprite: texture provided is not valid... Using errorTexture ");
@@ -67,7 +67,7 @@ sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& textur
 {
     return createSprite(index, texture, this->config);
 }
-sf::Texture ResourceManager::createCheckerboardTexture(resourceManagerConfig config)
+sf::Texture ResourceManager::createCheckerboardTexture(ResourceManagerConfig config)
 {
     const int size = config.textureResolution;
     sf::Image image;
@@ -87,7 +87,7 @@ sf::Texture ResourceManager::createCheckerboardTexture(resourceManagerConfig con
     spdlog::warn("ResourceManager::createCheckerboardTexture: Error texture might be visible somewhere!");
     return texture;
 }
-ResourceManager::ResourceManager(const resourceManagerConfig& config) : config(config) {
+ResourceManager::ResourceManager(const ResourceManagerConfig& config) : config(config) {
     // Set the flush level to info
     spdlog::flush_on(spdlog::level::info);
     spdlog::info("ResourceManager initialized");
