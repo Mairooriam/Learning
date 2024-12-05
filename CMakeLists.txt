@@ -39,6 +39,7 @@ src/main.cpp
 src/example.cpp
 src/WindowManager.cpp
 src/ResourceManager.cpp
+src/Benchmark.cpp
 )
 target_compile_definitions(main PRIVATE SFML_STATIC)
 target_link_libraries(main PRIVATE sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
@@ -69,7 +70,7 @@ add_custom_command(
 enable_testing()
 set(CTEST_USE_LAUNCHERS OFF)
 # Add the test executable
-add_executable(ExampleTests tests/ExampleTests.cpp src/example.cpp)
+add_executable(ExampleTests tests/ExampleTests.cpp src/WindowManager.cpp src/ResourceManager.cpp)
 set_target_properties(ExampleTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_TESTS})
 target_compile_definitions(ExampleTests PRIVATE SFML_STATIC)
 target_link_libraries(ExampleTests PRIVATE gtest_main sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
@@ -78,3 +79,9 @@ target_compile_features(ExampleTests PRIVATE cxx_std_17)
 
 # Register the test
 add_test(NAME ExampleTests COMMAND ExampleTests)
+
+# Add a post-build command to run the tests
+add_custom_command(TARGET ExampleTests
+    POST_BUILD
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+)
