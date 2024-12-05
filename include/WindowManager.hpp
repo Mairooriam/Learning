@@ -6,14 +6,16 @@
 class WindowManager {
 public:
     WindowManager();
-    void run(sf::Sprite sprite);
-
+    void run();
+    sf::RenderWindow& getWindow();
+    void updateSpriteArray(std::vector<sf::Sprite> &&spriteArray);
 private:
     void processEvents();
     void update();
-    void render(sf::Sprite sprite);
-
-    sf::RenderWindow window;
-};
+    void render();
+    
+    sf::RenderWindow m_window;
+    std::vector<sf::Sprite> m_spriteArray;
+};;
 
 #endif // WINDOWMANAGER_HPP
