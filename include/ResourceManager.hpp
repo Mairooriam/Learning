@@ -21,12 +21,12 @@ enum WallTextureType{
 
 struct ResourceManagerConfig
 {
-    int textureSize = 16;
+    int textureCellSize = 16;
     int textureResolution = 128;
-    int textureMaxRows = textureResolution/textureSize;
+    int textureMaxRows = textureResolution/textureCellSize;
     std::string texturesPath = "resources/textures";
     std::string fontsPath = "resources/fonts";
-    bool enableLogging = true;
+
 };  
 class ResourceManager {
 public:
@@ -34,6 +34,7 @@ public:
         static ResourceManager instance(config);
         return instance;
     }
+    void loadResources();
     ResourceManager(const ResourceManager&) = delete;
     ResourceManager& operator=(const ResourceManager&) = delete;
 
@@ -42,13 +43,17 @@ public:
 
     sf::Texture createCheckerboardTexture(ResourceManagerConfig config);
     sf::Font& getFont(const std::string& fileName);
+    
+    friend std::ostream& operator<<(std::ostream& os, const ResourceManager& rm);
+    
+    
     sf::Texture& getTexture(const std::string& fileName);
     ResourceManagerConfig getConfig() const {return this->config;}
-    friend std::ostream& operator<<(std::ostream& os, const ResourceManager& rm);
+    sf::Texture getErrorTexture()const {return this->m_errorTexture;}
 private:
     ResourceManager(const ResourceManagerConfig& config);
     ResourceManager();
-
+    
     sf::IntRect createTextureRect(const size_t index, ResourceManagerConfig config);
     bool isTextureValid(sf::Texture texture);
     void loadTextures(std::string resourceDir, std::unordered_map<std::string,sf::Texture>* target);
@@ -57,7 +62,7 @@ private:
 
     
     std::unordered_map<std::string, sf::Texture> textures;
-    sf::Texture errorTexture;
+    sf::Texture m_errorTexture;
     std::unordered_map<std::string, sf::Font> fonts;
     ResourceManagerConfig config;
 };
