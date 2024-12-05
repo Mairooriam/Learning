@@ -4,23 +4,36 @@
 #include <iostream>
 #include <filesystem>
 namespace fs = std::filesystem;
+#include "Profiler.hpp"
+
+
+ResourceManager::ResourceManager(const ResourceManagerConfig& config) : config(config) {
+    // Set the flush level to info
+    spdlog::flush_on(spdlog::level::info);
+    spdlog::info("ResourceManager initialized");
+    m_errorTexture = createCheckerboardTexture(this->config);
+}
 
 
 
-
+void ResourceManager::loadResources()
+{
+    loadTextures(config.texturesPath, &this->textures);
+    loadFonts(config.fontsPath, &this->fonts);
+}
 
 sf::IntRect ResourceManager::createTextureRect(size_t index, ResourceManagerConfig config)
 {
     int x = index % config.textureMaxRows; // Column index
     int y = index / config.textureMaxRows; // Row index
-    int size = config.textureSize;
+    int size = config.textureCellSize;
     spdlog::info("ResourceManager::createTextureRect: Created textureRect x:{} y:{} size:{}",x,y,size);
     return sf::IntRect(x*size, y*size, size,size);
 }
 
 bool ResourceManager::isTextureValid(sf::Texture texture)
 {
-    spdlog::info("ResourceManager::isTextureValid: Texture size x:{} y:{}", texture.getSize().x, texture.getSize().y);
+    spdlog::debug("ResourceManager::isTextureValid: Texture size x:{} y:{}", texture.getSize().x, texture.getSize().y);
     return texture.getSize().x == config.textureResolution && texture.getSize().y == config.textureResolution;
 }
 
@@ -48,6 +61,7 @@ sf::Font &ResourceManager::getFont(const std::string &fileName)
 
 sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& texture, ResourceManagerConfig config)
 {
+    PROFILE_FUNCTION();
     if (isTextureValid(texture)){
         sf::Sprite sprite;
         sprite.setTexture(texture);
@@ -57,7 +71,7 @@ sf::Sprite ResourceManager::createSprite(const size_t index, sf::Texture& textur
     } else {
         spdlog::error("ResourceManager::createSprite: texture provided is not valid... Using errorTexture ");
         sf::Sprite sprite;
-        sprite.setTexture(errorTexture);
+        sprite.setTexture(m_errorTexture);
         sprite.setTextureRect(createTextureRect(index, config));
         return sprite;
     }
@@ -86,15 +100,6 @@ sf::Texture ResourceManager::createCheckerboardTexture(ResourceManagerConfig con
     }
     spdlog::warn("ResourceManager::createCheckerboardTexture: Error texture might be visible somewhere!");
     return texture;
-}
-ResourceManager::ResourceManager(const ResourceManagerConfig& config) : config(config) {
-    // Set the flush level to info
-    spdlog::flush_on(spdlog::level::info);
-    spdlog::info("ResourceManager initialized");
-
-    loadTextures(config.texturesPath, &this->textures);
-    loadFonts(config.fontsPath, &this->fonts);
-    errorTexture = createCheckerboardTexture(this->config);
 }
 
 
@@ -132,12 +137,12 @@ std::ostream& operator<<(std::ostream& os, const ResourceManager& rm) {
     // CONFIG
     os << "############# RESOURCE MANAGER PRINT #############\n";
     os << "  ########### ResourceManager config ###########\n";
-    os << std::setw(20) << std::left << "Texture size:" << rm.config.textureSize << "\n";
+    os << std::setw(20) << std::left << "Texture size:" << rm.config.textureCellSize << "\n";
     os << std::setw(20) << std::left << "Texture area size:" << rm.config.textureResolution << "\n";
     os << std::setw(20) << std::left << "Texture max row:" << rm.config.textureMaxRows << "\n";
     os << std::setw(20) << std::left << "Textures path:" << rm.config.texturesPath << "\n";
     os << std::setw(20) << std::left << "Fonts path:" << rm.config.fontsPath << "\n";
-    os << std::setw(20) << std::left << "Logging enabled:" << std::boolalpha << rm.config.enableLogging << "\n\n";
+
 
     // TEXTURES
     os << "  ########### Textures loaded ###########\n";
