@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 
-set(This ExampleTests)
+set(This ExampleTests1)
 
 set(Sources
-    ExampleTests.cpp
+    ExampleTests1.cpp
+    Source.cpp
 )
 
 add_executable(${This} ${Sources})
