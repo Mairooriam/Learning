@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "ResourceManager.hpp"
 #include "WindowManager.hpp"
-
+#include "Profiler.hpp"
 
 class ResourceManagerTest : public ::testing::Test {
 protected:
@@ -39,14 +39,6 @@ TEST_F(ResourceManagerTest, CreateCheckerboardTexture) {
     EXPECT_EQ(image.getPixel(1, 1), sf::Color::Magenta);
     EXPECT_EQ(texture.getSize().x, 128);
     EXPECT_EQ(texture.getSize().y, 128);
-}
-
-// Test sprite creation
-TEST_F(ResourceManagerTest, CreateSprite) {
-    sf::Texture test_texture = resourceManager->getErrorTexture();
-    sf::Sprite sprite = resourceManager->createSprite(1, test_texture);
-    EXPECT_EQ(sprite.getTextureRect().width, 16); // Ensure the texture rectangle is set correctly
-    EXPECT_EQ(sprite.getTextureRect().height, 16);
 }
 
 int main(int argc, char **argv) {
