@@ -33,13 +33,13 @@ link_directories(${SFML_DIR}/lib)
 set(GTEST_DIR ${CMAKE_SOURCE_DIR}/external/googletest-1.15.2)
 add_subdirectory(${GTEST_DIR})
 
-# Add the main executable
+### MAIN PROGRAM ###
 add_executable(main 
 src/main.cpp
 src/example.cpp
 src/WindowManager.cpp
 src/ResourceManager.cpp
-src/Benchmark.cpp
+src/Application.cpp
 )
 target_compile_definitions(main PRIVATE SFML_STATIC)
 target_link_libraries(main PRIVATE sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
@@ -65,23 +65,42 @@ add_custom_command(
     ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:main>/resources
 )
 
-##TESTING##
+### TESTING ###
 # Enable testing
 enable_testing()
 set(CTEST_USE_LAUNCHERS OFF)
-# Add the test executable
-add_executable(ExampleTests tests/ExampleTests.cpp src/WindowManager.cpp src/ResourceManager.cpp)
-set_target_properties(ExampleTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_TESTS})
-target_compile_definitions(ExampleTests PRIVATE SFML_STATIC)
-target_link_libraries(ExampleTests PRIVATE gtest_main sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
-target_include_directories(ExampleTests PRIVATE ${SFML_DIR}/include ${CMAKE_SOURCE_DIR}/include)
-target_compile_features(ExampleTests PRIVATE cxx_std_17)
 
-# Register the test
-add_test(NAME ExampleTests COMMAND ExampleTests)
+### SOURCE ###
+add_executable(ApplicationTests 
+tests/ApplicationTest.cpp 
+src/WindowManager.cpp 
+src/ResourceManager.cpp
+src/Application.cpp) 
+set_target_properties(ApplicationTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_TESTS})
+target_compile_definitions(ApplicationTests PRIVATE SFML_STATIC)
+target_link_libraries(ApplicationTests PRIVATE gtest_main sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
+target_include_directories(ApplicationTests PRIVATE ${SFML_DIR}/include ${CMAKE_SOURCE_DIR}/include)
+target_compile_features(ApplicationTests PRIVATE cxx_std_17)
 
-# Add a post-build command to run the tests
-add_custom_command(TARGET ExampleTests
+
+add_test(NAME ApplicationTests COMMAND ApplicationTests)
+
+### EXAMPLE TESTS ###
+add_executable(ExampleTests1 
+    tests/ExampleTests1.cpp 
+    src/WindowManager.cpp 
+    src/ResourceManager.cpp)
+
+set_target_properties(ExampleTests1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_TESTS})
+target_compile_definitions(ExampleTests1 PRIVATE SFML_STATIC)
+target_link_libraries(ExampleTests1 PRIVATE gtest_main sfml-graphics-s sfml-window-s sfml-system-s opengl32 freetype winmm gdi32 ws2_32 spdlog::spdlog)
+target_include_directories(ExampleTests1 PRIVATE ${SFML_DIR}/include ${CMAKE_SOURCE_DIR}/include)
+target_compile_features(ExampleTests1 PRIVATE cxx_std_17)
+
+add_test(NAME ExampleTests1 COMMAND ExampleTests1)
+
+#Add a post-build command to run the tests
+add_custom_command(TARGET ExampleTests1
     POST_BUILD
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
 )
