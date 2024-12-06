@@ -8,8 +8,10 @@ namespace fs = std::filesystem;
 
 
 ResourceManager::ResourceManager(const ResourceManagerConfig& config) : config(config) {
+     // Disable logging
+    spdlog::set_level(spdlog::level::off);
     // Set the flush level to info
-    spdlog::flush_on(spdlog::level::info);
+    spdlog::flush_on(spdlog::level::critical);
     spdlog::info("ResourceManager initialized");
     m_errorTexture = createCheckerboardTexture(this->config);
 }
