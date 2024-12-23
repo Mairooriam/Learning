@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.28)
+project(Application LANGUAGES CXX)
+
+# Set the C++ standard to C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Include directories
+include_directories(${CMAKE_SOURCE_DIR}/../engine/include)
+
+# Add the main executable
+add_executable(application
+  src/main.cpp
+)
+
+# Link the engine DLL
+target_link_libraries(application PRIVATE engine)
