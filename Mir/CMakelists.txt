@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(CMakeSDLProject LANGUAGES CXX)
+project(Mir LANGUAGES CXX)
 
 # Set the C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -57,19 +57,25 @@ add_library(imgui STATIC
 )
 
 # Add the engine library (DLL)
-add_library(engine SHARED
-  src/RenderWindow.cpp
+add_library(Mir SHARED
+  src/application.cpp
 )
-target_compile_definitions(engine PRIVATE BUILD_DLL)
+
+# Define macros
+target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL)
+
+target_compile_definitions(Mir PRIVATE BUILD_DLL)
 find_package(OpenGL REQUIRED)
-target_link_libraries(engine PRIVATE spdlog::spdlog SDL2::SDL2 SDL2::SDL2main OpenGL::GL imgui)
-target_include_directories(engine PRIVATE ${CMAKE_BINARY_DIR}/_deps/imgui-src ${CMAKE_BINARY_DIR}/_deps/imgui-src/backends ${CMAKE_BINARY_DIR}/_deps/sdl2-src/include)
+target_link_libraries(Mir PRIVATE spdlog::spdlog SDL2::SDL2 SDL2::SDL2main OpenGL::GL imgui)
+target_include_directories(Mir PRIVATE ${CMAKE_BINARY_DIR}/_deps/imgui-src ${CMAKE_BINARY_DIR}/_deps/imgui-src/backends ${CMAKE_BINARY_DIR}/_deps/sdl2-src/include)
+
+
 
 # Custom command to copy resources folder
-add_custom_command(TARGET engine POST_BUILD
+add_custom_command(TARGET Mir POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources $<TARGET_FILE_DIR:engine>/resources
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources $<TARGET_FILE_DIR:Mir>/resources
 )
 
 # Custom target to trigger the command
-add_custom_target(copy_resources ALL DEPENDS engine)
+add_custom_target(copy_resources ALL DEPENDS Mir)

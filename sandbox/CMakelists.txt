@@ -7,12 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Include directories
-include_directories(${CMAKE_SOURCE_DIR}/../engine/include)
+include_directories(${CMAKE_SOURCE_DIR}/Mir)
+
 
 # Add the main executable
 add_executable(application
-  src/main.cpp
+  src/sandboxApp.cpp
 )
 
 # Link the engine DLL
-target_link_libraries(application PRIVATE engine)
+target_link_libraries(application PRIVATE Mir)
