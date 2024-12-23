@@ -1,59 +1,40 @@
-#include "WindowManager.hpp"
-#include "ResourceManager.hpp"
 #include <iostream>
-#include "Profiler.hpp"
-#include "Node.hpp"
-#include "imgui.h"
-int main()
-{
-    ResourceManager& resourceManager = ResourceManager::getInstance();
-    resourceManager.loadResources();
-    std::cout << resourceManager << "\n";
-    Instrumentor::Get().BeginSession("Profile");
-    
-        //     sprite.scale(5.0f, 5.0f);
-        
-        // // Set the position with an offset
-        // float xOffset = 10.0f; // Adjust this value as needed
-        // float yOffset = 10.0f; // Adjust this value as needed
-        // sprite.setPosition(i * xOffset, i * yOffset);
+#include "RenderWindow.hpp"
 
-    std::vector<Node> nodes;    
-    
+int main(int argc, char* argv[]) {
+    RenderWindow renderwindow;
+    if (!renderwindow.initWindow(600, 400)) {
+        printf("Failed to initialize!\n");
+        return -1;
+    }
 
-    {
-        PROFILE_SCOPE("Create sprite test");
-        struct GridConfig {
-            int rows;
-            int columns;
-            float spacing; // Add spacing between tiles
-        };
+    if (!renderwindow.loadMedia()) {
+        printf("Failed to load media!\n");
+        return -1;
+    }
 
-        
+    // Apply the image
+    SDL_BlitSurface(renderwindow.getHelloWorld(), NULL, renderwindow.getScreenSurface(), NULL);
+    // Update the surface
+    SDL_UpdateWindowSurface(renderwindow.getWindow());
 
-
-        GridConfig gridConfig = {5, 5, 5.0f}; // Adjust these values as needed
-        int totalEls = gridConfig.columns*gridConfig.rows;
-        nodes.reserve(totalEls); 
-        sf::Texture& texture = resourceManager.getTexture("dsadasd.png");
-       
-
-        for (int row = 0; row < gridConfig.rows; ++row) {
-            for (int col = 0; col < gridConfig.columns; ++col) {
-            sf::Sprite sprite = resourceManager.createSprite(1, texture);
-            sf::Vector2i pos = {row,col};
-            nodes.emplace_back(pos, sprite);
-            
+    // Event loop to keep window open
+    SDL_Event e;
+    bool quit = false;
+    while (!quit) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                quit = true;
+            } else if (e.type == SDL_WINDOWEVENT) {
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED || e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    renderwindow.updateScreenSurface();
+                    SDL_BlitSurface(renderwindow.getHelloWorld(), NULL, renderwindow.getScreenSurface(), NULL);
+                    SDL_UpdateWindowSurface(renderwindow.getWindow());
+                }
             }
         }
-
+        // Additional rendering or processing can be done here
     }
-    WindowManager windowManager;
-    windowManager.updateSpriteArray(std::move(nodes));
-    
-    windowManager.run();
-  
-    Instrumentor::Get().EndSession();
-    
+
     return 0;
 }
