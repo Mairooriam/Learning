@@ -8,12 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/Mir)
+include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include())
 
 
 # Add the main executable
 add_executable(application
   src/sandboxApp.cpp
 )
-
+# Define macros
+target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)
 # Link the engine DLL
 target_link_libraries(application PRIVATE Mir)

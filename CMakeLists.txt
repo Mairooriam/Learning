@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Define common compile definitions
-add_compile_definitions(MIR_PLATFORM_WINDOWS)
+#add_compile_definitions(MIR_PLATFORM_WINDOWS)
 
 
 # Add subdirectories
