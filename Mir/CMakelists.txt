@@ -61,8 +61,6 @@ add_library(Mir SHARED
   src/application.cpp
 )
 
-# Define macros
-target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL)
 
 target_compile_definitions(Mir PRIVATE BUILD_DLL)
 find_package(OpenGL REQUIRED)

@@ -7,5 +7,5 @@
         #define MIR_API __declspec(dllimport)
     #endif
 #else
-    #define MIR_API
+    #error Mir only supports Windows!
 #endif

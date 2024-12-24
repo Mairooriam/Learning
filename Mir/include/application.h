@@ -9,4 +9,6 @@ namespace Mir {
         virtual ~Application();
         void Run();
     };
+
+    Application* createApplication();
 }

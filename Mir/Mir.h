@@ -1,3 +1,8 @@
 #pragma once
 
+#include "stdio.h"
 #include "include/application.h"
+
+/////////////////////// ENTRY POINT ///////////////////////
+#include "include/entryPoint.h"
+/////////////////////// ENTRY POINT ///////////////////////

@@ -1,7 +1,15 @@
 #include <Mir.h>
 
-int main() {
-    Mir::Application app;
-    app.Run();
-    return 0;
+class SandBox : public Mir::Application{
+    public:
+    SandBox(){
+
+    }
+    ~SandBox(){
+    
+    }
+};
+
+Mir::Application* Mir::createApplication(){
+    return new SandBox();
 }
