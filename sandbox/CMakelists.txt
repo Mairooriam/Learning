@@ -8,7 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/Mir)
-include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include())
+include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include)
+
 
 
 # Add the main executable
