@@ -1,5 +1,5 @@
 #include <Mir.h>
-
+#include "mirpch.h"
 class SandBox : public Mir::Application{
     public:
     SandBox(){

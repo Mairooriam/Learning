@@ -6,17 +6,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Include directories
-include_directories(${CMAKE_SOURCE_DIR}/Mir)
-include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include)
-
-
-
 # Add the main executable
 add_executable(application
   src/sandboxApp.cpp
 )
+
+# Include directories
+include_directories(${CMAKE_SOURCE_DIR}/Mir/src)
+include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include)
+include_directories(${CMAKE_SOURCE_DIR}/Mir/external/glfw/include)
+
 # Define macros
 target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)
 # Link the engine DLL
 target_link_libraries(application PRIVATE Mir)
+
+# Set the output directory for the executable
+set_target_properties(application PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)

@@ -26,14 +26,26 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+# Fetch spdlog
+FetchContent_Declare(
+  glfw
+  GIT_REPOSITORY https://github.com/glfw/glfw.git
+  GIT_TAG 3.4
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW
+)
+set(GLFW_BUILD_SHARED_LIBS OFF)
+FetchContent_MakeAvailable(glfw)
 # Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir/Events)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog/include)
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include)
 # Add the engine library (DLL)
 add_library(Mir SHARED
-  src/application.cpp
-  src/Log.cpp
+  src/Mir/application.cpp
+  src/Mir/Log.cpp
+  src/mirpch.cpp
 )
 
 # Define macros
@@ -41,7 +53,10 @@ target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL)
 
 # Link libraries
 find_package(OpenGL REQUIRED)
-target_link_libraries(Mir PRIVATE spdlog::spdlog)
+target_link_libraries(Mir PRIVATE spdlog::spdlog glfw)
+
+# Use precompiled headers
+target_precompile_headers(Mir PRIVATE src/mirpch.h)
 
 # Custom command to copy resources folder
 add_custom_command(TARGET Mir POST_BUILD
@@ -51,3 +66,4 @@ add_custom_command(TARGET Mir POST_BUILD
 
 # Custom target to trigger the command
 add_custom_target(copy_resources ALL DEPENDS Mir)
+
