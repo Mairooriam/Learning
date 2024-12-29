@@ -1,4 +1,5 @@
-build
+/build/
+Mir/external/
 out
 .cache
 .idea
