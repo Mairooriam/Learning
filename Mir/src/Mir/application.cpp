@@ -6,6 +6,7 @@
 
 namespace Mir {
     Application::Application() {
+		m_Window = std::unique_ptr<Window>(Window::Create());
     }
 
 
@@ -14,16 +15,10 @@ namespace Mir {
 
     void Application::Run()
     {
-        WindowResizeEvent e(1280, 720);
-		if (e.IsInCategory(EventCategoryApplication))
-		{
-			MIR_TRACE(e);
+
+		while (m_Running){
+			m_Window->OnUpdate();
 		}
-		if (e.IsInCategory(EventCategoryInput))
-		{
-			MIR_TRACE(e);
-		}
-		while (true);
     }
 
 }

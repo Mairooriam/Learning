@@ -35,21 +35,26 @@ FetchContent_Declare(
 )
 set(GLFW_BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailable(glfw)
+
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir/Events)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Platform)
+
+# EXTERNAL Includes
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include)
 # Add the engine library (DLL)
 add_library(Mir SHARED
   src/Mir/application.cpp
   src/Mir/Log.cpp
+  src/Mir/Platform/WindowsWindow.cpp
   src/mirpch.cpp
 )
 
 # Define macros
-target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL)
+target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_ENABLE_ASSERTS)
 
 # Link libraries
 find_package(OpenGL REQUIRED)

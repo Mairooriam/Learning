@@ -15,7 +15,7 @@ add_executable(application
 include_directories(${CMAKE_SOURCE_DIR}/Mir/src)
 include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include)
 include_directories(${CMAKE_SOURCE_DIR}/Mir/external/glfw/include)
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Mir/src/Platform)
 # Define macros
 target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)
 # Link the engine DLL
