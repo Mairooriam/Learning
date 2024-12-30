@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Mir/Window.h"
-
-#include <GLFW/glfw3.h>
+#include "Mir/core.h"
+#include "Mir/Events/Event.h"
+#include "Mir/Events/ApplicationEvent.h"
+#include "Window.h"
 
 namespace Mir {
 
