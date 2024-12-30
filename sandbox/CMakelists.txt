@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Use the multi-threaded DLL runtime library
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+
+
 # Add the main executable
 add_executable(application
   src/sandboxApp.cpp
@@ -13,9 +17,7 @@ add_executable(application
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/Mir/src)
-include_directories(${CMAKE_SOURCE_DIR}/Mir/external/spdlog/include)
-include_directories(${CMAKE_SOURCE_DIR}/Mir/external/glfw/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Mir/src/Platform)
+
 # Define macros
 target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)
 # Link the engine DLL

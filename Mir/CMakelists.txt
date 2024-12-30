@@ -1,18 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 project(Mir LANGUAGES CXX)
 
-
-
 # Set the C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Set the output directory for binaries
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Ensure the output directory exists
-file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # Fetch dependencies
 include(FetchContent)
@@ -36,10 +28,15 @@ FetchContent_Declare(
 set(GLFW_BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailable(glfw)
 
+# Set the output directory for binaries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Ensure the output directory exists
+file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir/Events)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Platform)
 
 # EXTERNAL Includes
@@ -49,7 +46,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include)
 add_library(Mir SHARED
   src/Mir/application.cpp
   src/Mir/Log.cpp
-  src/Mir/Platform/WindowsWindow.cpp
+  src/Platform/WindowsWindow.cpp
+  src/Mir/LayerStack.cpp
+  src/Mir/Layer.cpp
   src/mirpch.cpp
 )
 
@@ -59,6 +58,14 @@ target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_EN
 # Link libraries
 find_package(OpenGL REQUIRED)
 target_link_libraries(Mir PRIVATE spdlog::spdlog glfw)
+
+# Set include directories for Mir target
+target_include_directories(Mir
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include
+)
 
 # Use precompiled headers
 target_precompile_headers(Mir PRIVATE src/mirpch.h)
@@ -71,4 +78,5 @@ add_custom_command(TARGET Mir POST_BUILD
 
 # Custom target to trigger the command
 add_custom_target(copy_resources ALL DEPENDS Mir)
+
 
