@@ -2,6 +2,7 @@
 
 #include "stdio.h"
 #include "Mir/application.h"
+#include "Mir/Layer.h"
 #include "Mir/log.h"
 #include "Mir/Window.h"
 /////////////////////// ENTRY POINT ///////////////////////
