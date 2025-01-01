@@ -1,5 +1,5 @@
-#include "mirpch.h"
-#include "log.h"
+#include "Mirpch.h"
+#include "Log.h"
 
 namespace Mir{
 

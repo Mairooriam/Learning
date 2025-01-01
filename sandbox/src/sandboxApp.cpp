@@ -22,6 +22,7 @@ class SandBox : public Mir::Application{
     public:
     SandBox(){
         PushLayer(new ExampleLayer());
+        PushOverlay(new Mir::ImGuiLayer());
     }
     ~SandBox(){
     

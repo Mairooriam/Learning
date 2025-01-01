@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mir/core.h"
+#include "Mir/Core.h"
 #include "Mir/Events/Event.h"
 
 namespace Mir{

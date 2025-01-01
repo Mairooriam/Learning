@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mirpch.h"
+#include "Mirpch.h"
 
-#include "Mir/core.h"
+#include "Mir/Core.h"
 #include "Mir/Events/Event.h"
 
 namespace Mir {

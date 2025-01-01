@@ -1,9 +1,12 @@
 #pragma once
 
-#include "Mir/core.h"
+#include "Mir/Core.h"
 #include "Mir/Events/Event.h"
 #include "Mir/Events/ApplicationEvent.h"
-#include "Window.h"
+#include "Mir/Window.h"
+
+#include <GLFW/glfw3.h>
+
 
 namespace Mir {
 
@@ -27,6 +30,7 @@ namespace Mir {
     private:
         GLFWwindow* m_Window;
 
+    public:
         struct WindowData {
             std::string Title;
             unsigned int Width, Height;
@@ -36,7 +40,28 @@ namespace Mir {
         };
 
         WindowData m_Data;
+
+
         
     };
 
+};
+
+
+namespace fmt {
+    template <>
+    struct formatter<Mir::WindowsWindow::WindowData> {
+        constexpr auto parse(format_parse_context& ctx) {
+            return ctx.begin();
+        }
+        
+        template <typename FormatContext>
+        auto format(const Mir::WindowsWindow::WindowData& wd, FormatContext& ctx) const {
+            return format_to(
+                ctx.out(),
+                "WindowData(Title: {}, Width: {}, Height: {}, VSync: {})",
+                wd.Title, wd.Width, wd.Height, wd.VSync
+            );
+        }
+    };
 }

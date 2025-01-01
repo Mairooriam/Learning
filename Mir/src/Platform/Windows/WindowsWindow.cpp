@@ -1,11 +1,12 @@
-#include "mirpch.h"
+#include "Mirpch.h"
 #include "WindowsWindow.h"
 
 #include "Mir/Events/ApplicationEvent.h"
 #include "Mir/Events/MouseEvent.h"
 #include "Mir/Events/KeyEvent.h"
 
-#include "Mir/log.h"
+
+#include <glad/glad.h>
 
 namespace Mir {
 
@@ -47,6 +48,9 @@ namespace Mir {
 
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
         glfwMakeContextCurrent(m_Window);
+        int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        MIR_CORE_ASSERT(m_Window, "Failed to initialize Glad!");
+      
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
 

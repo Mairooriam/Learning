@@ -12,15 +12,10 @@
 #include <unordered_set>
 #include <functional>
 
-// Include spdlog
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/fmt/ostr.h>
-
-// Include glfw
-#include <GLFW/glfw3.h>
-
+// include the formatter specialization
+#include "Mir/Log.h"
+#include "spdlog/fmt/ostr.h"
 
 #ifdef MIR_PLATFORM_WINDOWS
-    #include <windows.h>
+    #include <Windows.h>
 #endif

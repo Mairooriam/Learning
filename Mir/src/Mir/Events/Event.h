@@ -1,6 +1,9 @@
 #pragma once
-#include "mirpch.h"
+#include "Mirpch.h"
 #include "Mir/core.h"
+
+
+
 
 namespace Mir {
 
@@ -78,5 +81,11 @@ namespace Mir {
 	{
 		return os << e.ToString();
 	}
+
+    inline std::string format_as(const Event& e) {
+        return e.ToString();
+    }
 }
+
+
 

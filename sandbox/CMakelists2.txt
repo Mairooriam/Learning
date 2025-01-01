@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(Sandbox)
+
+SET(SANDBOX_RES
+        
+        )
+
+SET(SANDBOX_SRC
+        src/sandboxApp.cpp)
+
+
+add_executable(Sandbox ${SANDBOX_SRC} ${SANDBOX_RES})
+target_link_libraries(Sandbox PUBLIC ENGINE)
+target_include_directories(Sandbox PUBLIC  ${ENGINE_SOURCE_DIR}/src ${imgui_SOURCE_DIR}/src ${SPDLOG_SOURCE_DIR}/include)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "src" FILES ${SANDBOX_SRC})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "res" FILES ${SANDBOX_RES})
+
+
+set_target_properties(Sandbox PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+        )

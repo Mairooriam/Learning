@@ -21,7 +21,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Mir/src)
 # Define macros
 target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)
 # Link the engine DLL
-target_link_libraries(application PRIVATE Mir)
+target_link_libraries(application PUBLIC Mir)
 
 # Set the output directory for the executable
 set_target_properties(application PROPERTIES

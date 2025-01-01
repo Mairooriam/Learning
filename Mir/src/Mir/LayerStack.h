@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mirpch.h"
-#include "Mir/core.h"
+#include "Mirpch.h"
+#include "Mir/Core.h"
 #include "Layer.h"
 
 namespace Mir {

@@ -1,7 +1,6 @@
 #pragma once
-#include "mirpch.h"
+#include "Mirpch.h"
 #include "Event.h"
-
 
 namespace Mir {
 
@@ -19,6 +18,7 @@ namespace Mir {
 			std::stringstream ss;
 			ss << "MouseMovedEvent: " << m_MouseX << ", " << m_MouseY;
 			return ss.str();
+
 		}
 
 		EVENT_CLASS_TYPE(MouseMoved)

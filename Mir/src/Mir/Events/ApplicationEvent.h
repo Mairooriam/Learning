@@ -1,5 +1,5 @@
 #pragma once
-#include "mirpch.h"
+#include "Mirpch.h"
 #include "Event.h"
 
 namespace Mir {
@@ -17,7 +17,8 @@ namespace Mir {
 		{
 			std::stringstream ss;
 			ss << "WindowResizeEvent: " << m_Width << ", " << m_Height;
-			return ss.str();
+			return ss.str();   
+            return this->ToString();
 		}
 
 		EVENT_CLASS_TYPE(WindowResize)
