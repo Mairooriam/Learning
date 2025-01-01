@@ -1,82 +1,144 @@
-cmake_minimum_required(VERSION 3.28)
-project(Mir LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.10)
 
-# Set the C++ standard to C++17
+project(Mir)
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Fetch dependencies
 include(FetchContent)
 
-# Fetch spdlog
-FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.9.2
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog
+# Find or fetch spdlog
+find_package(spdlog QUIET)
+if (NOT spdlog_FOUND)
+    message(STATUS "spdlog not found, fetching from GitHub...")
+    FetchContent_Declare(
+      spdlog
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG v1.x
+    )
+    FetchContent_MakeAvailable(spdlog)
+endif()
+
+# Find or fetch glfw
+find_package(glfw3 QUIET)
+if (NOT glfw3_FOUND)
+    message(STATUS "glfw3 not found, fetching from GitHub...")
+    set(GLFW_VERSION 3.4)
+    FetchContent_Declare(
+      glfw
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG ${GLFW_VERSION}
+    )
+    FetchContent_MakeAvailable(glfw)
+endif()
+
+# Find or fetch glad
+find_package(glad QUIET)
+if (NOT glad_FOUND)
+    message(STATUS "glad not found, fetching from GitHub...")
+    set(GLAD_VERSION c)
+    FetchContent_Declare(
+      glad
+      GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+      GIT_TAG ${GLAD_VERSION}
+    )
+    FetchContent_MakeAvailable(glad)
+endif()
+
+# Find or fetch imgui
+find_package(imgui QUIET)
+if (NOT imgui_FOUND)
+    message(STATUS "imgui not found, fetching from GitHub...")
+    set(imgui_VERSION docking)
+    FetchContent_Declare(
+      imgui
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG ${imgui_VERSION}
+    )
+    FetchContent_MakeAvailable(imgui)
+endif()
+
+# Add glad as a target
+add_library(glad STATIC ${glad_SOURCE_DIR}/src/glad.c)
+target_include_directories(glad PUBLIC ${glad_SOURCE_DIR}/include)
+
+# Add imgui as a target
+add_library(imgui STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
 )
-FetchContent_MakeAvailable(spdlog)
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
+set(D3_SOURCE_FILES
+        src/Mir/Application.cpp
+        src/Mir/Log.cpp
 
-# Fetch spdlog
-FetchContent_Declare(
-  glfw
-  GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG 3.4
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW
+        src/Mir/LayerStack.cpp
+        src/Mir/Layer.cpp
+
+        src/Mir/ImGui/ImGuiLayer.cpp
+
+        src/Platform/Windows/WindowsWindow.cpp
+        src/Platform/OpenGL/ImGuiOpenGLRenderer.cpp
+        )
+
+set(D3_HEADER_FILES
+        src/Mir/Layer.h
+        src/Mir/LayerStack.h
+        src/Mir/Core.h
+        src/Mir.h
+        src/Mir/EntryPoint.h
+        src/Mir/Window.h
+
+        src/Mir/Events/Event.h
+        src/Mir/Events/KeyEvent.h
+        src/Mir/Events/MouseEvent.h
+        src/Mir/Events/ApplicationEvent.h
+
+        src/Mir/ImGui/ImGuiLayer.h
+
+        src/Platform/Windows/WindowsWindow.h
+        src/Platform/OpenGL/ImGuiOpenGLRenderer.h
+        )
+
+add_library(Mir SHARED ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
+target_link_libraries(Mir PRIVATE glfw glad spdlog::spdlog imgui)
+
+# Use precompiled headers
+target_precompile_headers(Mir PRIVATE src/Mirpch.h)
+
+
+
+# Define a variable for the include directories
+set(INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Mir
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/OpenGL
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Events
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui
 )
-set(GLFW_BUILD_SHARED_LIBS OFF)
-FetchContent_MakeAvailable(glfw)
 
-# Set the output directory for binaries
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Ensure the output directory exists
-file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+include_directories(${INCLUDE_DIRS})
 
-# Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Mir)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Platform)
+# # EXTERNAL Includes
+include_directories(${glfw_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include)
+include_directories(${glad_SOURCE_DIR}/include ${imgui_SOURCE_DIR})
 
-# EXTERNAL Includes
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include)
-# Add the engine library (DLL)
-add_library(Mir SHARED
-  src/Mir/application.cpp
-  src/Mir/Log.cpp
-  src/Platform/WindowsWindow.cpp
-  src/Mir/LayerStack.cpp
-  src/Mir/Layer.cpp
-  src/mirpch.cpp
-)
-
-# Define macros
-target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_ENABLE_ASSERTS)
-
-# Link libraries
-find_package(OpenGL REQUIRED)
-target_link_libraries(Mir PRIVATE spdlog::spdlog glfw)
+# source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
 
 # Set include directories for Mir target
 target_include_directories(Mir
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/spdlog/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/GLFW/include
+    ${glfw_SOURCE_DIR}/include
+    ${glad_SOURCE_DIR}/include
+    ${spdlog_SOURCE_DIR}/include
+    ${imgui_SOURCE_DIR}
 )
 
-# Use precompiled headers
-target_precompile_headers(Mir PRIVATE src/mirpch.h)
-
-# Custom command to copy resources folder
-add_custom_command(TARGET Mir POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources $<TARGET_FILE_DIR:Mir>/resources
-)
-
-# Custom target to trigger the command
-add_custom_target(copy_resources ALL DEPENDS Mir)
-
-
+# Define macros
+target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_ENABLE_ASSERTS GLFW_INCLUDE_NONE)
