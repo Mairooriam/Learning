@@ -3,7 +3,12 @@
 #include "Application.h"
 #include "Mir/Events/ApplicationEvent.h"
 
+
 #include <glad/glad.h>
+
+#include "Mir/Input.h"
+
+#include <glm/glm.hpp>
 namespace Mir {
 
   #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -47,10 +52,9 @@ namespace Mir {
             {
                 layer->OnUpdate();
             }
-            
 
 			m_Window->OnUpdate();
-		}
+        }
     }
 
    

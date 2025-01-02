@@ -9,6 +9,8 @@ public:
     
     void OnUpdate() override{
         //MIR_INFO("ExampleLayer::Update");
+        if(Mir::Input::IsKeyPressed(MIR_KEY_TAB))
+            MIR_TRACE("Tab key is pressed!");
     }
 
     void OnEvent(Mir::Event& event) override{
