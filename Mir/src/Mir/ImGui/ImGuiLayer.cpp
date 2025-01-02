@@ -135,7 +135,7 @@ namespace Mir{
     }           
 
     void ImGuiLayer::OnEvent(Event &event){
-        MIR_CORE_INFO("ImGuiLayer::OnEvent {0}!",event);
+        //MIR_CORE_INFO("ImGuiLayer::OnEvent {0}!",event);
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<MouseButtonPressedEvent>(MIR_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressedEvent));
         dispatcher.Dispatch<MouseButtonReleasedEvent>(MIR_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonReleasedEvent));
