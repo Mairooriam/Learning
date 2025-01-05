@@ -1,5 +1,8 @@
 #include <Mir.h>
 
+#include "imgui.h"
+
+
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
 #include <glm/mat4x4.hpp> // glm::mat4
@@ -41,6 +44,12 @@ public:
     void OnEvent(Mir::Event& event) override{
         //MIR_TRACE("{0}", event);
     }
+
+    virtual void OnImGuiRender() override{
+        ImGui::Begin("Test");
+		ImGui::Text("Hello World");
+		ImGui::End();
+    }
 };
 
 
@@ -49,7 +58,7 @@ class SandBox : public Mir::Application{
     public:
     SandBox(){
         PushLayer(new ExampleLayer());
-        PushOverlay(new Mir::ImGuiLayer());
+        
     }
     ~SandBox(){
     

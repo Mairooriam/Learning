@@ -5,8 +5,9 @@
 #include "Mir/Events/MouseEvent.h"
 #include "Mir/Events/KeyEvent.h"
 
+#include "Platform/OpenGL/OpenGLContext.h"
 
-#include <glad/glad.h>
+
 
 namespace Mir {
 
@@ -37,6 +38,8 @@ namespace Mir {
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
 
+        
+
         MIR_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
         if (!s_GLFWInitialized){
@@ -46,10 +49,14 @@ namespace Mir {
             s_GLFWInitialized = true;
         }
 
+
+
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-        glfwMakeContextCurrent(m_Window);
-        int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-        MIR_CORE_ASSERT(m_Window, "Failed to initialize Glad!");
+        
+        m_Context = new OpenGLContext(m_Window);
+        m_Context->Init();
+
+
       
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
@@ -71,6 +78,10 @@ namespace Mir {
         });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
+            (void)scancode; // Mark parameter as unused
+            (void)mods;     // Mark parameter as unused
+
+
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             switch (action){
@@ -103,6 +114,8 @@ namespace Mir {
         });
 
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods){
+            (void)mods; // Mark parameter as unused
+            
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             switch (action){
@@ -140,7 +153,8 @@ namespace Mir {
     }
     void WindowsWindow::OnUpdate(){
         glfwPollEvents();
-        glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
+        
     }
 
     void WindowsWindow::SetVSync(bool enabled){

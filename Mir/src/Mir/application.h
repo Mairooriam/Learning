@@ -7,6 +7,9 @@
 #include "Mir/Events/ApplicationEvent.h"
 #include "Mir/Events/Event.h"
 
+
+#include "Mir/ImGui/ImGuiLayer.h"
+
 namespace Mir {
     class MIR_API Application {
     public:
@@ -26,6 +29,7 @@ namespace Mir {
         bool OnwWindowClose(WindowCloseEvent& e);
 
         std::unique_ptr<Window> m_Window;
+        ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
     private:

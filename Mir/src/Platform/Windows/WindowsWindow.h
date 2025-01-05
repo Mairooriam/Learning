@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Mir/Core.h"
-#include "Mir/Events/Event.h"
-#include "Mir/Events/ApplicationEvent.h"
 #include "Mir/Window.h"
+#include "Mir/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 
@@ -31,6 +29,7 @@ namespace Mir {
         virtual void Shutdown();
     private:
         GLFWwindow* m_Window;
+        GraphicsContext* m_Context;
 
     public:
         struct WindowData {

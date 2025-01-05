@@ -1,11 +1,15 @@
 #pragma once
 
 #ifdef MIR_PLATFORM_WINDOWS
+#if MIR_DYNAMIC_LINK
     #ifdef MIR_BUILD_DLL
         #define MIR_API __declspec(dllexport)
     #else
         #define MIR_API __declspec(dllimport)
     #endif
+#else   
+    #define MIR_API
+#endif
 #else
     #error Mir only supports Windows!
 #endif
