@@ -118,6 +118,8 @@ set(D3_SOURCE_FILES
         src/Mir/LayerStack.cpp
         src/Mir/Layer.cpp
 
+        src/Mir/Renderer/Shader.cpp
+
         src/Mir/ImGui/ImGuiLayer.cpp
 
         src/Platform/Windows/WindowsWindow.cpp
@@ -141,7 +143,8 @@ set(D3_HEADER_FILES
         src/Mir/Events/ApplicationEvent.h
 
         src/Mir/Renderer/GraphicsContext.h
-
+        src/Mir/Renderer/Shader.h
+           
         src/Mir/ImGui/ImGuiLayer.h
 
         src/Platform/Windows/WindowsWindow.h

@@ -7,8 +7,9 @@
 #include "Mir/Events/ApplicationEvent.h"
 #include "Mir/Events/Event.h"
 
-
 #include "Mir/ImGui/ImGuiLayer.h"
+
+#include "Mir/Renderer/Shader.h"
 
 namespace Mir {
     class MIR_API Application {
@@ -32,6 +33,9 @@ namespace Mir {
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
+
+        unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+        std::unique_ptr<Shader> m_Shader;
     private:
         static Application* s_Instance; 
     };

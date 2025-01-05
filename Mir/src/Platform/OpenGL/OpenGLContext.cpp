@@ -14,6 +14,11 @@ namespace Mir {
         glfwMakeContextCurrent(m_WindowHandle);
         int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         MIR_CORE_ASSERT(status, "Failed to initialize Glad!");
+
+        MIR_CORE_INFO("OpenGL Info:");
+        MIR_CORE_INFO("  Vendor {0}", (const char*)glGetString(GL_VENDOR));
+        MIR_CORE_INFO("  Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+        MIR_CORE_INFO("  Version {0}", (const char*)glGetString(GL_VERSION));
     }
 
     void OpenGLContext::SwapBuffers(){
