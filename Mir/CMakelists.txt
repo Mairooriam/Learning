@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Enable compiler warnings
+if (MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 project(Mir)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -62,15 +74,27 @@ endif()
 add_library(glad STATIC ${glad_SOURCE_DIR}/src/glad.c)
 target_include_directories(glad PUBLIC ${glad_SOURCE_DIR}/include)
 
+# Suppress specific warnings for glad.c
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set_source_files_properties(${glad_SOURCE_DIR}/src/glad.c PROPERTIES COMPILE_FLAGS "-Wno-pedantic")
+elseif (MSVC)
+    set_source_files_properties(${glad_SOURCE_DIR}/src/glad.c PROPERTIES COMPILE_FLAGS "/wd4055")
+endif()
+
 # Add imgui as a target
 add_library(imgui STATIC
     ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_demo.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
 )
-target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+
+# Link FreeGLUT to imgui
+target_link_libraries(imgui ${GLUT_LIBRARIES})
 
 # Find or fetch imgui
 find_package(glm QUIET)
@@ -98,7 +122,8 @@ set(D3_SOURCE_FILES
 
         src/Platform/Windows/WindowsWindow.cpp
         src/Platform/Windows/WindowsInput.cpp
-        src/Platform/OpenGL/ImGuiOpenGLRenderer.cpp
+        src/Platform/OpenGL/OpenGLContext.cpp
+
         )
 
 set(D3_HEADER_FILES
@@ -108,19 +133,20 @@ set(D3_HEADER_FILES
         src/Mir.h
         src/Mir/EntryPoint.h
         src/Mir/Window.h
+        src/Mir/Input.h
 
         src/Mir/Events/Event.h
         src/Mir/Events/KeyEvent.h
         src/Mir/Events/MouseEvent.h
         src/Mir/Events/ApplicationEvent.h
 
-        src/Mir/Input.h
+        src/Mir/Renderer/GraphicsContext.h
 
         src/Mir/ImGui/ImGuiLayer.h
 
         src/Platform/Windows/WindowsWindow.h
         src/Platform/Windows/WindowsInput.h
-        src/Platform/OpenGL/ImGuiOpenGLRenderer.h
+        src/Platform/OpenGL/OpenGLContext.h
         )
 
 add_library(Mir SHARED ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
@@ -138,7 +164,7 @@ set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/OpenGL
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Events
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui
+
 )
 
 
@@ -146,7 +172,7 @@ include_directories(${INCLUDE_DIRS})
 
 # # EXTERNAL Includes
 include_directories(${glfw_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include)
-include_directories(${glad_SOURCE_DIR}/include ${imgui_SOURCE_DIR})
+include_directories(${glad_SOURCE_DIR}/include ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 include_directories(${glm_SOURCE_DIR})
 # source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
 
@@ -158,6 +184,7 @@ target_include_directories(Mir
     ${glad_SOURCE_DIR}/include
     ${spdlog_SOURCE_DIR}/include
     ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
 )
 
