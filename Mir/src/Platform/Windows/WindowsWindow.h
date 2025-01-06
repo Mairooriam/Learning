@@ -41,9 +41,7 @@ namespace Mir {
         };
     private:
         WindowData m_Data;
-
-
-        
+  
     };
 
 };

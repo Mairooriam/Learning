@@ -11,6 +11,8 @@
 
 #include "Mir/Renderer/Shader.h"
 
+#include "Mir/Renderer/Buffer.h"
+
 namespace Mir {
     class MIR_API Application {
     public:
@@ -26,6 +28,7 @@ namespace Mir {
         inline Window& GetWindow() { return *m_Window;}
         
         inline static Application& Get() { return *s_Instance; }
+        inline static VertexBuffer& GetVertexBuffer() { return *s_Instance->m_VertexBuffer; }
     private:
         bool OnwWindowClose(WindowCloseEvent& e);
 
@@ -34,7 +37,9 @@ namespace Mir {
         bool m_Running = true;
         LayerStack m_LayerStack;
 
-        unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+        unsigned int m_VertexArray;
+        std::unique_ptr<VertexBuffer> m_VertexBuffer;
+        std::unique_ptr<IndexBuffer> m_IndexBuffer;
         std::unique_ptr<Shader> m_Shader;
     private:
         static Application* s_Instance; 

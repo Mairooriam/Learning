@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Enable compiler warnings
-if (MSVC)
-    add_compile_options(/W4)
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
 
+if (MSVC)
+    add_compile_options(-Wall) # -Wextra -Wpedantic -Werror
+    add_compile_options(-Wunused-parameter -Wreorder -Wswitch -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual)
+endif()
 
 if (MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -118,14 +116,16 @@ set(D3_SOURCE_FILES
         src/Mir/LayerStack.cpp
         src/Mir/Layer.cpp
 
+        src/Mir/Renderer/Buffer.cpp
+        src/Mir/Renderer/Renderer.cpp
         src/Mir/Renderer/Shader.cpp
 
         src/Mir/ImGui/ImGuiLayer.cpp
 
+        src/Platform/OpenGL/OpenGLBuffer.cpp
+        src/Platform/OpenGL/OpenGLContext.cpp
         src/Platform/Windows/WindowsWindow.cpp
         src/Platform/Windows/WindowsInput.cpp
-        src/Platform/OpenGL/OpenGLContext.cpp
-
         )
 
 set(D3_HEADER_FILES
@@ -142,14 +142,18 @@ set(D3_HEADER_FILES
         src/Mir/Events/MouseEvent.h
         src/Mir/Events/ApplicationEvent.h
 
+        src/Mir/Renderer/Buffer.h
         src/Mir/Renderer/GraphicsContext.h
+        src/Mir/Renderer/Renderer.h
         src/Mir/Renderer/Shader.h
            
         src/Mir/ImGui/ImGuiLayer.h
 
+        src/Platform/OpenGL/OpenGLBuffer.h
+        src/Platform/OpenGL/OpenGLContext.h
         src/Platform/Windows/WindowsWindow.h
         src/Platform/Windows/WindowsInput.h
-        src/Platform/OpenGL/OpenGLContext.h
+        
         )
 
 add_library(Mir SHARED ${D3_SOURCE_FILES} ${D3_HEADER_FILES})

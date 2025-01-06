@@ -3,6 +3,10 @@
 #include "Mir/Core.h"
 #include "Mir/Events/Event.h"
 
+struct ImGuiData{
+    float* vertices[3];
+};
+
 namespace Mir{
 
     class MIR_API Layer{
