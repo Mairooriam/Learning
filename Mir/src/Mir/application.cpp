@@ -11,24 +11,7 @@
 #include <glm/glm.hpp>
 namespace Mir {
 
-    static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type){
-    switch (type){
-        case ShaderDataType::Float:     return GL_FLOAT;
-        case ShaderDataType::Float2:    return GL_FLOAT;
-        case ShaderDataType::Float3:    return GL_FLOAT;
-        case ShaderDataType::Float4:    return GL_FLOAT;
-        case ShaderDataType::Mat3:      return GL_FLOAT;
-        case ShaderDataType::Mat4:      return GL_FLOAT;
-        case ShaderDataType::Int:       return GL_INT;
-        case ShaderDataType::Int2:      return GL_INT;
-        case ShaderDataType::Int3:      return GL_INT;
-        case ShaderDataType::Int4:      return GL_INT;
-        case ShaderDataType::Bool:      return GL_BOOL;
-    }
 
-    MIR_CORE_ASSERT(false, "Unkown ShaderDataType!");
-    return 0;
-    }  
 
   #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -45,7 +28,8 @@ namespace Mir {
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 
-
+        m_Vertexarray.reset(VertexArray::Create());
+        
         float verticies [3 * 7] = {
             -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
              0.5f, -0.5f, 0.0f, 0.2f, 0.2f, 0.8f, 1.0f,
@@ -53,32 +37,11 @@ namespace Mir {
         };
 
         m_VertexBuffer.reset(VertexBuffer::Create(verticies, sizeof(verticies)));
-        {  BufferLayout layout = {
-            { ShaderDataType::Float3, "a_Position"},
-            { ShaderDataType::Float4, "a_Color"}
-        };
         m_VertexBuffer->SetLayout( {
             { ShaderDataType::Float3, "a_Position"},
             { ShaderDataType::Float4, "a_Color"}
         });
-        }
-        uint32_t index = 0;
-        const auto& layout =  m_VertexBuffer->GetLayout();
-        for (const auto& element :layout){
-            glEnableVertexAttribArray(index);
-            glVertexAttribPointer(index,
-            element.GetComponentCount(element.Type),
-            ShaderDataTypeToOpenGLBaseType(element.Type), 
-            element.Normalized ? GL_TRUE : GL_FALSE,
-            layout.GetStride(),
-            (const void*)(uintptr_t)element.Offset); // ADDED (uintptr_t) to remove error
-
-            index++;
-        }
-        
-        
-
-
+     
         uint32_t indicies[3] = { 0, 1, 2};
         m_IndexBuffer.reset(IndexBuffer::Create(indicies, sizeof(indicies) / sizeof(uint32_t)));
 

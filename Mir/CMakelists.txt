@@ -119,6 +119,10 @@ set(D3_SOURCE_FILES
         src/Mir/Renderer/Buffer.cpp
         src/Mir/Renderer/Renderer.cpp
         src/Mir/Renderer/Shader.cpp
+        src/Mir/Renderer/VertexArray.cpp
+        
+
+
 
         src/Mir/ImGui/ImGuiLayer.cpp
 
@@ -146,7 +150,10 @@ set(D3_HEADER_FILES
         src/Mir/Renderer/GraphicsContext.h
         src/Mir/Renderer/Renderer.h
         src/Mir/Renderer/Shader.h
-           
+        src/Mir/Renderer/VertexArray.h
+          
+
+
         src/Mir/ImGui/ImGuiLayer.h
 
         src/Platform/OpenGL/OpenGLBuffer.h

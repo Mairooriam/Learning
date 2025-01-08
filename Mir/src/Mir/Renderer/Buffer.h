@@ -3,6 +3,11 @@
 
 namespace Mir {
 
+    
+    // --------------------------------------------------------------------------------------- //
+    // Utils------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
+   
     enum class ShaderDataType{
         None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
     };
@@ -28,7 +33,10 @@ namespace Mir {
       
     }
 
-
+    // --------------------------------------------------------------------------------------- //
+    // BufferElement ------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
+   
     struct BufferElement{
         std::string Name;
         ShaderDataType Type;
@@ -40,8 +48,7 @@ namespace Mir {
 
         BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
             :Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized){
-                
-            }
+        }
 
         uint32_t GetComponentCount(ShaderDataType Type) const{
             switch (Type){
@@ -59,13 +66,14 @@ namespace Mir {
                 default:
                     MIR_CORE_ASSERT(false, "Unkown ShaderDataType!");
                     return 0;   
-            }
-            
+            } 
         };
-
-
     };
 
+
+    // --------------------------------------------------------------------------------------- //
+    // BufferLayout ------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
     class BufferLayout{
     public:
         BufferLayout() {}
@@ -98,6 +106,10 @@ namespace Mir {
         uint32_t m_Stride = 0;
     };
 
+
+    // --------------------------------------------------------------------------------------- //
+    // VertexBuffer --------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
     class VertexBuffer{
     public:
         virtual ~VertexBuffer() {}
@@ -111,9 +123,13 @@ namespace Mir {
  
 
         static VertexBuffer* Create(float* verticies, uint32_t size);
-    private:
-
     };
+
+    
+    // --------------------------------------------------------------------------------------- //
+    // IndexBuffer ------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------------------- //<
+   
     class IndexBuffer{
     public:
         virtual ~IndexBuffer() {}
