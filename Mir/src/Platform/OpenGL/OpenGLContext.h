@@ -1,4 +1,3 @@
-#pragma once
 
 #include "Mir/Renderer/GraphicsContext.h"
 

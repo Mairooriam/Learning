@@ -2,6 +2,8 @@
 #include "VertexArray.h"
 
 #include "Renderer.h"
+
+#include "Platform/OpenGL/OpenGLVertexArray.h"
 namespace Mir {
     void VertexArray::Bind() const{
 
@@ -21,8 +23,8 @@ namespace Mir {
 
     VertexArray *VertexArray::Create(){        
         switch (Renderer::GetAPI()){
-        case RendererAPI::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
-        case RendererAPI::OpenGL: return new OpenGLVertexArray();
+        case RendererAPI::API::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
+        case RendererAPI::API::OpenGL: return new OpenGLVertexArray();
         };
 
         MIR_CORE_ASSERT(false, "Unkown RendererAPI!");

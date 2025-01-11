@@ -16,6 +16,11 @@
 #include "Mir/Renderer/VertexArray.h"
 
 namespace Mir {
+
+    struct ImGuiStatistic {
+
+    };
+
     class MIR_API Application {
     public:
         Application();
@@ -30,7 +35,7 @@ namespace Mir {
         inline Window& GetWindow() { return *m_Window;}
         
         inline static Application& Get() { return *s_Instance; }
-        inline static VertexBuffer& GetVertexBuffer() { return *s_Instance->m_VertexBuffer; }
+        
     private:
         bool OnwWindowClose(WindowCloseEvent& e);
 
@@ -40,10 +45,10 @@ namespace Mir {
         LayerStack m_LayerStack;
 
  
-        std::shared_ptr<VertexArray> m_Vertexarray;
-        std::shared_ptr<VertexBuffer> m_VertexBuffer;
-        std::shared_ptr<IndexBuffer> m_IndexBuffer;
+        std::shared_ptr<VertexArray> m_VertexArray;
+        std::shared_ptr<VertexArray> m_SquareVA;
         std::shared_ptr<Shader> m_Shader;
+        std::shared_ptr<Shader> m_BlueShader;
     private:
         static Application* s_Instance; 
     };

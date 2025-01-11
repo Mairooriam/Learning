@@ -10,8 +10,8 @@ namespace Mir {
     VertexBuffer *VertexBuffer::Create(float *verticies, uint32_t size){
         switch (Renderer::GetAPI()){
 
-        case RendererAPI::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
-        case RendererAPI::OpenGL: return new OpenGlVertexBuffer(verticies, size);
+        case RendererAPI::API::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
+        case RendererAPI::API::OpenGL: return new OpenGLVertexBuffer(verticies, size);
         }
 
         MIR_CORE_ASSERT(false, "Unkown RendererAPI!");
@@ -21,8 +21,8 @@ namespace Mir {
     IndexBuffer *IndexBuffer::Create(uint32_t *indicies, uint32_t size){
         switch (Renderer::GetAPI()){
             
-        case RendererAPI::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
-        case RendererAPI::OpenGL: return new OpenGlIndexBuffer(indicies, size);
+        case RendererAPI::API::None: MIR_CORE_ASSERT(false, "Render::API::None is currently not supported!"); return nullptr;
+        case RendererAPI::API::OpenGL: return new OpenGLIndexBuffer(indicies, size);
         }
 
         MIR_CORE_ASSERT(false, "Unkown RendererAPI!");

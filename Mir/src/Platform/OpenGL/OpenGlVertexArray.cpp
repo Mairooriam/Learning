@@ -23,19 +23,19 @@ namespace Mir {
     return 0;
     }  
 
-    OpenGlVertexArray::OpenGlVertexArray(){
+    OpenGLVertexArray::OpenGLVertexArray(){
         glCreateVertexArrays(1, &m_RendererID);
     }
 
-    void OpenGlVertexArray::Bind() const{
+    void OpenGLVertexArray::Bind() const{
         glBindVertexArray(m_RendererID);
     }
 
-    void OpenGlVertexArray::UnBind() const{
+    void OpenGLVertexArray::UnBind() const{
         glBindVertexArray(0);
     }
 
-    void OpenGlVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &VertexBuffer){
+    void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &VertexBuffer){
         MIR_CORE_ASSERT(VertexBuffer->GetLayout().GetElements().size(), "Vertex buffer has no layout");
 
 
@@ -58,7 +58,7 @@ namespace Mir {
         m_VertexBuffers.push_back(VertexBuffer);
     }
     
-    void OpenGlVertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> &IndexBuffer){
+    void OpenGLVertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> &IndexBuffer){
         glBindVertexArray(m_RendererID);
         IndexBuffer->Bind();
 

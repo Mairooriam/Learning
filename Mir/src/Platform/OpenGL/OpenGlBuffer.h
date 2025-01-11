@@ -3,10 +3,10 @@
 #include "Mir/Renderer/Buffer.h"
 
 namespace Mir {
-    class OpenGlVertexBuffer : public VertexBuffer {
+    class OpenGLVertexBuffer : public VertexBuffer {
     public:
-        OpenGlVertexBuffer(float *verticies, uint32_t size);
-        virtual ~OpenGlVertexBuffer();
+        OpenGLVertexBuffer(float *verticies, uint32_t size);
+        virtual ~OpenGLVertexBuffer();
 
         virtual void Bind() const override;
         virtual void UnBind() const override;
@@ -19,10 +19,10 @@ namespace Mir {
 
     };
 
-    class OpenGlIndexBuffer : public IndexBuffer {
+    class OpenGLIndexBuffer : public IndexBuffer {
     public:
-        OpenGlIndexBuffer(uint32_t* indicies, uint32_t size);
-        virtual ~OpenGlIndexBuffer();
+        OpenGLIndexBuffer(uint32_t* indicies, uint32_t size);
+        virtual ~OpenGLIndexBuffer();
 
         virtual void Bind() const override;
         virtual void UnBind() const override;
