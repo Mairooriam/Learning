@@ -9,6 +9,7 @@
 
 #include "Mir/ImGui/ImGuiLayer.h"
 
+#include "Mir/Core/Timestep.h"
 
 /////////////////////// RENDERER ///////////////////////
 #include "Mir/Renderer/Renderer.h"

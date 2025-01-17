@@ -140,6 +140,8 @@ set(D3_HEADER_FILES
         src/Mir/Window.h
         src/Mir/Input.h
 
+        src/Mir/Core/Timestep.h
+
         src/Mir/Events/Event.h
         src/Mir/Events/KeyEvent.h
         src/Mir/Events/MouseEvent.h

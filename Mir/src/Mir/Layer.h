@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Mir/Core.h"
+#include "Mir/Core/Timestep.h"
 #include "Mir/Events/Event.h"
 
 struct ImGuiData{
@@ -16,7 +17,7 @@ namespace Mir{
 
         virtual void OnAttach() {}
         virtual void OnDetach() {}
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(Timestep ts) {}
         virtual void OnImGuiRender() {}
         virtual void OnEvent(Event& event) { (void)event; }
 

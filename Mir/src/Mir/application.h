@@ -9,25 +9,9 @@
 
 #include "Mir/ImGui/ImGuiLayer.h"
 
-#include "Mir/Renderer/Shader.h"
-
-#include "Mir/Renderer/Buffer.h"
-
-#include "Mir/Renderer/VertexArray.h"
-
-#include "Renderer/OrthographicCamera.h"
-
-#include <glm/vec3.hpp>
+#include "Mir/Core/Timestep.h"
 
 namespace Mir {
-
-    struct ImGuiData {
-        OrthographicCamera& Camera;
-
-        ImGuiData(OrthographicCamera& camera)
-            : Camera(camera){}
-
-        };
 
     class MIR_API Application {
     public:
@@ -46,11 +30,12 @@ namespace Mir {
         
     private:
         bool OnwWindowClose(WindowCloseEvent& e);
-
+    private:
         std::unique_ptr<Window> m_Window;
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
+        float m_LastFrameTime = 0.0f;
     private:
         static Application* s_Instance; 
     };
