@@ -13,12 +13,13 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Mir{
 
-    
+ 
     ImGuiLayer::ImGuiLayer()
-    : Layer("ImGuiLayer")
-    {
+    : Layer("ImGuiLayer"){
 
     }
 
@@ -65,8 +66,6 @@ namespace Mir{
     void ImGuiLayer::OnImGuiRender(){
         static bool show = true;
         ImGui::ShowDemoWindow(&show);
-
-
     }
 
     void ImGuiLayer::Begin(){

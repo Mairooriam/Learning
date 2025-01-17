@@ -15,6 +15,7 @@ add_executable(application
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/Mir/src)
+include_directories(${CMAKE_SOURCE_DIR}/Mir/src/Mir/Renderer)
 
 # Define macros
 target_compile_definitions(application PRIVATE MIR_PLATFORM_WINDOWS)

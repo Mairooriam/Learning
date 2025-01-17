@@ -8,6 +8,8 @@
 #include "Mir/Events/ApplicationEvent.h"
 namespace Mir {
 
+       struct ImGuiData;
+
     class MIR_API ImGuiLayer : public Layer{
     public:
         ImGuiLayer();
@@ -20,7 +22,6 @@ namespace Mir {
         void End();
     private:
         float m_Time = 0.0f;
-
     };
 
 

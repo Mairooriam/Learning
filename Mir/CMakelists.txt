@@ -116,7 +116,7 @@ set(D3_SOURCE_FILES
         src/Mir/ImGui/ImGuiLayer.cpp
 
         src/Mir/Renderer/Buffer.cpp
-        src/Mir/Renderer/GraphicsContext.h
+        src/Mir/Renderer/OrthographicCamera.cpp
         src/Mir/Renderer/RenderCommand.cpp
         src/Mir/Renderer/Renderer.cpp
         src/Mir/Renderer/RendererAPI.cpp
@@ -147,6 +147,7 @@ set(D3_HEADER_FILES
 
         src/Mir/Renderer/Buffer.h
         src/Mir/Renderer/GraphicsContext.h
+        src/Mir/Renderer/OrthographicCamera.h
         src/Mir/Renderer/RenderCommand.h
         src/Mir/Renderer/Renderer.h
         src/Mir/Renderer/RendererAPI.h

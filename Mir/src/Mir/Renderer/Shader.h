@@ -2,7 +2,7 @@
 #include <string>
 #include <cstdint>
 
-
+#include <glm/glm.hpp>
 namespace Mir {
     class Shader{
     public:
@@ -11,6 +11,8 @@ namespace Mir {
         
         void Bind() const;
         void UnBind() const;
+
+        void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
     private:
         uint32_t m_RendererID;
     };

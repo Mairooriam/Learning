@@ -15,11 +15,19 @@
 
 #include "Mir/Renderer/VertexArray.h"
 
+#include "Renderer/OrthographicCamera.h"
+
+#include <glm/vec3.hpp>
+
 namespace Mir {
 
-    struct ImGuiStatistic {
+    struct ImGuiData {
+        OrthographicCamera& Camera;
 
-    };
+        ImGuiData(OrthographicCamera& camera)
+            : Camera(camera){}
+
+        };
 
     class MIR_API Application {
     public:
@@ -43,12 +51,6 @@ namespace Mir {
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
-
- 
-        std::shared_ptr<VertexArray> m_VertexArray;
-        std::shared_ptr<VertexArray> m_SquareVA;
-        std::shared_ptr<Shader> m_Shader;
-        std::shared_ptr<Shader> m_BlueShader;
     private:
         static Application* s_Instance; 
     };
