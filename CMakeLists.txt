@@ -19,3 +19,4 @@ add_compile_definitions(MIR_PLATFORM_WINDOWS)
 # Add subdirectories
 add_subdirectory(Mir)
 add_subdirectory(sandbox)
+add_subdirectory(opcuaApplication)
