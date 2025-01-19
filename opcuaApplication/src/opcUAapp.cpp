@@ -5,6 +5,7 @@
 #include <open62541/client.h>
 #include <iostream>
 #include <open62541/client_config_default.h>
+#include <open62541/client_highlevel.h>
 
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -13,182 +14,110 @@
 
 class ExampleLayer : public Mir::Layer{
 public:
-    ExampleLayer()
-        : Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f){
+    ExampleLayer(){
+        m_UaClient = UA_Client_new();
+        UA_ClientConfig_setDefault(UA_Client_getConfig(m_UaClient));
 
-            
- 
-
-
-
-        m_VertexArray.reset(Mir::VertexArray::Create());
-
-		float vertices[3 * 7] = {
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
-		};
-
-		std::shared_ptr<Mir::VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(Mir::VertexBuffer::Create(vertices, sizeof(vertices)));
-		Mir::BufferLayout layout = {
-			{ Mir::ShaderDataType::Float3, "a_Position" },
-			{ Mir::ShaderDataType::Float4, "a_Color" }
-		};
-		vertexBuffer->SetLayout(layout);
-		m_VertexArray->AddVertexBuffer(vertexBuffer);
-
-		uint32_t indices[3] = { 0, 1, 2 };
-		std::shared_ptr<Mir::IndexBuffer> indexBuffer;
-		indexBuffer.reset(Mir::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
-		m_VertexArray->SetIndexBuffer(indexBuffer);
-
-		m_SquareVA.reset(Mir::VertexArray::Create());
-
-		float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
-		};
-
-		std::shared_ptr<Mir::VertexBuffer> squareVB;
-		squareVB.reset(Mir::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-		squareVB->SetLayout({
-			{ Mir::ShaderDataType::Float3, "a_Position" }
-		});
-		m_SquareVA->AddVertexBuffer(squareVB);
-
-		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<Mir::IndexBuffer> squareIB;
-		squareIB.reset(Mir::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
-		m_SquareVA->SetIndexBuffer(squareIB);
-
-		std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec4 a_Color;
-
-            uniform mat4 u_ViewProjection;
-
-			out vec3 v_Position;
-			out vec4 v_Color;
-
-			void main()
-			{
-				v_Position = a_Position;
-				v_Color = a_Color;
-				gl_Position = gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec3 v_Position;
-			in vec4 v_Color;
-
-			void main()
-			{
-				color = vec4(v_Position * 0.5 + 0.5, 1.0);
-				color = v_Color;
-                
-			}
-		)";
-
-		m_Shader.reset(new Mir::Shader(vertexSrc, fragmentSrc));
-
-		std::string blueShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-
-            uniform mat4 u_ViewProjection;
-
-			out vec3 v_Position;
-
-			void main()
-			{
-				v_Position = a_Position;
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string blueShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec3 v_Position;
-
-			void main()
-			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
-			}
-		)";
-
-		m_BlueShader.reset(new Mir::Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
-        
+        // Connect to the server
+        UA_StatusCode status = UA_Client_connect(m_UaClient, "opc.tcp://192.168.0.55:4840");
+        if (status != UA_STATUSCODE_GOOD) {
+            UA_Client_delete(m_UaClient);
+            MIR_TRACE("Failed to connect to server: {0}", UA_StatusCode_name(status));
+        }  
+         // Browse namespaces
+        browseNamespaces();
     }
     
     void OnUpdate(Mir::Timestep ts) override{
-        MIR_TRACE("Delta time: {0} ({1}ms)", ts.GetSeconds(), ts.GetMillieconds());
-
-        if (Mir::Input::IsKeyPressed(MIR_KEY_LEFT)){
-           m_CameraPosition.x -= m_CameraSpeed * ts; 
-        }
-        else if (Mir::Input::IsKeyPressed(MIR_KEY_RIGHT)){
-           m_CameraPosition.x += m_CameraSpeed * ts; 
-        }
-
-        if (Mir::Input::IsKeyPressed(MIR_KEY_UP)){
-           m_CameraPosition.y += m_CameraSpeed * ts; 
-        }
-        else if (Mir::Input::IsKeyPressed(MIR_KEY_DOWN)){
-           m_CameraPosition.y -= m_CameraSpeed * ts; 
-        }
-
-        if (Mir::Input::IsKeyPressed(MIR_KEY_E)){
-           m_CameraRotation += m_CameraRotationSpeed * ts; 
-        }
-        else if (Mir::Input::IsKeyPressed(MIR_KEY_Q)){
-           m_CameraRotation -= m_CameraRotationSpeed * ts; 
-        }
         Mir::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
         Mir::RenderCommand::Clear();
 
-        m_Camera.SetPosition(m_CameraPosition);
-        m_Camera.SetRotation(m_CameraRotation);
-
-        Mir::Renderer::BeginScene(m_Camera);
- 
-        Mir::Renderer::Submit(m_SquareVA, m_BlueShader);
-        Mir::Renderer::Submit(m_VertexArray, m_Shader);
-
-        Mir::Renderer::EndScene();   
     }   
 
     void OnEvent(Mir::Event& event) override{
         Mir::EventDispatcher dispatcher(event);
     }
+    virtual void OnImGuiRender() override {
+        ImGui::Begin("Namespace Browser");
+        
+        if (ImGui::TreeNode("Advanced, with Selectable nodes"))
+        {
+            static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+            static bool align_label_with_current_x_position = false;
 
-    virtual void OnImGuiRender() override{
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_OpenOnArrow",       &base_flags, ImGuiTreeNodeFlags_OpenOnArrow);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_OpenOnDoubleClick", &base_flags, ImGuiTreeNodeFlags_OpenOnDoubleClick);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanAvailWidth",    &base_flags, ImGuiTreeNodeFlags_SpanAvailWidth); ImGui::SameLine(); 
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanFullWidth",     &base_flags, ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanLabelWidth",    &base_flags, ImGuiTreeNodeFlags_SpanLabelWidth); ImGui::SameLine(); 
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanAllColumns",    &base_flags, ImGuiTreeNodeFlags_SpanAllColumns); ImGui::SameLine(); 
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_AllowOverlap",      &base_flags, ImGuiTreeNodeFlags_AllowOverlap);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_Framed",            &base_flags, ImGuiTreeNodeFlags_Framed); ImGui::SameLine(); 
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_NavLeftJumpsBackHere", &base_flags, ImGuiTreeNodeFlags_NavLeftJumpsBackHere);
+            ImGui::Checkbox("Align label with current X position", &align_label_with_current_x_position);
+            ImGui::Text("Hello!");
+            if (align_label_with_current_x_position)
+                ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
 
+            // 'selection_mask' is dumb representation of what may be user-side selection state.
+            //  You may retain selection state inside or outside your objects in whatever format you see fit.
+            // 'node_clicked' is temporary storage of what node we have clicked to process selection at the end
+            /// of the loop. May be a pointer to your own node type, etc.
+            static int selection_mask = (1 << 2);
+            int node_clicked = -1;
+            for (int i = 0; i < m_Namespaces.size(); i++)
+            {
+                // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+                // To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
+                ImGuiTreeNodeFlags node_flags = base_flags;
+                const bool is_selected = (selection_mask & (1 << i)) != 0;
+                if (is_selected){
+                    node_flags |= ImGuiTreeNodeFlags_Selected;
+                }    	    
+            
+                node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+                std::string label = fmt::format("Namespace {0}: {1}", i, m_Namespaces[i]);
+                ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, label.c_str());
+                if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                    node_clicked = i;
+                
+
+            }
+            if (node_clicked != -1)
+            {
+                selection_mask = (1 << node_clicked);           // Click to single-select
+            }
+            if (align_label_with_current_x_position)
+                ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());
+            ImGui::TreePop();
+        }
+
+    ImGui::End();
     }
 private:
-    std::shared_ptr<Mir::VertexArray> m_VertexArray;
-    std::shared_ptr<Mir::VertexArray> m_SquareVA;
-    std::shared_ptr<Mir::Shader> m_Shader;
-    std::shared_ptr<Mir::Shader> m_BlueShader;
+    UA_Client* m_UaClient;
+    std::string m_UaEndpointAdress; // TODO change tree view to have endpoint adress -> show namne spaces
+    std::vector<std::string> m_Namespaces;
+    std::vector<bool> m_SelectedNamespace;
+private:
+    void browseNamespaces() {
+        UA_Variant value;
+        UA_Variant_init(&value);
 
-    Mir::OrthographicCamera m_Camera;
-    glm::vec3 m_CameraPosition;
-    float m_CameraRotation;
-    float m_CameraSpeed = 5.0f;
-    float m_CameraRotationSpeed = 30.0f;
+        UA_NodeId nodeId = UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER_NAMESPACEARRAY);
+        UA_StatusCode status = UA_Client_readValueAttribute(m_UaClient, nodeId, &value);
+        if (status == UA_STATUSCODE_GOOD && UA_Variant_hasArrayType(&value, &UA_TYPES[UA_TYPES_STRING])) {
+            size_t arrayLength = value.arrayLength;
+            UA_String* namespaceArray = (UA_String*)value.data;
+
+            MIR_INFO("OPC UA Server has: {0} namespaces", arrayLength);
+            for (size_t i = 0; i < arrayLength; ++i) {
+                m_Namespaces.push_back(std::string((char*)namespaceArray[i].data, namespaceArray[i].length));
+            }
+        }
+        m_SelectedNamespace.resize(m_Namespaces.size(), false);
+        UA_Variant_clear(&value);
+    }
 };
 
 
