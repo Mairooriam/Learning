@@ -104,7 +104,7 @@ if (NOT glm_FOUND)
     FetchContent_MakeAvailable(glm)
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/External/open62541-1.3)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/External/open62541-1.4.8)
 
 
 set(D3_SOURCE_FILES
@@ -205,6 +205,14 @@ target_include_directories(Mir
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
 )
+
+
+# Suppress warnings for open62541
+if (MSVC)
+  target_compile_options(Mir PRIVATE $<$<COMPILE_LANGUAGE:C>:/wd4244 /wd4267 /wd4305 /wd4312>)
+else()
+  target_compile_options(Mir PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-c++-compat -Wno-unused-parameter -Wno-missing-field-initializers>)
+endif()
 
 # Define macros
 target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_ENABLE_ASSERTS GLFW_INCLUDE_NONE)

@@ -2,11 +2,6 @@
 
 #include "imgui.h"
 
-#include <open62541/client.h>
-#include <iostream>
-#include <open62541/client_config_default.h>
-
-
 #define GLM_ENABLE_EXPERIMENTAL
 
 
