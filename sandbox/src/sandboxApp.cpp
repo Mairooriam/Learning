@@ -130,7 +130,7 @@ public:
     }
     
     void OnUpdate(Mir::Timestep ts) override{
-        MIR_TRACE("Delta time: {0} ({1}ms)", ts.GetSeconds(), ts.GetMillieconds());
+        //MIR_TRACE("Delta time: {0} ({1}ms)", ts.GetSeconds(), ts.GetMillieconds());
 
         if (Mir::Input::IsKeyPressed(MIR_KEY_LEFT)){
            m_CameraPosition.x -= m_CameraSpeed * ts; 

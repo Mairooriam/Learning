@@ -9,7 +9,7 @@
 #include "Mir/Input.h"
 #include <GLFW/glfw3.h>
 
-
+#include "OpcUA/OpcuaClient.h"
 
 namespace Mir {
 
@@ -29,7 +29,29 @@ namespace Mir {
         
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+        OpcuaClient opcClient;
+        opcClient.Connect("opc.tcp://192.168.0.55:4840");
+        const std::vector<std::string>& namespaces = opcClient.GetNamespaces();
+        UA_NodeId serverInterfacesNodeId = UA_NODEID_STRING(3, "ServerInterfaces");
+        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
+        opcClient.GetNodesInObjectFolder();
+UA_Client_connect()
+        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 1);
+        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
+
+        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 2);
+        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
+
+        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 58);
+        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
+
+        opcClient.WriteBooleanToNode(4,58,false);
+        opcClient.ReadValueFromNode(4,58);
     }
+
+
+
 
     void Application::OnEvent(Event &e){        
         EventDispatcher dispatcher(e);

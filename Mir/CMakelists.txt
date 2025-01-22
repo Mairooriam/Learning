@@ -116,6 +116,8 @@ set(D3_SOURCE_FILES
 
         src/Mir/ImGui/ImGuiLayer.cpp
 
+        src/Mir/Opcua/OpcuaClient.cpp
+
         src/Mir/Renderer/Buffer.cpp
         src/Mir/Renderer/OrthographicCamera.cpp
         src/Mir/Renderer/RenderCommand.cpp
@@ -142,6 +144,8 @@ set(D3_HEADER_FILES
         src/Mir/Input.h
 
         src/Mir/Core/Timestep.h
+
+        src/Mir/Opcua/OpcuaClient.h
 
         src/Mir/Events/Event.h
         src/Mir/Events/KeyEvent.h
@@ -181,6 +185,7 @@ set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Mir
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/OpenGL
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Opcua
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Events
 
 )
