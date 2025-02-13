@@ -1,6 +1,3 @@
 [submodule "open62541pp"]
-	path = open62541pp
-	url = https://github.com/open62541pp/open62541pp.git
-[submodule "Mir/External/SQLiteCpp"]
-	path = Mir/External/SQLiteCpp
-	url = https://github.com/SRombauts/SQLiteCpp.git
+    path = open62541pp
+    url = https://github.com/open62541pp/open62541pp.git
