@@ -27,6 +27,8 @@ namespace Mir {
         inline Window& GetWindow() { return *m_Window;}
         
         inline static Application& Get() { return *s_Instance; }
+
+        void CreateOpcUaClient(std::string_view serverAdress);
         
     private:
         bool OnwWindowClose(WindowCloseEvent& e);

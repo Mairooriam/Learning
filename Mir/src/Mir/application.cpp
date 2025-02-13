@@ -30,24 +30,8 @@ namespace Mir {
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-        OpcuaClient opcClient;
-        opcClient.Connect("opc.tcp://192.168.0.55:4840");
-        const std::vector<std::string>& namespaces = opcClient.GetNamespaces();
-        UA_NodeId serverInterfacesNodeId = UA_NODEID_STRING(3, "ServerInterfaces");
-        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
-        opcClient.GetNodesInObjectFolder();
-UA_Client_connect()
-        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 1);
-        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
 
-        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 2);
-        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
 
-        serverInterfacesNodeId = UA_NODEID_NUMERIC(4, 58);
-        opcClient.GetNodesAtNodeID(serverInterfacesNodeId);
-
-        opcClient.WriteBooleanToNode(4,58,false);
-        opcClient.ReadValueFromNode(4,58);
     }
 
 
@@ -103,7 +87,12 @@ UA_Client_connect()
         layer->OnAttach();
     }
 
-    bool Application::OnwWindowClose(WindowCloseEvent& e){
+    void Application::CreateOpcUaClient(std::string_view serverAdress){
+        OpcuaClient opcUaClient(serverAdress);
+    }
+
+    bool Application::OnwWindowClose(WindowCloseEvent &e)
+    {
         (void)e; // Mark parameter as unused
         m_Running = false;
         return true;

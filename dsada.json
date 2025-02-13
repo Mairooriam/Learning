@@ -1,0 +1,19 @@
+
+
+{"mittaus1":1234,"mittaus2":4321}
+
+
+{
+    "mittaus1": 1234,
+    "mittaus2": 4321
+}
+
+{
+    "PLC1":
+    {
+    "mittaus1":"John", 
+    "mittaus1":30, 
+    "mittaus1":"New York"
+    }
+}
+

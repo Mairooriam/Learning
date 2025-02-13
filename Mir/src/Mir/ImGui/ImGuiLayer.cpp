@@ -15,8 +15,10 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Mir{
 
+
+namespace Mir{
+    
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -63,16 +65,142 @@ namespace Mir{
     
     }
 
+
+    static void HelpMarker(const char* desc){
+        ImGui::TextDisabled("(?)");
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
+    static void PushStyleCompact()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, (float)(int)(style.FramePadding.y * 0.60f));
+        ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, (float)(int)(style.ItemSpacing.y * 0.60f));
+    }
+
+    
+    static void PopStyleCompact()
+    {
+        ImGui::PopStyleVar(2);
+    }
+
+
     void ImGuiLayer::OnImGuiRender(){
         static bool show = true;
+        static char str0[128] = "opc.tcp://192.168.0.55:4840";
+
         ImGui::ShowDemoWindow(&show);
+
+        ImGui::SeparatorText("General");
+
+        static int clicked = 0;
+        if (ImGui::Button("Button")){
+            clicked++;
+            Mir::Application::Get().CreateOpcUaClient(str0);
+        }
+
+        ImGui::SameLine();
+        
+        ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0));
+        ImGui::SameLine(); HelpMarker(
+        "USER:\n"
+        "Hold SHIFT or use mouse to select text.\n"
+        "CTRL+Left/Right to word jump.\n"
+        "CTRL+A or Double-Click to select all.\n"
+        "CTRL+X,CTRL+C,CTRL+V clipboard.\n"
+        "CTRL+Z,CTRL+Y undo/redo.\n"
+        "ESCAPE to revert.\n\n");
+    
+        if (clicked & 1)
+        {
+            ImGui::SameLine(); ImGui::Text(str0);
+            ImGui::Text(str0);
+            ImGui::Text(str0);
+            ImGui::Text(str0);
+            ImGui::Text(str0);
+        }
+
+        if (ImGui::TreeNode("Borders, background"))
+        {
+            // Expose a few Borders related flags interactively
+            enum ContentsType { CT_Text, CT_FillButton };
+            static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+            static bool display_headers = false;
+            static int contents_type = CT_Text;
+
+            PushStyleCompact();
+            ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
+            ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
+            ImGui::SameLine(); HelpMarker("ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerH\n | ImGuiTableFlags_BordersOuterH");
+            ImGui::Indent();
+
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersH", &flags, ImGuiTableFlags_BordersH);
+            ImGui::Indent();
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterH", &flags, ImGuiTableFlags_BordersOuterH);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerH", &flags, ImGuiTableFlags_BordersInnerH);
+            ImGui::Unindent();
+
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
+            ImGui::Indent();
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags, ImGuiTableFlags_BordersOuterV);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags, ImGuiTableFlags_BordersInnerV);
+            ImGui::Unindent();
+
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags, ImGuiTableFlags_BordersOuter);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &flags, ImGuiTableFlags_BordersInner);
+            ImGui::Unindent();
+
+            ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
+            ImGui::SameLine(); ImGui::RadioButton("Text", &contents_type, CT_Text);
+            ImGui::SameLine(); ImGui::RadioButton("FillButton", &contents_type, CT_FillButton);
+            ImGui::Checkbox("Display headers", &display_headers);
+            ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
+            PopStyleCompact();
+
+            if (ImGui::BeginTable("table1", 3, flags))
+            {
+                // Display headers so we can inspect their interaction with borders
+                // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them now. See other sections for details)
+                if (display_headers)
+                {
+                    ImGui::TableSetupColumn("One");
+                    ImGui::TableSetupColumn("Two");
+                    ImGui::TableSetupColumn("Three");
+                    ImGui::TableHeadersRow();
+                }
+
+                for (int row = 0; row < 5; row++)
+                {
+                    ImGui::TableNextRow();
+                    for (int column = 0; column < 3; column++)
+                    {
+                        ImGui::TableSetColumnIndex(column);
+                        char buf[32];
+                        sprintf(buf, "Hello %d,%d", column, row);
+                        if (contents_type == CT_Text)
+                            ImGui::TextUnformatted(buf);
+                        else if (contents_type == CT_FillButton)
+                            ImGui::Button(buf, ImVec2(-FLT_MIN, 0.0f));
+                    }
+                }
+                ImGui::EndTable();
+            }
+            ImGui::TreePop();
+        }
     }
+
 
     void ImGuiLayer::Begin(){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-}
+    }
 
     void ImGuiLayer::End(){
         ImGuiIO& io = ImGui::GetIO();
