@@ -106,6 +106,8 @@ endif()
 
 find_package(open62541pp CONFIG REQUIRED)
 
+## SQLITE ##
+add_subdirectory(External/SQLiteCpp)
 
 set(D3_SOURCE_FILES
         src/Mir/Application.cpp
@@ -172,7 +174,7 @@ set(D3_HEADER_FILES
         )
 
 add_library(Mir STATIC ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
-target_link_libraries(Mir PUBLIC glfw glad spdlog::spdlog imgui open62541pp::open62541pp)
+target_link_libraries(Mir PUBLIC glfw glad spdlog::spdlog imgui open62541pp::open62541pp SQLiteCpp)
 
 # Use precompiled headers
 target_precompile_headers(Mir PRIVATE src/Mirpch.h)
