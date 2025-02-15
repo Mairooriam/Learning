@@ -101,50 +101,25 @@ namespace Mir {
 
             auto BrowseName = child.readBrowseName(); // example 4, "publis_lenght"
             auto DisplayName = child.readDisplayName();
+        
             opcua::LocalizedText Description;
 
-            opcua::Variant DataValue;
-
-            
-            try { 
-                auto Data = child.readDataValue();
-                // GET VALUE AND ITS DATA //
-                DataValue = Data.value();
-                
-                
-                const UA_DataType* dataType = DataValue.type();
-                
-                auto data = DataValue.data();
-            
-                if (dataType == &UA_TYPES[UA_TYPES_INT32]) {
-                    int32_t value = *static_cast<int32_t*>(data);
-                    // Use the value as needed
-                } else if (dataType == &UA_TYPES[UA_TYPES_DOUBLE]) {
-                    double value = *static_cast<double*>(data);
-                    // Use the value as needed
-                } else if (dataType == &UA_TYPES[UA_TYPES_STRING]) {
-                    
-                    opcua::String value = *static_cast<opcua::String*>(data);
-                    std::string stringValue(value.data(), value.length());
-                    // Use the stringValue as needed
-                } else {
-                    // Handle other data types as needed
-                }
-                // // Check the data type and cast accordingly
-                // if (DataValue.type() == opcua::VariantType::Int32) {
-                //     int32_t value = *static_cast<int32_t*>(DataValue.data());
-                //     // Use the value as needed
-                // } else if (DataValue.type() == opcua::VariantType::Double) {
-                //     double value = *static_cast<double*>(DataValue.data());
-                //     // Use the value as needed
-                // } else if (DataValue.type() == opcua::VariantType::String) {
-                //     std::string value = *static_cast<std::string*>(DataValue.data());
-                //     // Use the value as needed
-                // }
-                // Add more type checks and casts as needed
-            } catch (const std::exception& e) {
-                DataValue = opcua::LocalizedText("", e.what());
+            opcua::DataValue Data = child.readDataValue();
+            auto datatype = Data.value().isArray();
+            auto datatype2 = Data.value().isEmpty();
+            auto datatype3 = Data.value().isScalar();
+            auto datatype4 = Data.value().data();
+            auto datatype6 = Data.value().type()->memSize;
+            std::string teststring;
+            if (Data.value().type() == &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]) {
+                UA_LocalizedText *localizedText = static_cast<UA_LocalizedText*>(datatype4);
+                teststring = std::string(reinterpret_cast<const char*>(localizedText->text.data), localizedText->text.length);
+            } else {
+                teststring = std::string(static_cast<const char*>(datatype4), 32);
             }
+
+            Mir::NodeValue nodevalue(child.readDataValue());
+
 
             
             try {
@@ -160,7 +135,7 @@ namespace Mir {
                 std::to_string(BrowseName.namespaceIndex()) + " ," + std::string(BrowseName.name()),
                 std::string(DisplayName.locale()) + std::string(DisplayName.text().data(), DisplayName.text().length()), // will cuase problems locale not showintg correctly
                 std::string(Description.text().data(), Description.text().length()),
-                DataValue
+                nodevalue
             };
             nodeMap[childid.toString()] = data;
         }

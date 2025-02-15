@@ -82,14 +82,49 @@ namespace Mir {
 			}
 		};
 
-    struct NodeData {
+        struct NodeValue {
+            std::string SourceTimestamp;
+            uint16_t SourcePicoseconds;
+            std::string ServerTimestamp;
+            uint16_t ServerPicoseconds;
+            std::string StatusCode;
+            std::string value;
+        
+            // Default constructor
+            NodeValue() 
+				: SourceTimestamp(""), SourcePicoseconds(0), ServerTimestamp(""), ServerPicoseconds(0), StatusCode("empty"), value() {}
+        
+            //Parameterized constructor
+            NodeValue(const opcua::DataValue& dataValue)
+                : SourceTimestamp(dataValue.sourceTimestamp().format("%Y-%m-%d %H:%M:%S")), 
+                  SourcePicoseconds(dataValue.sourcePicoseconds()), 
+                  ServerTimestamp(dataValue.serverTimestamp().format("%Y-%m-%d %H:%M:%S")), 
+                  ServerPicoseconds(dataValue.serverPicoseconds()), 
+                  StatusCode(std::string(dataValue.status().name()))
+                 {
+                    opcua::Variant data = dataValue.value();
+                    auto dataType = data.type();
+                    if (dataType == &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]) {
+                        UA_LocalizedText *localizedText = static_cast<UA_LocalizedText*>(data.data());
+                        value = std::string(reinterpret_cast<const char*>(localizedText->text.data), localizedText->text.length);
+                    } else if (dataType == &UA_TYPES[UA_TYPES_INT32]){
+                        value = std::to_string(*static_cast<int32_t*>(data.data()));
+                    } else if (data.isScalar() | data.isArray()){
+                        value = data.to<std::string>();} 
+                    else {
+                        value = "EMPTY";
+                    }
+                  }
+        };
+
+        struct NodeData {
         Mir::NodeId NodeId;
         std::string NodeClass;
         std::string BrowseName;
         std::string DisplayName;
         std::string Description;
         //opcua::DataValue value;
-        opcua::Variant value;
+        Mir::NodeValue value;
     };
 
 
