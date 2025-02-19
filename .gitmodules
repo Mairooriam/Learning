@@ -4,3 +4,6 @@
 [submodule "Mir/External/SQLiteCpp"]
 	path = Mir/External/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "Mir/External/jsonParser"]
+	path = Mir/External/jsonParser
+	url = https://github.com/nlohmann/json
