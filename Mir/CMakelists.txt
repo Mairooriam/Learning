@@ -118,6 +118,8 @@ set(D3_SOURCE_FILES
 
         src/Mir/ImGui/ImGuiLayer.cpp
 
+        src/Mir/b&rParser/parser.cpp
+
         src/Mir/Opcua/OpcuaClient.cpp
 
         src/Mir/Renderer/Buffer.cpp
@@ -165,6 +167,8 @@ set(D3_HEADER_FILES
 
         src/Mir/ImGui/ImGuiLayer.h
 
+        src/Mir/b&rParser/parser.h
+
         src/Platform/Windows/WindowsWindow.h
         src/Platform/Windows/WindowsInput.h
         src/Platform/OpenGL/OpenGLBuffer.h
@@ -189,6 +193,7 @@ set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Windows
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Opcua
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Events
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/b&rParser
 
 )
 

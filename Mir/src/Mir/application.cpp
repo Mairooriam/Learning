@@ -11,6 +11,8 @@
 
 #include "OpcUA/OpcuaClient.h"
 
+#include "b&rParser/parser.h"
+
 namespace Mir {
 
 
@@ -54,7 +56,7 @@ namespace Mir {
 
     void Application::Run()
     {
-
+        Mir::readFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
 
 		while (m_Running){
 

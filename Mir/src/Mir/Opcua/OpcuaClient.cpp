@@ -11,8 +11,78 @@
 
 namespace Mir {
 
+    enum UaDataTypes1 {
+        Boolean = 1,           // A two-state logical value (true or false).
+        SByte,                 // An integer value between −128 and 127 inclusive.
+        Byte,                  // An integer value between 0 and 255 inclusive.
+        Int16,                 // An integer value between −32 768 and 32 767 inclusive.
+        UInt16,                // An integer value between 0 and 65 535 inclusive.
+        Int32,                 // An integer value between −2 147 483 648 and 2 147 483 647 inclusive.
+        UInt32,                // An integer value between 0 and 4 294 967 295 inclusive.
+        Int64,                 // An integer value between −9 223 372 036 854 775 808 and 9 223 372 036 854 775 807 inclusive.
+        UInt64,                // An integer value between 0 and 18 446 744 073 709 551 615 inclusive.
+        Float,                 // An IEEE single precision (32 bit) floating point value.
+        Double,                // An IEEE double precision (64 bit) floating point value.
+        String,                // A sequence of Unicode characters.
+        DateTime,              // An instance in time.
+        Guid,                  // A 16-byte value that can be used as a globally unique identifier.
+        ByteString,            // A sequence of octets.
+        XmlElement,            // An XML element.
+        NodeId2,               // An identifier for a node in the address space of an OPC UA Server.
+        ExpandedNodeId,        // A NodeId that allows the namespace URI to be specified instead of an index.
+        StatusCode,            // A numeric identifier for an error or condition that is associated with a value or an operation.
+        QualifiedName,         // A name qualified by a namespace.
+        LocalizedText,         // Human readable text with an optional locale identifier.
+        ExtensionObject,       // A structure that contains an application specific data type that may not be recognized by the receiver.
+        DataValue,             // A data value with an associated status code and timestamps.
+        Variant,               // A union of all of the types specified above.
+        DiagnosticInfo         // A structure that contains detailed error and diagnostic information associated with a StatusCode.
+    };
 
+    std::string toString(UaDataTypes1 type) {
+        switch (type) {
+            case Boolean: return "Boolean";
+            case SByte: return "SByte";
+            case Byte: return "Byte";
+            case Int16: return "Int16";
+            case UInt16: return "UInt16";
+            case Int32: return "Int32";
+            case UInt32: return "UInt32";
+            case Int64: return "Int64";
+            case UInt64: return "UInt64";
+            case Float: return "Float";
+            case Double: return "Double";
+            case String: return "String";
+            case DateTime: return "DateTime";
+            case Guid: return "Guid";
+            case ByteString: return "ByteString";
+            case XmlElement: return "XmlElement";
+            case NodeId2: return "NodeId2";
+            case ExpandedNodeId: return "ExpandedNodeId";
+            case StatusCode: return "StatusCode";
+            case QualifiedName: return "QualifiedName";
+            case LocalizedText: return "LocalizedText";
+            case ExtensionObject: return "ExtensionObject";
+            case DataValue: return "DataValue";
+            case Variant: return "Variant";
+            case DiagnosticInfo: return "DiagnosticInfo";
+            default: return "Unknown";
+        }
+    }
 
+    // Define the function
+    std::variant<uint32_t, opcua::String, opcua::Guid, opcua::ByteString> getIdentifierMir(const opcua::NodeIdType& type, const opcua::NodeId& datatype) {
+        switch (type) {
+            case opcua::NodeIdType::Numeric:
+                return datatype.identifier<uint32_t>();
+            case opcua::NodeIdType::String:
+                return datatype.identifier<opcua::String>();
+            case opcua::NodeIdType::Guid:
+                return datatype.identifier<opcua::Guid>();
+            default:
+                throw std::invalid_argument("Unknown identifier type");
+        }
+    }
 
     // Separate definition for recursion
     void printNodeTree(opcua::Node<opcua::Client>& node, int indent);
@@ -104,23 +174,45 @@ namespace Mir {
         
             opcua::LocalizedText Description;
 
-            opcua::DataValue Data = child.readDataValue();
-            auto datatype = Data.value().isArray();
-            auto datatype2 = Data.value().isEmpty();
-            auto datatype3 = Data.value().isScalar();
-            auto datatype4 = Data.value().data();
-            auto datatype6 = Data.value().type()->memSize;
-            std::string teststring;
-            if (Data.value().type() == &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]) {
-                UA_LocalizedText *localizedText = static_cast<UA_LocalizedText*>(datatype4);
-                teststring = std::string(reinterpret_cast<const char*>(localizedText->text.data), localizedText->text.length);
-            } else {
-                teststring = std::string(static_cast<const char*>(datatype4), 32);
+
+            // NODE VALUUE
+            Mir::NodeValue nodevalue(child.readDataValue());
+            Mir::NodeDataType nodeDataType(child.readDataType());
+
+            auto datatype = child.readDataType();
+            auto dasda42 = child.readDataValue().typeIndex();
+           
+            auto test222 = datatype.namespaceIndex();
+            auto test333 = datatype.identifierType();
+            
+            std::string_view test5455 = toString(datatype.identifierType());
+            std::variant<uint32_t, opcua::String, opcua::Guid, opcua::ByteString> identifier;
+
+            try {
+                identifier = getIdentifierMir(test333, datatype);
+                //auto tset11 = toString(UaDataTypes1(identifier));
+            } catch (const std::invalid_argument& e) {
+                std::cout << e.what() << '\n';
             }
 
-            Mir::NodeValue nodevalue(child.readDataValue());
+            // switch (test333) {
+            //     case opcua::NodeIdType::Numeric:
+            //         identifier = datatype.identifier<uint32_t>();
+            //         break;
+            //     case opcua::NodeIdType::String:
+            //         identifier = datatype.identifier<opcua::String>();
+            //         break;
+            //     case opcua::NodeIdType::Guid:
+            //         identifier = datatype.identifier<opcua::Guid>();
+            //         break;
+            //     default:
+            //         std::cout << "Unknown identifier type\n";
+            //         break;
+            // }
+            
 
 
+           
             
             try {
                 Description = child.readDescription();
@@ -135,7 +227,8 @@ namespace Mir {
                 std::to_string(BrowseName.namespaceIndex()) + " ," + std::string(BrowseName.name()),
                 std::string(DisplayName.locale()) + std::string(DisplayName.text().data(), DisplayName.text().length()), // will cuase problems locale not showintg correctly
                 std::string(Description.text().data(), Description.text().length()),
-                nodevalue
+                nodevalue,
+                nodeDataType
             };
             nodeMap[childid.toString()] = data;
         }
