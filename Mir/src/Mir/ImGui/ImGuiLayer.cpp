@@ -117,9 +117,16 @@ namespace Mir{
         "CTRL+Z,CTRL+Y undo/redo.\n"
         "ESCAPE to revert.\n\n");
     
+
+        if (ImGui::Button("Save dummy data")){
+            clicked++;
+            Mir::Application::Get().GetBrParser().writeDummyData();
+            
+        }    
+
         if (clicked & 1)
         {
-            ImGui::SameLine(); ImGui::Text(str0);
+            ImGui::Text(str0);
             ImGui::Text(str0);
             ImGui::Text(str0);
             ImGui::Text(str0);
@@ -163,33 +170,32 @@ namespace Mir{
             ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
             PopStyleCompact();
 
-            if (ImGui::BeginTable("table1", 3, flags))
+            if (ImGui::BeginTable("table1", 10, flags))
             {
                 // Display headers so we can inspect their interaction with borders
                 // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them now. See other sections for details)
                 if (display_headers)
                 {
+
+                    
                     ImGui::TableSetupColumn("One");
                     ImGui::TableSetupColumn("Two");
                     ImGui::TableSetupColumn("Three");
                     ImGui::TableHeadersRow();
                 }
 
-                for (int row = 0; row < 5; row++)
-                {
+                auto brData = Mir::Application::Get().GetBrParser().getData();
+                for (const auto& data : brData) {
                     ImGui::TableNextRow();
-                    for (int column = 0; column < 3; column++)
-                    {
-                        ImGui::TableSetColumnIndex(column);
-                        char buf[32];
-                        sprintf(buf, "Hello %d,%d", column, row);
-                        if (contents_type == CT_Text)
-                            ImGui::TextUnformatted(buf);
-                        else if (contents_type == CT_FillButton)
-                            ImGui::Button(buf, ImVec2(-FLT_MIN, 0.0f));
-                    }
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted(data.name.c_str());
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::TextUnformatted(brDatatypeToString(data.type));
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::TextUnformatted(data.comment.c_str());
                 }
                 ImGui::EndTable();
+
             }
             ImGui::TreePop();
         }

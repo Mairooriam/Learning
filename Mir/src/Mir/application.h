@@ -11,6 +11,8 @@
 
 #include "Mir/Core/Timestep.h"
 
+#include "b&rParser/parser.h"
+
 namespace Mir {
 
     class MIR_API Application {
@@ -28,6 +30,8 @@ namespace Mir {
         
         inline static Application& Get() { return *s_Instance; }
 
+        inline brParser& GetBrParser() { return *m_brParser; }
+
         void CreateOpcUaClient(std::string_view serverAdress);
         
     private:
@@ -38,6 +42,7 @@ namespace Mir {
         bool m_Running = true;
         LayerStack m_LayerStack;
         float m_LastFrameTime = 0.0f;
+        brParser* m_brParser;
     private:
         static Application* s_Instance; 
     };

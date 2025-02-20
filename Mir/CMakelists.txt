@@ -109,6 +109,9 @@ find_package(open62541pp CONFIG REQUIRED)
 ## SQLITE ##
 add_subdirectory(External/SQLiteCpp)
 
+## JSON ##
+add_subdirectory(External/jsonParser)
+
 set(D3_SOURCE_FILES
         src/Mir/Application.cpp
         src/Mir/Log.cpp

@@ -11,7 +11,6 @@
 
 #include "OpcUA/OpcuaClient.h"
 
-#include "b&rParser/parser.h"
 
 namespace Mir {
 
@@ -32,8 +31,8 @@ namespace Mir {
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-
-
+        m_brParser = new brParser(); // will cause memory leak not deleted. not sure where to do it
+        
     }
 
 
@@ -56,9 +55,11 @@ namespace Mir {
 
     void Application::Run()
     {
-        Mir::readFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
 
-		while (m_Running){
+
+
+        
+        while (m_Running){
 
             float time = (float)glfwGetTime(); // TODO: abstract into Platfrom::GetTime();
             Timestep timestep = time - m_LastFrameTime;
