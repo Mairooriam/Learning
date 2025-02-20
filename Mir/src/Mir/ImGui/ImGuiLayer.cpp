@@ -185,10 +185,13 @@ namespace Mir{
                 }
 
                 auto brData = Mir::Application::Get().GetBrParser().getData();
+                size_t index = 0;
+                char Buffer[1000];
                 for (const auto& data : brData) {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    ImGui::TextUnformatted(data.name.c_str());
+                    strncpy(Buffer, data.name.c_str(), sizeof(Buffer));
+                    ImGui::InputText("##DataName", Buffer, sizeof(Buffer));
                     ImGui::TableSetColumnIndex(1);
                     ImGui::TextUnformatted(brDatatypeToString(data.type));
                     ImGui::TableSetColumnIndex(2);
