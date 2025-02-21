@@ -19,6 +19,56 @@
 
 namespace Mir{
     
+    void SetKeyboardNavigationEnabled(bool enabled) {
+        ImGuiIO& io = ImGui::GetIO();
+        if (enabled) {
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        } else {
+            io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+        }
+    }
+
+
+    // Function to display input text with auto-completion suggestions
+    bool InputTextWithSuggestions(const char* label, char* buf, size_t buf_size, const std::vector<std::string_view>& suggestions) {
+        bool value_changed = ImGui::InputText(label, buf, buf_size);
+        static int selected_index = -1;
+
+        if (ImGui::IsItemActive()) {
+            SetKeyboardNavigationEnabled(false);
+            ImGui::BeginTooltip();
+            for (int i = 0; i < suggestions.size(); ++i) {
+                const auto& suggestion = suggestions[i];
+                if (std::string_view(buf).empty() || suggestion.find(buf) != std::string_view::npos) {
+                    bool is_selected = (i == selected_index);
+                    if (ImGui::Selectable(suggestion.data(), is_selected)) {
+                        strncpy(buf, suggestion.data(), buf_size);
+                        buf[buf_size - 1] = '\0'; // Ensure null-termination
+                        value_changed = true;
+                        selected_index = -1; // Reset selection after choosing
+                    }
+                    if (is_selected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+            }
+            ImGui::EndTooltip();
+
+            // Handle keyboard navigation
+            if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+                selected_index = (selected_index + 1) % suggestions.size();
+            } else if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+                selected_index = (selected_index - 1 + suggestions.size()) % suggestions.size();
+            }
+        } else {
+            selected_index = -1; // Reset selection when input is not active
+            SetKeyboardNavigationEnabled(true);
+        }
+
+        return value_changed;
+    }
+
+
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -106,8 +156,18 @@ namespace Mir{
         }
 
         ImGui::SameLine();
+
+        // Example suggestions
+        std::vector<std::string_view> suggestions = {
+            "opc.tcp://192.168.0.55:4840",
+            "opc.tcp://192.168.0.56:4840",
+            "opc.tcp://192.168.0.57:4840"
+        };
+
+
+
         
-        ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0));
+        //ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0));
         ImGui::SameLine(); HelpMarker(
         "USER:\n"
         "Hold SHIFT or use mouse to select text.\n"
@@ -133,9 +193,11 @@ namespace Mir{
             ImGui::Text(str0);
         }
 
-
-
-
+        
+        if (InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
+            // Handle input change if needed
+        }
+ 
         
         if (ImGui::TreeNode("Borders, background"))
         {
@@ -215,8 +277,14 @@ namespace Mir{
                 }
                 ImGui::EndTable();
 
+
+
+   
+                
             }
+            
             ImGui::TreePop();
+
         }
     }
 
