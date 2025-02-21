@@ -133,6 +133,10 @@ namespace Mir{
             ImGui::Text(str0);
         }
 
+
+
+
+        
         if (ImGui::TreeNode("Borders, background"))
         {
             // Expose a few Borders related flags interactively
@@ -170,7 +174,7 @@ namespace Mir{
             ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
             PopStyleCompact();
 
-            if (ImGui::BeginTable("table1", 10, flags))
+            if (ImGui::BeginTable("table1", 3, flags))
             {
                 // Display headers so we can inspect their interaction with borders
                 // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them now. See other sections for details)
@@ -184,18 +188,30 @@ namespace Mir{
                     ImGui::TableHeadersRow();
                 }
 
-                auto brData = Mir::Application::Get().GetBrParser().getData();
+                auto& brData = Mir::Application::Get().GetBrParser().getMutable();
+                std::vector<std::array<char, 1000>> buffers(brData.size()); // not efficient buffer
+                
                 size_t index = 0;
-                char Buffer[1000];
-                for (const auto& data : brData) {
+                for (auto& data : brData) {
+                    // Initialize the buffer with the string data
+                    strncpy(buffers[index].data(), data.name.c_str(), buffers[index].size());
+                    buffers[index][buffers[index].size() - 1] = '\0'; // Ensure null-termination
+                
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    strncpy(Buffer, data.name.c_str(), sizeof(Buffer));
-                    ImGui::InputText("##DataName", Buffer, sizeof(Buffer));
+
+                    ImGui::PushItemWidth(-1);
+                    if (ImGui::InputText(("##DataName" + std::to_string(index)).c_str(), buffers[index].data(), buffers[index].size())) {
+                        data.name = std::string(buffers[index].data()); // Update the original string with the modified buffer
+                    }
+                    ImGui::PopItemWidth();
+
                     ImGui::TableSetColumnIndex(1);
                     ImGui::TextUnformatted(brDatatypeToString(data.type));
                     ImGui::TableSetColumnIndex(2);
                     ImGui::TextUnformatted(data.comment.c_str());
+                
+                    ++index;
                 }
                 ImGui::EndTable();
 

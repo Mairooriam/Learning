@@ -94,12 +94,14 @@ namespace Mir {
             return result;
         }
 
-        
         // Begin and end functions for iteration
         auto begin() { return data.begin(); }
         auto end() { return data.end(); }
         auto begin() const { return data.begin(); }
         auto end() const { return data.end(); }
+
+        // Size function to get the number of nodes
+        size_t size() const { return data.size(); }
 
         std::string datatypeName;
         std::vector<brDataTypeNode> data;
@@ -113,7 +115,12 @@ namespace Mir {
         std::string readFile(const std::string& path);
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
         void writeDummyData();
+
         const brData& getData() const { return m_Data; }
+        brData& getMutable() { return m_Data; }
+
+        size_t size() const { return m_Data.size(); }
+        
 
         void initDummyData();
     private:
