@@ -15,58 +15,11 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-
+#include "ImguiWidgets.h"
 
 namespace Mir{
-    
-    void SetKeyboardNavigationEnabled(bool enabled) {
-        ImGuiIO& io = ImGui::GetIO();
-        if (enabled) {
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        } else {
-            io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
-        }
-    }
 
 
-    // Function to display input text with auto-completion suggestions
-    bool InputTextWithSuggestions(const char* label, char* buf, size_t buf_size, const std::vector<std::string_view>& suggestions) {
-        bool value_changed = ImGui::InputText(label, buf, buf_size);
-        static int selected_index = -1;
-
-        if (ImGui::IsItemActive()) {
-            SetKeyboardNavigationEnabled(false);
-            ImGui::BeginTooltip();
-            for (int i = 0; i < suggestions.size(); ++i) {
-                const auto& suggestion = suggestions[i];
-                if (std::string_view(buf).empty() || suggestion.find(buf) != std::string_view::npos) {
-                    bool is_selected = (i == selected_index);
-                    if (ImGui::Selectable(suggestion.data(), is_selected)) {
-                        strncpy(buf, suggestion.data(), buf_size);
-                        buf[buf_size - 1] = '\0'; // Ensure null-termination
-                        value_changed = true;
-                        selected_index = -1; // Reset selection after choosing
-                    }
-                    if (is_selected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-            }
-            ImGui::EndTooltip();
-
-            // Handle keyboard navigation
-            if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
-                selected_index = (selected_index + 1) % suggestions.size();
-            } else if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
-                selected_index = (selected_index - 1 + suggestions.size()) % suggestions.size();
-            }
-        } else {
-            selected_index = -1; // Reset selection when input is not active
-            SetKeyboardNavigationEnabled(true);
-        }
-
-        return value_changed;
-    }
 
 
  
@@ -102,6 +55,7 @@ namespace Mir{
 
         Application& app = Application::Get();
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+
         
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -194,7 +148,7 @@ namespace Mir{
         }
 
         
-        if (InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
+        if (MirUI::InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
             // Handle input change if needed
         }
  
@@ -227,6 +181,8 @@ namespace Mir{
 
             ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags, ImGuiTableFlags_BordersOuter);
             ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &flags, ImGuiTableFlags_BordersInner);
+            ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
+            ImGui::CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags, ImGuiTableFlags_ContextMenuInBody);
             ImGui::Unindent();
 
             ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
@@ -236,7 +192,9 @@ namespace Mir{
             ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
             PopStyleCompact();
 
-            if (ImGui::BeginTable("table1", 3, flags))
+
+            int COLUMNS_COUNT = 3;
+            if (ImGui::BeginTable("table1", COLUMNS_COUNT, flags))
             {
                 // Display headers so we can inspect their interaction with borders
                 // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them now. See other sections for details)
@@ -253,27 +211,32 @@ namespace Mir{
                 auto& brData = Mir::Application::Get().GetBrParser().getMutable();
                 std::vector<std::array<char, 1000>> buffers(brData.size()); // not efficient buffer
                 
-                size_t index = 0;
+                size_t row = 0;
                 for (auto& data : brData) {
                     // Initialize the buffer with the string data
-                    strncpy(buffers[index].data(), data.name.c_str(), buffers[index].size());
-                    buffers[index][buffers[index].size() - 1] = '\0'; // Ensure null-termination
+                    strncpy(buffers[row].data(), data.name.c_str(), buffers[row].size());
+                    buffers[row][buffers[row].size() - 1] = '\0'; // Ensure null-termination
                 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
 
                     ImGui::PushItemWidth(-1);
-                    if (ImGui::InputText(("##DataName" + std::to_string(index)).c_str(), buffers[index].data(), buffers[index].size())) {
-                        data.name = std::string(buffers[index].data()); // Update the original string with the modified buffer
+                    if (ImGui::InputText(("##DataName" + std::to_string(row)).c_str(), buffers[row].data(), buffers[row].size())) {
+                        data.name = std::string(buffers[row].data()); // Update the original string with the modified buffer
                     }
                     ImGui::PopItemWidth();
 
+
+
                     ImGui::TableSetColumnIndex(1);
                     ImGui::TextUnformatted(brDatatypeToString(data.type));
+                    ImGui::SameLine();
+                    MirUI::contextPopup(row, 1);
+
                     ImGui::TableSetColumnIndex(2);
                     ImGui::TextUnformatted(data.comment.c_str());
                 
-                    ++index;
+                    row++;
                 }
                 ImGui::EndTable();
 

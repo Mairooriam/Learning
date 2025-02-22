@@ -120,6 +120,7 @@ set(D3_SOURCE_FILES
         src/Mir/Layer.cpp
 
         src/Mir/ImGui/ImGuiLayer.cpp
+        src/Mir/ImGui/ImguiWidgets.cpp
 
         src/Mir/b&rParser/parser.cpp
 
@@ -169,6 +170,7 @@ set(D3_HEADER_FILES
         src/Mir/Renderer/VertexArray.h
 
         src/Mir/ImGui/ImGuiLayer.h
+        src/Mir/ImGui/ImguiWidgets.h
 
         src/Mir/b&rParser/parser.h
 
