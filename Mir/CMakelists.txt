@@ -112,6 +112,10 @@ add_subdirectory(External/SQLiteCpp)
 ## JSON ##
 add_subdirectory(External/jsonParser)
 
+
+# Find Python
+find_package(Python3 COMPONENTS Development REQUIRED)
+
 set(D3_SOURCE_FILES
         src/Mir/Application.cpp
         src/Mir/Log.cpp
@@ -125,6 +129,8 @@ set(D3_SOURCE_FILES
         src/Mir/b&rParser/parser.cpp
 
         src/Mir/Opcua/OpcuaClient.cpp
+
+        src/Mir/CPython/PythonTool.cpp
 
         src/Mir/Renderer/Buffer.cpp
         src/Mir/Renderer/OrthographicCamera.cpp
@@ -174,6 +180,8 @@ set(D3_HEADER_FILES
 
         src/Mir/b&rParser/parser.h
 
+        src/Mir/CPython/PythonTool.h
+
         src/Platform/Windows/WindowsWindow.h
         src/Platform/Windows/WindowsInput.h
         src/Platform/OpenGL/OpenGLBuffer.h
@@ -183,7 +191,7 @@ set(D3_HEADER_FILES
         )
 
 add_library(Mir STATIC ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
-target_link_libraries(Mir PUBLIC glfw glad spdlog::spdlog imgui open62541pp::open62541pp SQLiteCpp)
+target_link_libraries(Mir PUBLIC glfw glad spdlog::spdlog imgui open62541pp::open62541pp ${Python3_LIBRARIES})
 
 # Use precompiled headers
 target_precompile_headers(Mir PRIVATE src/Mirpch.h)
@@ -221,7 +229,10 @@ target_include_directories(Mir
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
+    ${Python3_INCLUDE_DIRS}
 )
+
+
 
 # Define macros
 target_compile_definitions(Mir PRIVATE MIR_PLATFORM_WINDOWS MIR_BUILD_DLL MIR_ENABLE_ASSERTS GLFW_INCLUDE_NONE)

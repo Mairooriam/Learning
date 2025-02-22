@@ -11,10 +11,9 @@
 
 #include "OpcUA/OpcuaClient.h"
 
+#include "CPython/PythonTool.h"
 
-namespace Mir {
-
-
+namespace Mir {  
 
   #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -32,6 +31,21 @@ namespace Mir {
 		PushOverlay(m_ImGuiLayer);
 
         m_brParser = new brParser(); // will cause memory leak not deleted. not sure where to do it
+
+        PythonTool pythonTool;
+    
+        // Path to your Python script
+        std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
+        
+        // Arguments for the script (excel file path and optional csv file path)
+        std::vector<std::string> args = {
+            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata.xlsx",
+            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
+        };
+        
+        // Run the script
+        pythonTool.RunPythonScript(scriptPath, args);
+        
         
     }
 

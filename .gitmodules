@@ -7,3 +7,6 @@
 [submodule "Mir/External/jsonParser"]
 	path = Mir/External/jsonParser
 	url = https://github.com/nlohmann/json
+[submodule "Mir/External/openXLSX"]
+	path = Mir/External/openXLSX
+	url = https://github.com/troldal/OpenXLSX
