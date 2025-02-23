@@ -31,25 +31,25 @@ namespace Mir {
 		PushOverlay(m_ImGuiLayer);
 
         m_brParser = new brParser(); // Direct initialization
-        m_brParser->initDummyData();
+        // m_brParser->initDummyData();
         std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
         m_brParser->mergeMaps(plcdata);
         
-        //std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        m_brParser->writeDummyData();
-        PythonTool pythonTool;
+        // //std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        // m_brParser->writeDummyData();
+        // PythonTool pythonTool;
     
-        // Path to your Python script
-        std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
+        // // Path to your Python script
+        // std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
         
-        // Arguments for the script (excel file path and optional csv file path)
-        std::vector<std::string> args = {
-            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata.xlsx",
-            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
-        };
+        // // Arguments for the script (excel file path and optional csv file path)
+        // std::vector<std::string> args = {
+        //     "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata.xlsx",
+        //     "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
+        // };
         
-        // Run the script
-        pythonTool.RunPythonScript(scriptPath, args);
+        // // Run the script
+        // pythonTool.RunPythonScript(scriptPath, args);
         
         
     }

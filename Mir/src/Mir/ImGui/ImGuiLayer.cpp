@@ -22,6 +22,7 @@ namespace Mir{
 
 
 
+
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -70,29 +71,8 @@ namespace Mir{
     }
 
 
-    static void HelpMarker(const char* desc){
-        ImGui::TextDisabled("(?)");
-        if (ImGui::BeginItemTooltip())
-        {
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(desc);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
 
-    static void PushStyleCompact()
-    {
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, (float)(int)(style.FramePadding.y * 0.60f));
-        ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, (float)(int)(style.ItemSpacing.y * 0.60f));
-    }
 
-    
-    static void PopStyleCompact()
-    {
-        ImGui::PopStyleVar(2);
-    }
 
 
     void ImGuiLayer::OnImGuiRender(){
@@ -121,16 +101,6 @@ namespace Mir{
 
 
         
-        //ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0));
-        ImGui::SameLine(); HelpMarker(
-        "USER:\n"
-        "Hold SHIFT or use mouse to select text.\n"
-        "CTRL+Left/Right to word jump.\n"
-        "CTRL+A or Double-Click to select all.\n"
-        "CTRL+X,CTRL+C,CTRL+V clipboard.\n"
-        "CTRL+Z,CTRL+Y undo/redo.\n"
-        "ESCAPE to revert.\n\n");
-    
 
         if (ImGui::Button("Save dummy data")){
             clicked++;
@@ -153,102 +123,16 @@ namespace Mir{
         }
  
         
-        // if (ImGui::TreeNode("Borders, background"))
-        // {
-        //     // Expose a few Borders related flags interactively
-        //     enum ContentsType { CT_Text, CT_FillButton };
-        //     static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
-        //     static bool display_headers = false;
-        //     static int contents_type = CT_Text;
-
-        //     PushStyleCompact();
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
-        //     ImGui::SameLine(); HelpMarker("ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerH\n | ImGuiTableFlags_BordersOuterH");
-        //     ImGui::Indent();
-
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersH", &flags, ImGuiTableFlags_BordersH);
-        //     ImGui::Indent();
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterH", &flags, ImGuiTableFlags_BordersOuterH);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerH", &flags, ImGuiTableFlags_BordersInnerH);
-        //     ImGui::Unindent();
-
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
-        //     ImGui::Indent();
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags, ImGuiTableFlags_BordersOuterV);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags, ImGuiTableFlags_BordersInnerV);
-        //     ImGui::Unindent();
-
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags, ImGuiTableFlags_BordersOuter);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &flags, ImGuiTableFlags_BordersInner);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags, ImGuiTableFlags_ContextMenuInBody);
-        //     ImGui::Unindent();
-
-        //     ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
-        //     ImGui::SameLine(); ImGui::RadioButton("Text", &contents_type, CT_Text);
-        //     ImGui::SameLine(); ImGui::RadioButton("FillButton", &contents_type, CT_FillButton);
-        //     ImGui::Checkbox("Display headers", &display_headers);
-        //     ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
-        //     PopStyleCompact();
+        if (ImGui::TreeNode("Borders, background"))
+        {
 
 
-        //     int COLUMNS_COUNT = 3;
-        //     if (ImGui::BeginTable("table1", COLUMNS_COUNT, flags))
-        //     {
-        //         // Display headers so we can inspect their interaction with borders
-        //         // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them now. See other sections for details)
-        //         if (display_headers)
-        //         {
-
-                    
-        //             ImGui::TableSetupColumn("One");
-        //             ImGui::TableSetupColumn("Two");
-        //             ImGui::TableSetupColumn("Three");
-        //             ImGui::TableHeadersRow();
-        //         }
-
-        //         auto& brData = Mir::Application::Get().GetBrParser().getMutable();
-        //         std::vector<std::array<char, 1000>> buffers(brData.size()); // not efficient buffer
-                
-        //         size_t row = 0;
-        //         for (auto& data : brData) {
-        //             // Initialize the buffer with the string data
-        //             strncpy(buffers[row].data(), data.name.c_str(), buffers[row].size());
-        //             buffers[row][buffers[row].size() - 1] = '\0'; // Ensure null-termination
-                
-        //             ImGui::TableNextRow();
-        //             ImGui::TableSetColumnIndex(0);
-
-        //             ImGui::PushItemWidth(-1);
-        //             if (ImGui::InputText(("##DataName" + std::to_string(row)).c_str(), buffers[row].data(), buffers[row].size())) {
-        //                 data.name = std::string(buffers[row].data()); // Update the original string with the modified buffer
-        //             }
-        //             ImGui::PopItemWidth();
-
-
-
-        //             ImGui::TableSetColumnIndex(1);
-        //             ImGui::TextUnformatted(data.type);
-        //             ImGui::SameLine();
-        //             MirUI::contextPopup(row, 1);
-
-        //             ImGui::TableSetColumnIndex(2);
-        //             ImGui::TextUnformatted(data.comment.c_str());
-                
-        //             row++;
-        //         }
-        //         ImGui::EndTable();
-
-
-
-   
-                
-        //     }
+            std::map<std::string, std::vector<Mir::brDataTypeNode>>& brData = Mir::Application::Get().GetBrParser().getMutable();
+            MirUI::tableFromBrData(brData);
             
-        //     ImGui::TreePop();
+            ImGui::TreePop();
 
-        // }
+        }
     }
 
 
