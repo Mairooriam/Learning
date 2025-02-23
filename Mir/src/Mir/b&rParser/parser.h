@@ -164,6 +164,6 @@ namespace Mir {
         void initDummyData();
     private:
         brDataCollection m_Data;
-    };;
+    };
 
 }

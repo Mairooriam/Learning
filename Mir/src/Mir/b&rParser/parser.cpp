@@ -194,11 +194,13 @@ namespace Mir {
     }
 
     void brParser::initDummyData(){
-        // m_Data.datatypeName = "AF101";
-        // for (int i = 1; i <= 10; ++i) {
-        //     std::string nodeName = "Sami" + std::to_string(i);
-        //     Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");
-        //     m_Data.addNode(node);
-        // }
+        brData brData;
+        brData.datatypeName = "AF101";
+        for (int i = 1; i <= 10; ++i) {
+            std::string nodeName = "Sami" + std::to_string(i);
+            Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");
+            brData.addNode(node);
+        }
+        m_Data.push_back(brData);
     }
 }
