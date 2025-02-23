@@ -31,7 +31,7 @@ namespace Mir {
 		PushOverlay(m_ImGuiLayer);
 
         m_brParser = new brParser(); // will cause memory leak not deleted. not sure where to do it
-
+        std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
         PythonTool pythonTool;
     
         // Path to your Python script

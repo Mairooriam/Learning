@@ -86,7 +86,7 @@ namespace Mir {
         
                 PyRun_SimpleFile(file, scriptPath.c_str());
                 fclose(file);
-        
+
                 return true;
             }
             catch (...) {

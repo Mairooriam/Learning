@@ -67,13 +67,19 @@ namespace Mir {
         }
     }
 
+
     struct brDataTypeNode {
-        brDataTypeNode(const std::string& name, brDatatypes type, const std::string& comment)
-            : name(name), type(type), comment(comment) {}
+        brDataTypeNode() = default;
+
+        brDataTypeNode(const std::string& name, const std::string& typeStr, const std::string& comment)
+            : name(name), type(typeStr), comment(comment) {
+        }
+        
         std::string name;
-        brDatatypes type;
+        std::string type;
         std::string comment;
     };
+
 
     struct brData {
         brData() = default;
@@ -88,7 +94,7 @@ namespace Mir {
             std::string result = "TYPE\n";
             result += "\t" + datatypeName + " : STRUCT\n";
             for (const auto& node : data) {
-                result += "\t\t" + node.name + " : " + brDatatypeToString(node.type) + "; (*" + node.comment + "*)\n";
+                result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
             }
             result += "\nEND_STRUCT;\nEND_TYPE\n";
             return result;
@@ -113,8 +119,12 @@ namespace Mir {
         brParser(/* args */);
         ~brParser();
         std::string readFile(const std::string& path);
+        std::vector<std::string> readDatatypeFile(const std::string& path);
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
         void writeDummyData();
+
+        std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
+
 
         const brData& getData() const { return m_Data; }
         brData& getMutable() { return m_Data; }

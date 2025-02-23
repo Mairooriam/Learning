@@ -229,7 +229,7 @@ namespace Mir{
 
 
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::TextUnformatted(brDatatypeToString(data.type));
+                    ImGui::TextUnformatted(data.type.c_str());
                     ImGui::SameLine();
                     MirUI::contextPopup(row, 1);
 
