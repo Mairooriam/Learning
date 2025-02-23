@@ -89,12 +89,20 @@ namespace Mir {
         void addNode(const brDataTypeNode& node) {
             data.push_back(node);
         }
+        void setNode(const std::string& name, const std::string& type, const std::string& comment) {
+            data.push_back(brDataTypeNode(name, type, comment));
+        }
+
+        void clear() {
+            data.clear();
+            datatypeName.clear();
+        }
 
         std::string toString() const {
             std::string result = "TYPE\n";
             result += "\t" + datatypeName + " : STRUCT\n";
             for (const auto& node : data) {
-                result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
+            result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
             }
             result += "\nEND_STRUCT;\nEND_TYPE\n";
             return result;
@@ -111,6 +119,29 @@ namespace Mir {
 
         std::string datatypeName;
         std::vector<brDataTypeNode> data;
+        };
+
+    class brDataCollection {
+    public:
+        void push_back(const brData& data) { m_Data.push_back(data); }
+        
+        // Delegation of vector operations
+        auto begin() { return m_Data.begin(); }
+        auto end() { return m_Data.end(); }
+        auto begin() const { return m_Data.begin(); }
+        auto end() const { return m_Data.end(); }
+        size_t size() const { return m_Data.size(); }
+        
+        std::string toString() const {
+            std::string result;
+            for (const auto& data : m_Data) {
+                result += data.toString() + "\n";
+            }
+            return result;
+        }
+
+    private:
+        std::vector<brData> m_Data;
     };
 
     class brParser
@@ -125,17 +156,14 @@ namespace Mir {
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
 
-
-        const brData& getData() const { return m_Data; }
-        brData& getMutable() { return m_Data; }
+        const brDataCollection& getData() const { return m_Data; }
+        brDataCollection& getMutable() { return m_Data; }
 
         size_t size() const { return m_Data.size(); }
         
-
         void initDummyData();
     private:
-        brData m_Data; // make into vector later
-
-    };
+        brDataCollection m_Data;
+    };;
 
 }

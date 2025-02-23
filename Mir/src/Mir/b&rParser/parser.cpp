@@ -79,12 +79,14 @@ namespace Mir {
         std::vector<std::string> tokens;
         std::vector<std::string> subTokens;
         size_t iAfterTypeFound = 0;
+        brData brData;
         for (const auto string : result){
             std::stringstream ss(string);
             if (structFound)
             {
                 tokens = splitString(string,":");
                 size_t tabCount = std::count(tokens[0].begin(), tokens[0].end(), '\t');
+                
                 brDataTypeNode node;
                 switch (tabCount)
                 {
@@ -101,7 +103,7 @@ namespace Mir {
                             varType.erase(0, varType.find_first_not_of(" \t"));
                             varType.erase(varType.find_last_not_of(" \t;") + 1);
     
-                            m_Data.datatypeName = varName;
+                            brData.datatypeName = varName;
                         }
                         
 
@@ -110,6 +112,8 @@ namespace Mir {
                         if (tokens[0].find("END_STRUCT"))
                         {
                             structFound = false;
+                            m_Data.push_back(brData);
+                            brData.clear();
                         }
                         
                     }
@@ -128,7 +132,7 @@ namespace Mir {
                     subTokens[0].erase(subTokens[0].find_last_not_of(" \t") + 1);
                     node.type = subTokens[0];
 
-                    if (subTokens[1].size() < 0)
+                    if (subTokens[1].size() > 0)
                     {
                         subTokens[1].erase(0,subTokens[1].find_first_not_of(" \t"));
                         subTokens[1].erase(subTokens[1].find_last_not_of(" \t") + 1);
@@ -139,8 +143,8 @@ namespace Mir {
                         node.comment = "";
                     };
                     
-
-                    m_Data.addNode(node);
+                    brData.data.push_back(node);
+                    
                     break;
                 default:
                     break;
@@ -190,11 +194,11 @@ namespace Mir {
     }
 
     void brParser::initDummyData(){
-        m_Data.datatypeName = "AF101";
-        for (int i = 1; i <= 10; ++i) {
-            std::string nodeName = "Sami" + std::to_string(i);
-            Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");
-            m_Data.addNode(node);
-        }
+        // m_Data.datatypeName = "AF101";
+        // for (int i = 1; i <= 10; ++i) {
+        //     std::string nodeName = "Sami" + std::to_string(i);
+        //     Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");
+        //     m_Data.addNode(node);
+        // }
     }
 }
