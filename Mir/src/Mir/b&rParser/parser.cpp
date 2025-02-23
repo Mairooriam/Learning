@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <map>
 
 #include "parser.h"
 
@@ -32,9 +33,13 @@ namespace Mir {
 
     brParser::brParser()
     {
-        //initDummyData();
     }
-     std::string brParser::readFile(const std::string &path)
+
+    brParser::~brParser()
+    {
+    }
+
+    std::string brParser::readFile(const std::string &path)
     {
         std::ifstream file(path);
         if (!file.is_open()) {
@@ -79,7 +84,8 @@ namespace Mir {
         std::vector<std::string> tokens;
         std::vector<std::string> subTokens;
         size_t iAfterTypeFound = 0;
-        brData brData;
+
+        std::string currentName = "";
         for (const auto string : result){
             std::stringstream ss(string);
             if (structFound)
@@ -103,7 +109,7 @@ namespace Mir {
                             varType.erase(0, varType.find_first_not_of(" \t"));
                             varType.erase(varType.find_last_not_of(" \t;") + 1);
     
-                            brData.datatypeName = varName;
+                            currentName = varName;
                         }
                         
 
@@ -112,8 +118,8 @@ namespace Mir {
                         if (tokens[0].find("END_STRUCT"))
                         {
                             structFound = false;
-                            m_Data.push_back(brData);
-                            brData.clear();
+
+
                         }
                         
                     }
@@ -143,7 +149,7 @@ namespace Mir {
                         node.comment = "";
                     };
                     
-                    brData.data.push_back(node);
+                    m_Data[currentName].push_back(node);
                     
                     break;
                 default:
@@ -176,6 +182,34 @@ namespace Mir {
 
     }
 
+    std::map<std::string, std::vector<brDataTypeNode>> brParser::readPlcDataCsv(const std::string &path){
+        std::ifstream file(path);
+        std::vector<std::string>   csvStr;
+        std::string                line;
+        std::string                cell;
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path << std::endl;
+            return std::map<std::string, std::vector<brDataTypeNode>>();
+        }
+    
+        // Check is header is valid
+        std::getline(file,line);
+        if (line != "DEVICE,IOCARD,NAME,COMMENT"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
+
+        while(std::getline(file,line))
+        {
+            csvStr.push_back(line);
+        }
+
+        std::map<std::string, std::vector<brDataTypeNode>> hashtable;
+        for (const auto& str: csvStr){
+            std::vector<std::string> tokens = splitString(str,",");
+            brDataTypeNode node(tokens[2], tokens[1], tokens[3]);
+            hashtable[tokens[0]].push_back(node);
+        }
+        return hashtable;
+    }
+
     void brParser::writeFile(const std::string &path, const std::string &content, std::ios_base::openmode mode)
     {
         std::ofstream file(path, mode);
@@ -189,18 +223,15 @@ namespace Mir {
         file.close();
     }
     void brParser::writeDummyData(){
-        std::string datatest = m_Data.toString();
+        std::string datatest = this->toString();
         writeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ",datatest,std::ios_base::app);
     }
 
     void brParser::initDummyData(){
-        brData brData;
-        brData.datatypeName = "AF101";
         for (int i = 1; i <= 10; ++i) {
             std::string nodeName = "Sami" + std::to_string(i);
             Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");
-            brData.addNode(node);
+            m_Data["DUMMY_DATA"].push_back(node);
         }
-        m_Data.push_back(brData);
     }
 }

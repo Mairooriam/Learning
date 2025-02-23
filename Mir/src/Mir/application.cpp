@@ -30,9 +30,13 @@ namespace Mir {
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-        m_brParser = new brParser(); // will cause memory leak not deleted. not sure where to do it
-        //m_brParser->initDummyData();
-        std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        m_brParser = new brParser(); // Direct initialization
+        m_brParser->initDummyData();
+        std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
+        m_brParser->mergeMaps(plcdata);
+        
+        //std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        m_brParser->writeDummyData();
         PythonTool pythonTool;
     
         // Path to your Python script

@@ -4,6 +4,8 @@
 #include <vector>
 #include <ios>
 
+#include <map>
+
 namespace Mir {
 
     enum brDatatypes {
@@ -83,66 +85,47 @@ namespace Mir {
 
     struct brData {
         brData() = default;
-        brData(const std::string& datatypeName)
-            : datatypeName(datatypeName) {}
-
-        void addNode(const brDataTypeNode& node) {
-            data.push_back(node);
+        brData(const std::string& datatypeName) {
+            m_data[datatypeName] = std::vector<brDataTypeNode>();
         }
-        void setNode(const std::string& name, const std::string& type, const std::string& comment) {
-            data.push_back(brDataTypeNode(name, type, comment));
+
+        void addNode(const std::string& datatypeName, const brDataTypeNode& node) {
+            m_data[datatypeName].push_back(node);
+        }
+
+        void setNode(const std::string& datatypeName, const std::string& name, const std::string& type, const std::string& comment) {
+            m_data[datatypeName].push_back(brDataTypeNode(name, type, comment));
         }
 
         void clear() {
-            data.clear();
-            datatypeName.clear();
+            m_data.clear();
         }
 
-        std::string toString() const {
-            std::string result = "TYPE\n";
-            result += "\t" + datatypeName + " : STRUCT\n";
-            for (const auto& node : data) {
-            result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
-            }
-            result += "\nEND_STRUCT;\nEND_TYPE\n";
-            return result;
-        }
-
-        // Begin and end functions for iteration
-        auto begin() { return data.begin(); }
-        auto end() { return data.end(); }
-        auto begin() const { return data.begin(); }
-        auto end() const { return data.end(); }
-
-        // Size function to get the number of nodes
-        size_t size() const { return data.size(); }
-
-        std::string datatypeName;
-        std::vector<brDataTypeNode> data;
-        };
-
-    class brDataCollection {
-    public:
-        void push_back(const brData& data) { m_Data.push_back(data); }
-        
-        // Delegation of vector operations
-        auto begin() { return m_Data.begin(); }
-        auto end() { return m_Data.end(); }
-        auto begin() const { return m_Data.begin(); }
-        auto end() const { return m_Data.end(); }
-        size_t size() const { return m_Data.size(); }
-        
         std::string toString() const {
             std::string result;
-            for (const auto& data : m_Data) {
-                result += data.toString() + "\n";
+            for (const auto& [name, nodes] : m_data) {
+                result += "TYPE\n";
+                result += "\t" + name + " : STRUCT\n";
+                for (const auto& node : nodes) {
+                    result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
+                }
+                result += "\nEND_STRUCT;\nEND_TYPE\n";
             }
             return result;
         }
 
-    private:
-        std::vector<brData> m_Data;
+        // Size function to get the number of datatypes
+        size_t size() const { return m_data.size(); }
+
+        // Get nodes for a specific datatype
+        const std::vector<brDataTypeNode>& getNodes(const std::string& datatypeName) const {
+            return m_data.at(datatypeName);
+        }
+
+        private:
+            std::map<std::string, std::vector<brDataTypeNode>> m_data;
     };
+
 
     class brParser
     {
@@ -151,19 +134,43 @@ namespace Mir {
         ~brParser();
         std::string readFile(const std::string& path);
         std::vector<std::string> readDatatypeFile(const std::string& path);
+        std::map<std::string, std::vector<brDataTypeNode>> readPlcDataCsv(const std::string& path);
+
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
         void writeDummyData();
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
 
-        const brDataCollection& getData() const { return m_Data; }
-        brDataCollection& getMutable() { return m_Data; }
+        const std::map<std::string, std::vector<brDataTypeNode>>& getData() const { return m_Data; }
+        std::map<std::string, std::vector<brDataTypeNode>>& getMutable() { return m_Data; }
 
         size_t size() const { return m_Data.size(); }
         
+
+        std::string toString() const {
+            std::string result;
+            for (const auto& [name, nodes] : m_Data) {
+                result += "TYPE\n";
+                result += "\t" + name + " : STRUCT\n";
+                for (const auto& node : nodes) {
+                    result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
+                }
+                result += "\nEND_STRUCT;\nEND_TYPE\n";
+            }
+            return result;
+        }
+
+        void mergeMaps(const std::map<std::string, std::vector<brDataTypeNode>>& other) {
+            for (const auto& [key, values] : other) {
+                // Insert or append to existing vector
+                m_Data[key].insert(m_Data[key].end(), values.begin(), values.end());
+            }
+        }
+
+
         void initDummyData();
     private:
-        brDataCollection m_Data;
+        std::map<std::string, std::vector<brDataTypeNode>> m_Data;
     };
 
 }
