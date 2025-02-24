@@ -188,6 +188,8 @@ set(D3_HEADER_FILES
         src/Platform/OpenGL/OpenGLContext.h
         src/Platform/OpenGL/OpenGLVertexArray.h
         src/Platform/OpenGL/OpenGLRendererAPI.h
+
+        External/IconsFontAwesome5/IconsFontAwesome5.h
         )
 
 add_library(Mir STATIC ${D3_SOURCE_FILES} ${D3_HEADER_FILES})
@@ -230,6 +232,7 @@ target_include_directories(Mir
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
     ${Python3_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/External/IconsFontAwesome5
 )
 
 

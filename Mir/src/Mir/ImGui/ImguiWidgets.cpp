@@ -166,6 +166,18 @@ namespace MirUI {
                             strncpy(buffers[nodeDataIndex][row].type.data(), data.type.c_str(), buffers[nodeDataIndex][row].type.size() - 1);
                             strncpy(buffers[nodeDataIndex][row].comment.data(), data.comment.c_str(), buffers[nodeDataIndex][row].comment.size() - 1);
                         }
+                        
+
+                        //TODO ADD auto select and maybe no blanks
+                        
+                        // // Auto-select all when focused
+                        // static char autoselect[128] = "";
+                        // ImGui::InputText("Auto-select", autoselect, IM_ARRAYSIZE(autoselect), ImGuiInputTextFlags_AutoSelectAll);
+
+                        // // Multiple flags can be combined with |
+                        // static char multiple[128] = "";
+                        // ImGui::InputText("Multiple flags", multiple, IM_ARRAYSIZE(multiple), 
+                        // ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
 
                         ImGui::TableNextRow();
                         
@@ -179,12 +191,24 @@ namespace MirUI {
                         ImGui::PopItemWidth();
 
                         ImGui::TableSetColumnIndex(1);
-                        ImGui::TextUnformatted(data.type.c_str());
+                        ImGui::PushItemWidth(-1);
+                        if (ImGui::InputText(("##DataType" + key + std::to_string(row)).c_str(),
+                                            buffers[nodeDataIndex][row].type.data(),
+                                            buffers[nodeDataIndex][row].type.size())) {
+                            // Handle input change
+                        }
+                        ImGui::PopItemWidth();
                         ImGui::SameLine();
                         MirUI::contextPopup(row, 1);
 
                         ImGui::TableSetColumnIndex(2);
-                        ImGui::TextUnformatted(data.comment.c_str());
+                        ImGui::PushItemWidth(-1);
+                        if (ImGui::InputText(("##DataComment" + key + std::to_string(row)).c_str(),
+                                            buffers[nodeDataIndex][row].comment.data(),
+                                            buffers[nodeDataIndex][row].comment.size())) {
+                            // Handle input change
+                        }
+                        ImGui::PopItemWidth();
 
                         row++;
                     }

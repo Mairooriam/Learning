@@ -1,11 +1,14 @@
 #include "ImGuiLayer.h"
 #include "Mirpch.h"
 
+#include <filesystem>
 
 
-#include "imgui.h"
+
+
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
+//#include "IconsFontAwesome5/IconsFontAwesome5.h"
 
 #include "Mir/Application.h"
 
@@ -17,9 +20,76 @@
 
 #include "ImguiWidgets.h"
 
+// for windows file browser
+#include <Windows.h>
+#include <string>
+#include <shobjidl.h> 
 namespace Mir{
 
 
+    
+    std::string sSelectedFile;
+    std::string sFilePath;
+    bool openFile()
+    {
+        //  CREATE FILE OBJECT INSTANCE
+        HRESULT f_SysHr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        if (FAILED(f_SysHr))
+            return FALSE;
+    
+        // CREATE FileOpenDialog OBJECT
+        IFileOpenDialog* f_FileSystem;
+        f_SysHr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&f_FileSystem));
+        if (FAILED(f_SysHr)) {
+            CoUninitialize();
+            return FALSE;
+        }
+    
+        //  SHOW OPEN FILE DIALOG WINDOW
+        f_SysHr = f_FileSystem->Show(NULL);
+        if (FAILED(f_SysHr)) {
+            f_FileSystem->Release();
+            CoUninitialize();
+            return FALSE;
+        }
+    
+        //  RETRIEVE FILE NAME FROM THE SELECTED ITEM
+        IShellItem* f_Files;
+        f_SysHr = f_FileSystem->GetResult(&f_Files);
+        if (FAILED(f_SysHr)) {
+            f_FileSystem->Release();
+            CoUninitialize();
+            return FALSE;
+        }
+    
+        //  STORE AND CONVERT THE FILE NAME
+        PWSTR f_Path;
+        f_SysHr = f_Files->GetDisplayName(SIGDN_FILESYSPATH, &f_Path);
+        if (FAILED(f_SysHr)) {
+            f_Files->Release();
+            f_FileSystem->Release();
+            CoUninitialize();
+            return FALSE;
+        }
+    
+        //  FORMAT AND STORE THE FILE PATH
+        std::wstring path(f_Path);
+        std::string c(path.begin(), path.end());
+        sFilePath = c;
+    
+        //  FORMAT STRING FOR EXECUTABLE NAME
+        const size_t slash = sFilePath.find_last_of("/\\");
+        sSelectedFile = sFilePath.substr(slash + 1);
+    
+        //  SUCCESS, CLEAN UP
+        CoTaskMemFree(f_Path);
+        f_Files->Release();
+        f_FileSystem->Release();
+        CoUninitialize();
+        return TRUE;
+    }
+    
+    bool result = FALSE;
 
 
 
@@ -56,6 +126,9 @@ namespace Mir{
 
         Application& app = Application::Get();
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+
+        m_fileDialog.SetTitle("title");
+        //m_fileDialog.SetTypeFilters({ ".h", ".cpp" });
 
         
         // Setup Platform/Renderer backends
@@ -121,13 +194,42 @@ namespace Mir{
         if (MirUI::InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
             // Handle input change if needed
         }
- 
+         if(ImGui::Button("open windows file dialog")){
+            result = openFile();
+            switch (result) {
+                case(TRUE): {
+                    printf("SELECTED FILE: %s\nFILE PATH: %s\n\n", sSelectedFile.c_str(), sFilePath.c_str());
+                    system("pause");
+                }
+                case(FALSE): {
+                    printf("ENCOUNTERED AN ERROR: (%d)\n", GetLastError());
+                    system("pause");
+                }
+            }
+        }
+        //////////////////////////////////////////////////////
+        //////////////  file browser     /////////////////////
+        //////////////////////////////////////////////////////
+       
         
+        m_fileDialog.Display();
+        
+        if(m_fileDialog.HasSelected())
+        {
+            std::cout << "Selected filename" << m_fileDialog.GetSelected().string() << std::endl;
+            m_fileDialog.ClearSelected();
+        }
+        //////////////////////////////////////////////////////
+        //////////////  file browser     /////////////////////
+        //////////////////////////////////////////////////////
+
+
         if (ImGui::TreeNode("Borders, background"))
         {
 
 
             std::map<std::string, std::vector<Mir::brDataTypeNode>>& brData = Mir::Application::Get().GetBrParser().getMutable();
+            
             MirUI::tableFromBrData(brData);
             
             ImGui::TreePop();

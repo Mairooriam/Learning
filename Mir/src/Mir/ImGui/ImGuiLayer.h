@@ -6,6 +6,9 @@
 #include "Mir/Events/KeyEvent.h"
 #include "Mir/Events/MouseEvent.h"
 #include "Mir/Events/ApplicationEvent.h"
+
+#include "imgui.h"
+#include "imfilebrowser.h"
 namespace Mir {
 
        struct ImGuiData;
@@ -22,9 +25,8 @@ namespace Mir {
         void End();
     private:
         float m_Time = 0.0f;
+        ImGui::FileBrowser m_fileDialog;
 
     };
-
-
 
 }

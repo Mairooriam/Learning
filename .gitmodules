@@ -10,3 +10,9 @@
 [submodule "Mir/External/openXLSX"]
 	path = Mir/External/openXLSX
 	url = https://github.com/troldal/OpenXLSX
+[submodule "External/IconFontCpp"]
+	path = External/IconFontCpp
+	url = https://github.com/juliettef/IconFontCppHeaders
+[submodule "Mir/External/IconsFontAwesome5"]
+	path = Mir/External/IconsFontAwesome5
+	url = https://github.com/juliettef/IconFontCppHeaders
