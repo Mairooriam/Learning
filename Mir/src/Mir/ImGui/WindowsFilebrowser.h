@@ -1,0 +1,30 @@
+﻿#pragma once
+#include <Windows.h>
+#include <string>
+#include <shobjidl.h> 
+namespace Mir {
+    struct FileSelection {
+        std::string fileName;
+        std::string filePath;
+    };
+
+    class WindowsFileBrowser {
+        private:
+            std::string sSelectedFile;
+            std::string sFilePath;
+            bool isInitialized;
+        
+        public:
+            WindowsFileBrowser();
+            ~WindowsFileBrowser();
+        
+            // Delete copy constructor and assignment operator due to COM handling
+            WindowsFileBrowser(const WindowsFileBrowser&) = delete;
+            WindowsFileBrowser& operator=(const WindowsFileBrowser&) = delete;
+        
+            FileSelection GetFileSelection();
+        
+            bool OpenFile(bool selectFolder = false, const std::vector<COMDLG_FILTERSPEC>& filters = {});
+            bool IsInitialized() const;
+        }; 
+}

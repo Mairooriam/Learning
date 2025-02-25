@@ -5,14 +5,14 @@ import os
 def excel_to_csv(excel_path, csv_path=None):
     try:
         # Read Excel file
-        df = pd.read_excel(excel_path)
-        
+        df = pd.read_excel(excel_path, converters={col: lambda x: str(x).replace('\n', ' ') if isinstance(x, str) else x 
+                              for col in pd.read_excel(excel_path, nrows=0).columns})
         # If no CSV path specified, create one from Excel path
         if csv_path is None:
             csv_path = os.path.splitext(excel_path)[0] + '.csv'
         
-        # Write to CSV with UTF-8 encoding
-        df.to_csv(csv_path, index=False, encoding='utf-8')
+        # Write to CSV with UTF-8 encoding, using comma as separator
+        df.to_csv(csv_path, index=False, encoding='utf-8', sep=',')
         print(f"Successfully converted {excel_path} to {csv_path}")
         return True
     except Exception as e:

@@ -43,6 +43,8 @@ namespace MirUI {
         ImGui::PopStyleVar(2);
     }
 
+
+
     //////////////////////////////////////////////////////
     ////////////// HELPER FUNCTIONS //////////////////////
     //////////////////////////////////////////////////////
@@ -52,7 +54,11 @@ namespace MirUI {
     //////////////////////////////////////////////////////
     //////////////      Widgets     //////////////////////
     //////////////////////////////////////////////////////
-        bool InputTextWithSuggestions(const char* label, char* buf, size_t buf_size, const std::vector<std::string_view>& suggestions) {
+
+    
+    
+    
+    bool InputTextWithSuggestions(const char* label, char* buf, size_t buf_size, const std::vector<std::string_view>& suggestions) {
             bool value_changed = ImGui::InputText(label, buf, buf_size);
             static int selected_index = -1;
     

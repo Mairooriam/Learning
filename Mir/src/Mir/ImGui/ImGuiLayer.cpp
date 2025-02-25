@@ -19,80 +19,16 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "ImguiWidgets.h"
+#include "misc/cpp/imgui_stdlib.h"
 
-// for windows file browser
-#include <Windows.h>
-#include <string>
-#include <shobjidl.h> 
 namespace Mir{
 
 
     
-    std::string sSelectedFile;
-    std::string sFilePath;
-    bool openFile()
-    {
-        //  CREATE FILE OBJECT INSTANCE
-        HRESULT f_SysHr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        if (FAILED(f_SysHr))
-            return FALSE;
-    
-        // CREATE FileOpenDialog OBJECT
-        IFileOpenDialog* f_FileSystem;
-        f_SysHr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&f_FileSystem));
-        if (FAILED(f_SysHr)) {
-            CoUninitialize();
-            return FALSE;
-        }
-    
-        //  SHOW OPEN FILE DIALOG WINDOW
-        f_SysHr = f_FileSystem->Show(NULL);
-        if (FAILED(f_SysHr)) {
-            f_FileSystem->Release();
-            CoUninitialize();
-            return FALSE;
-        }
-    
-        //  RETRIEVE FILE NAME FROM THE SELECTED ITEM
-        IShellItem* f_Files;
-        f_SysHr = f_FileSystem->GetResult(&f_Files);
-        if (FAILED(f_SysHr)) {
-            f_FileSystem->Release();
-            CoUninitialize();
-            return FALSE;
-        }
-    
-        //  STORE AND CONVERT THE FILE NAME
-        PWSTR f_Path;
-        f_SysHr = f_Files->GetDisplayName(SIGDN_FILESYSPATH, &f_Path);
-        if (FAILED(f_SysHr)) {
-            f_Files->Release();
-            f_FileSystem->Release();
-            CoUninitialize();
-            return FALSE;
-        }
-    
-        //  FORMAT AND STORE THE FILE PATH
-        std::wstring path(f_Path);
-        std::string c(path.begin(), path.end());
-        sFilePath = c;
-    
-        //  FORMAT STRING FOR EXECUTABLE NAME
-        const size_t slash = sFilePath.find_last_of("/\\");
-        sSelectedFile = sFilePath.substr(slash + 1);
-    
-        //  SUCCESS, CLEAN UP
-        CoTaskMemFree(f_Path);
-        f_Files->Release();
-        f_FileSystem->Release();
-        CoUninitialize();
-        return TRUE;
-    }
-    
-    bool result = FALSE;
-
-
-
+    std::string test1 = "HELLO WORDL MIRO";
+    FileSelection fileselection1;
+    FileSelection fileselection2;
+    std::string outputFileStr; 
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -127,10 +63,12 @@ namespace Mir{
         Application& app = Application::Get();
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-        m_fileDialog.SetTitle("title");
-        //m_fileDialog.SetTypeFilters({ ".h", ".cpp" });
+        // init path to deaulft bad needs rework
+        fileselection1.filePath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\manual_edited.xlsx";
 
-        
+        fileselection2.filePath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
+       
+
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 410");
@@ -145,7 +83,12 @@ namespace Mir{
 
 
 
-
+    std::vector<COMDLG_FILTERSPEC> filters = {
+        { L"Image Files", L"*.png;*.jpg;*.jpeg;*.bmp" },
+        { L"Text Files", L"*.txt;*.doc;*.docx" },
+        { L"All Files", L"*.*" },
+        { L"br DataType", L"*.typ*" }
+    };
 
 
     void ImGuiLayer::OnImGuiRender(){
@@ -194,34 +137,65 @@ namespace Mir{
         if (MirUI::InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
             // Handle input change if needed
         }
-         if(ImGui::Button("open windows file dialog")){
-            result = openFile();
-            switch (result) {
-                case(TRUE): {
-                    printf("SELECTED FILE: %s\nFILE PATH: %s\n\n", sSelectedFile.c_str(), sFilePath.c_str());
-                    system("pause");
-                }
-                case(FALSE): {
-                    printf("ENCOUNTERED AN ERROR: (%d)\n", GetLastError());
-                    system("pause");
-                }
-            }
+        // C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\Luotu.csv
+        // C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\Luotu.csv
+        if(ImGui::Button("Browse###BrowseInput")){
+            m_fileDialog.OpenFile(false);
+            fileselection1 = m_fileDialog.GetFileSelection();
         }
-        //////////////////////////////////////////////////////
-        //////////////  file browser     /////////////////////
-        //////////////////////////////////////////////////////
-       
-        
-        m_fileDialog.Display();
-        
-        if(m_fileDialog.HasSelected())
+        ImGui::SameLine();
+        ImGui::InputText("Input Path", &fileselection1.filePath);
+
+        if(ImGui::Button("Browse###BrowseOutput")){
+            m_fileDialog.OpenFile(false, filters);
+            fileselection2 = m_fileDialog.GetFileSelection();
+        }
+        ImGui::SameLine();
+        ImGui::InputText("Output Path", &fileselection2.filePath);
+
+
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
+
+
+
+        if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
         {
-            std::cout << "Selected filename" << m_fileDialog.GetSelected().string() << std::endl;
-            m_fileDialog.ClearSelected();
+            if (ImGui::BeginTabItem("B&R Parser"))
+            {
+                std::string test1 = Mir::Application::Get().GetBrParser().toString();
+                ImGui::InputTextMultiline(
+                "data.Txt Preview", 
+                &test1,
+                ImVec2(0,0),
+                ImGuiInputTextFlags_ReadOnly);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Converted CSV"))
+            {
+                
+                if (ImGui::Button("read output csv")){
+                    outputFileStr = Mir::Application::Get().GetBrParser().readFile(fileselection2.filePath);
+                }
+                ImGui::InputTextMultiline(
+                "data.Txt Preview", 
+                &outputFileStr,
+                ImVec2(0,0),
+                ImGuiInputTextFlags_ReadOnly);
+
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("brData edita ble"))
+            {
+                std::map<std::string, std::vector<Mir::brDataTypeNode>>& brData = Mir::Application::Get().GetBrParser().getMutable();
+            
+                MirUI::tableFromBrData(brData);
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
-        //////////////////////////////////////////////////////
-        //////////////  file browser     /////////////////////
-        //////////////////////////////////////////////////////
+        ImGui::Separator();
+
 
 
         if (ImGui::TreeNode("Borders, background"))
@@ -235,10 +209,10 @@ namespace Mir{
             ImGui::TreePop();
 
         }
-    }
+        }
 
 
-    void ImGuiLayer::Begin(){
+        void ImGuiLayer::Begin(){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();

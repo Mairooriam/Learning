@@ -182,6 +182,63 @@ namespace Mir {
 
     }
 
+    struct cardInfo {
+        std::string shortName;
+        std::string fullname;
+        std::string number;
+        std::string datatype;
+
+        std::string getShortName() {
+            if (fullname.find("DigitalInput") != std::string::npos) return "Di";
+            if (fullname.find("DigitalOutput") != std::string::npos) return "Do";
+            if (fullname.find("AnalogInput") != std::string::npos) return "Ai";
+            if (fullname.find("AnalogOutput") != std::string::npos) return "Ao";
+            return "Unknown";
+        }
+
+        std::string getDataType() {
+            if (shortName == "Di") return "BOOL";
+            if (shortName == "Do") return "BOOL";
+            if (shortName == "Ai") return "REAL";
+            if (shortName == "Ao") return "REAL";
+            return "UNKNOWN";
+        }
+        cardInfo(std::string cardName) {
+            fullname = cardName;
+            number = cardName.substr(cardName.size()-2, 2);
+            shortName = getShortName();
+            datatype = getDataType();
+        }
+    };
+
+    std::string sanitizeString(const std::string& input) {
+        std::string result;
+        result.reserve(input.length());
+        
+        for (char c : input) {
+            if (std::isalnum(c)) {
+                result += c;
+            } else if (c == ' ' || c == '-') {
+                // Replace spaces and hyphens with underscore
+                result += '_';
+            }
+            // Ignore all other special characters
+        }
+        
+        // Remove consecutive underscores
+        auto it = std::unique(result.begin(), result.end(), 
+            [](char a, char b) { return a == '_' && b == '_'; });
+        result.erase(it, result.end());
+        
+        // Remove trailing underscores
+        while (!result.empty() && result.back() == '_') {
+            result.pop_back();
+        }
+        
+        return result;
+    }
+
+
     std::map<std::string, std::vector<brDataTypeNode>> brParser::readPlcDataCsv(const std::string &path){
         std::ifstream file(path);
         std::vector<std::string>   csvStr;
@@ -194,7 +251,8 @@ namespace Mir {
     
         // Check is header is valid
         std::getline(file,line);
-        if (line != "DEVICE,IOCARD,NAME,COMMENT"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
+        //if (line != "DEVICE,IOCARD,NAME,COMMENT"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
+        if (line != "Location,Type,BR Name,Card,Eplan name"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
 
         while(std::getline(file,line))
         {
@@ -204,8 +262,14 @@ namespace Mir {
         std::map<std::string, std::vector<brDataTypeNode>> hashtable;
         for (const auto& str: csvStr){
             std::vector<std::string> tokens = splitString(str,",");
-            brDataTypeNode node(tokens[2], tokens[1], tokens[3]);
-            hashtable[tokens[0]].push_back(node);
+            if (!tokens[2].empty()){
+                tokens[2] = sanitizeString(tokens[2]);
+                cardInfo cardinfo(tokens[1]); // might be perforamnce pbrobme? creating new cardinfo each time. probably wont matter
+                std::string comment = tokens[3] + "." + cardinfo.shortName + "." + cardinfo.number;
+                brDataTypeNode node(tokens[2], cardinfo.datatype, comment);
+                std::string key = tokens[0] + "_" + cardinfo.shortName + "_Typ";
+                hashtable[key].push_back(node);
+            }
         }
         return hashtable;
     }

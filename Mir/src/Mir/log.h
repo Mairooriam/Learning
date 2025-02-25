@@ -23,6 +23,7 @@ namespace Mir {
 }
 
 // Core Log Macros
+// syntax example MIR_CORE_WARN("Windows file explorer: ENCOUNTERED AN ERROR: {0}", errormsg);
 #define MIR_CORE_TRACE(...) ::Mir::Log::getCoreLogger()->trace(__VA_ARGS__)
 #define MIR_CORE_INFO(...) ::Mir::Log::getCoreLogger()->info(__VA_ARGS__)
 #define MIR_CORE_WARN(...) ::Mir::Log::getCoreLogger()->warn(__VA_ARGS__)
