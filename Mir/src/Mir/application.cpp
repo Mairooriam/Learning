@@ -44,20 +44,22 @@ namespace Mir {
         // Run the script
         pythonTool.RunPythonScript(scriptPath, args);    
 
-
+        
 
 
         m_brParser = new brParser(); // Direct initialization
         // m_brParser->initDummyData();
-        std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
-        m_brParser->mergeMaps(plcdata);
+        //std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
         
+        std::map<std::string, std::vector<brDataTypeNode>> test222 = m_brParser->readDataTypeFileOneLineAtaTime("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        //std::vector<std::string> datatypefile = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        m_brParser->mergeMaps(test222);
         //std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        m_brParser->writeDummyData();
+        //m_brParser->writeDummyData();
 
         
         
-    }
+   }
 
 
 

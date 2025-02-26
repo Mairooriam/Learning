@@ -25,6 +25,44 @@ namespace Mir {
         return tokens;
     }
 
+    std::vector<std::string> brParser::splitStringStruct(const std::string &str)
+    {
+        std::vector<std::string> tokens;
+        std::vector<std::string> Finaltokens;
+        std::string delimeterFirst = ":";
+        std::string delimeterSecond = ";";
+
+        size_t start = 0;
+        size_t end = str.find(delimeterFirst);
+        
+        while (end != std::string::npos) {
+            std::string token = str.substr(start, end - start);
+            tokens.push_back(token);
+            start = end + delimeterFirst.length();
+            end = str.find(delimeterFirst, start);
+        }
+        tokens.push_back(str.substr(start));
+
+  
+        for (auto &token : tokens)
+        {
+            size_t start = 0;
+            size_t end = token.find(delimeterSecond);
+            while (end != std::string::npos) {
+                std::string tokenTemp = token.substr(start, end - start);
+                Finaltokens.push_back(tokenTemp);
+                start = end + delimeterSecond.length();
+                end = token.find(delimeterSecond, start);
+            }
+            Finaltokens.push_back(token.substr(start));
+            
+        }
+        if (Finaltokens.size() > 2) {
+            Finaltokens[2] = Finaltokens[2].substr(Finaltokens[2].find("(*") + 2);
+            Finaltokens[2] = Finaltokens[2].substr(0, Finaltokens[2].find("*)"));
+        }
+        return Finaltokens;
+    }
 
     void writeDummyData()
     {
@@ -182,6 +220,109 @@ namespace Mir {
 
     }
 
+    std::map<std::string, std::vector<brDataTypeNode>> brParser::readDataTypeFileOneLineAtaTime(const std::string &path)
+    {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path << std::endl;
+            return std::map<std::string, std::vector<brDataTypeNode>>();
+        }
+
+        std::string                 line;
+        size_t                      LineIndex = 1;
+        std::string                 lastLine;
+        std::vector<std::string>    tokens;
+        bool                        typeFound = 0;
+
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        std::map<std::string, std::vector<brDataTypeNode>> outputMap;
+        while(std::getline(file,line))
+        {
+            LineIndex++;
+
+            if (line == "") continue;
+
+            if (line == "TYPE"){
+                typeFound = true;
+            } 
+
+             
+                
+            if (line.length() >= 2 && line[0] == '(' && line[1] == '*')
+            {
+                std::string comment = line.substr(2); // Remove (*
+                if (comment.find("*)") != std::string::npos) {
+                    comment = comment.substr(0, comment.find("*)"));
+                }
+                brDataTypeNode node("Comment", "", "", std::to_string(LineIndex));
+                outputMap["Comments"].push_back(node);
+            }
+
+            
+            if (typeFound)
+            {
+                tokens = splitString(removeSpaces(line),":");
+
+                if(tokens.size() == 1) continue;
+                
+                if (tokens.size() > 2) {
+                    MIR_CORE_ASSERT(tokens.size() > 2, "There shouldnt be more than one : separator ( 2 tokens) update code! Maybe not valid input format");
+
+                    continue;
+                }
+
+                // HANDLE STRUCT
+                if (tokens[1] == "STRUCT")
+                {
+                    std::string structName = tokens[0];
+                    brDataTypeNode node("Line", std::to_string(LineIndex), "");
+                    outputMap[structName].push_back(node);
+                    bool structFound = true;
+                    MIR_CORE_INFO("Hit struct at {0}", LineIndex);
+                    while (std::getline(file, line))
+                    {
+                        LineIndex++;
+
+                        if (line == "") continue;
+
+                        if (line.find("END_STRUCT") != std::string::npos)
+                        {
+                            structFound = false;
+                            MIR_CORE_INFO("Hit end struct at {0}", LineIndex);
+                            break;
+                        }
+
+                    
+                        if (structFound)
+                        {
+                            tokens = splitStringStruct(removeSpaces(line));
+                            brDataTypeNode node(tokens[0], tokens[1], tokens[2]);
+                            outputMap[structName].push_back(node);
+                        } else{
+                            MIR_CORE_ASSERT(true,"Shouldnt happen. fix before using");
+                        }
+                    }
+                    
+                } 
+                
+                // HANDLE ENUM
+                if (tokens[1] == "")
+                {
+                    MIR_CORE_ASSERT(true, "Add implementation for enums!")
+                }
+                
+            }
+            lastLine = line;            
+        }
+        return outputMap;
+    }
+    std::string brParser::removeSpaces(std::string& str) {
+        str.erase(std::remove_if(str.begin(), str.end(), 
+                     [](char c) { return std::isspace(c); }),
+                 str.end());
+        return str;
+    }
     struct cardInfo {
         std::string shortName;
         std::string fullname;

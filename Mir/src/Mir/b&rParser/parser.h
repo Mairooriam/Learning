@@ -8,6 +8,10 @@
 #include "brTypes.h"
 namespace Mir {
 
+
+
+
+
     class brParser
     {
     public:
@@ -15,12 +19,15 @@ namespace Mir {
         ~brParser();
         std::string readFile(const std::string& path);
         std::vector<std::string> readDatatypeFile(const std::string& path);
+        std::map<std::string, std::vector<brDataTypeNode>> readDataTypeFileOneLineAtaTime(const std::string& path);
         std::map<std::string, std::vector<brDataTypeNode>> readPlcDataCsv(const std::string& path);
 
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
         void writeDummyData();
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
+        std::vector<std::string> splitStringStruct(const std::string& str);
+        std::string removeSpaces(std::string& str);
 
         const std::map<std::string, std::vector<brDataTypeNode>>& getData() const { return m_Data; }
         std::map<std::string, std::vector<brDataTypeNode>>& getMutable() { return m_Data; }

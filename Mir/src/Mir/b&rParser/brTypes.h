@@ -72,15 +72,15 @@ namespace Mir {
 
     struct brDataTypeNode {
         brDataTypeNode() = default;
-
-        brDataTypeNode(const std::string& name, const std::string& typeStr, const std::string& comment)
-            : name(name), type(typeStr), comment(comment) {
+        brDataTypeNode(const std::string& name, const std::string& typeStr = "", const std::string& comment = "", const std::string& lineIndex = "")
+            : name(name), type(typeStr), comment(comment), lineIndex(lineIndex) {
         }
         
         std::string name;
         std::string type;
         std::string comment;
-    };
+        std::string lineIndex;
+        };
 
 
     struct brData {
