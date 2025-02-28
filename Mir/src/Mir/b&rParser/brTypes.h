@@ -7,7 +7,13 @@
 #include <map>
 
 namespace Mir {
-
+        // Data type suggestions
+    const std::vector<std::string_view> brDataTypesSuggestions = {
+            "BOOL", "SINT", "INT", "DINT", "USINT", "UINT", "UDINT", "REAL",
+            "STRING", "ULINT", "DATE_AND_TIME", "TIME", "DATE", "LREAL",
+            "TOD", "TIME_OF_DAY", "BYTE", "WORD", "DWORD", "LWORD",
+            "WSTRING", "DT", "LINT", "STRUCT"
+        };
     enum brDatatypes {
         UNDEFINED = 0, 
         BOOL = 1, 

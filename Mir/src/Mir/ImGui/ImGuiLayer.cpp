@@ -201,10 +201,59 @@ namespace Mir{
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     std::string nameLbl = "##name" + std::to_string(i);
-                    bool nameModified = ImGui::InputText(nameLbl.c_str(), &data.typ.data()->nodes.data()->data[i].name);
+                    if(ImGui::InputText(nameLbl.c_str(), &data.typ.data()->nodes.data()->data[i].name)){
+                    
+                        
+                    
+                    }
+                    
+                    
+                    
+                    
                     ImGui::TableNextColumn();
+                    //std::string typeLbl = "##type" + std::to_string(i);
+                    //bool typeModified = ImGui::InputText(typeLbl.c_str(), &data.typ.data()->nodes.data()->data[i].type);
                     std::string typeLbl = "##type" + std::to_string(i);
-                    bool typeModified = ImGui::InputText(typeLbl.c_str(), &data.typ.data()->nodes.data()->data[i].type);
+                    auto& currentType = data.typ.data()->nodes.data()->data[i].type;
+
+                    // Static for search filter
+                    static char searchBuffer[64] = "";
+                    static bool comboFocused = false;
+
+                    if (ImGui::BeginCombo(typeLbl.c_str(), currentType.c_str())) {
+                        // Add search filter at top of combo
+                        ImGui::PushItemWidth(-1);
+                        if (!comboFocused) {
+                            ImGui::SetKeyboardFocusHere();
+                            comboFocused = true;
+                        }
+                        ImGui::InputText("##search", searchBuffer, sizeof(searchBuffer));
+                        ImGui::PopItemWidth();
+                        ImGui::Separator();
+
+                        // Show filtered suggestions
+                        std::string_view search(searchBuffer);
+                        for (const auto& type : brDataTypesSuggestions) {
+                            if (search.empty() || type.find(search) != std::string_view::npos) {
+                                const bool is_selected = (currentType == type);
+                                if (ImGui::Selectable(std::string(type).c_str(), is_selected)) {
+                                    currentType = std::string(type);
+                                    data.m_isDirty = true;
+                                    data.updateCachedString();
+                                    ImGui::CloseCurrentPopup();
+                                }
+                                if (is_selected) {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                        }
+                        ImGui::EndCombo();
+                    } else {
+                        comboFocused = false;
+                    }
+                                        
+                    
+                    
                     ImGui::TableNextColumn();
                     std::string valueLbl = "##value" + std::to_string(i);
                     bool valueModified = ImGui::InputText(valueLbl.c_str(), &data.typ.data()->nodes.data()->data[i].value);
@@ -213,9 +262,9 @@ namespace Mir{
                     bool commentModified = ImGui::InputText(commentLbl.c_str(), &data.typ.data()->nodes.data()->data[i].comment);
                     ImGui::TableNextColumn();
 
-                    if (nameModified || typeModified || valueModified || commentModified) {
+                   /// if (typeModified || valueModified || commentModified) {
                         data.updateCachedString();
-                    }
+                    //}
                 }
 
                     ImGui::EndTable();
