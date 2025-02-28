@@ -30,6 +30,7 @@ namespace Mir {
         void setDataStr();
         
         brTyp& getData() { return m_testData; }
+        
         void setData(const brTyp& data) { m_testData = data; }
 
     private:

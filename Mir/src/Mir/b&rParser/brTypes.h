@@ -130,6 +130,8 @@ namespace Mir {
             typ.push_back(collection);
             m_isDirty = true;
         }
+        // Get the number of collections
+        size_t size() const { return typ.size(); }
 
         // Get cached string without updating
         const std::string& getCachedString() const {

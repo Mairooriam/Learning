@@ -154,37 +154,81 @@ namespace Mir{
         ImGui::SeparatorText(data.m_isDirty ? "Type Editor *" : "Type Editor");
 
         // 2. Content
-        for (size_t i = 0; i < data.typ.size(); i++) {
+        for (size_t i = 0; i < data.size(); i++) {
             auto& collection = data.typ[i];
-            if (ImGui::InputText("Comment", &collection.comment)) {
-                data.m_isDirty = true;
-                data.updateCachedString();
+            if (ImGui::InputText(("Comment##collection" + std::to_string(i)).c_str(), &collection.comment)) {
+            data.m_isDirty = true;
+            data.updateCachedString();
+            }
+        }
+
+        for (size_t i = 0; i < data.typ.data()->nodes.size(); i++) {
+            auto& nodes = data.typ.data()->nodes;
+            if (ImGui::InputText(("name##node" + std::to_string(i)).c_str(), &nodes[0].name)) {
+            data.m_isDirty = true;
+            data.updateCachedString();
+            }
+        }
+
+        for (size_t i = 0; i < data.typ.data()->nodes.size(); i++) {
+            auto& nodes = data.typ.data()->nodes;
+            if (ImGui::InputText(("data##data" + std::to_string(i)).c_str(), &nodes[0].data[0].name)) {
+            data.m_isDirty = true;
+            data.updateCachedString();
             }
         }
 
         ImGui::Text("%s", data.getCachedString().c_str());
         
 
-        // 4. Show dirty state warning
-        if (data.m_isDirty) {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-            ImGui::Text("(Unsaved Changes)");
-            ImGui::PopStyleColor();
+        for (size_t i = 0; i < data.size(); i++) {
+            std::string label = "Type" + std::to_string(i) + "\t\t"  + data.typ[i].comment + "###Type" + std::to_string(i) + data.typ[i].comment;
+
             
+
+            if (ImGui::TreeNode(label.c_str()))
+            {
+                if (ImGui::BeginTable("Node", 4)){
+                    ImGui::TableSetupColumn("Name");
+                    ImGui::TableSetupColumn("Type");
+                    ImGui::TableSetupColumn("Value");
+                    ImGui::TableSetupColumn("Comment");
+                    ImGui::TableHeadersRow();
+
+
+                //printing for nodes
+                for (size_t i = 0; i < data.typ.data()->nodes.data()->data.size(); i++) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    std::string nameLbl = "##name" + std::to_string(i);
+                    bool nameModified = ImGui::InputText(nameLbl.c_str(), &data.typ.data()->nodes.data()->data[i].name);
+                    ImGui::TableNextColumn();
+                    std::string typeLbl = "##type" + std::to_string(i);
+                    bool typeModified = ImGui::InputText(typeLbl.c_str(), &data.typ.data()->nodes.data()->data[i].type);
+                    ImGui::TableNextColumn();
+                    std::string valueLbl = "##value" + std::to_string(i);
+                    bool valueModified = ImGui::InputText(valueLbl.c_str(), &data.typ.data()->nodes.data()->data[i].value);
+                    ImGui::TableNextColumn();
+                    std::string commentLbl = "##comment" + std::to_string(i);
+                    bool commentModified = ImGui::InputText(commentLbl.c_str(), &data.typ.data()->nodes.data()->data[i].comment);
+                    ImGui::TableNextColumn();
+
+                    if (nameModified || typeModified || valueModified || commentModified) {
+                        data.updateCachedString();
+                    }
+                }
+
+                    ImGui::EndTable();
+                }
+                
+                ImGui::TreePop();
+            }
         }
 
-        // 5. Save button with dirty state indication
-        if (data.m_isDirty) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.6f, 0.0f, 1.0f));
-            if (ImGui::Button("Save Changes")) {
-                
-            }
-            ImGui::PopStyleColor();
-        } else {
-            ImGui::BeginDisabled();
-            ImGui::Button("Save Changes");
-            ImGui::EndDisabled();
-        }
+        // 2. Content
+
+        
+        
     }
 
 

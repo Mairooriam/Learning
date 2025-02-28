@@ -28,7 +28,7 @@ namespace MirUI {
     void contextPopup(size_t row, size_t column);
 
 
-
+    void treeNodeForTypes(const Mir::brTyp& typ);
 
     
 

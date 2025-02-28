@@ -19,34 +19,48 @@ namespace Mir {
             // Get remaining string after name
             std::string remainder = str.substr(colonPos + 1);
             
-            // Find semicolon that separates type from value
-            size_t semicolonPos = remainder.find(';');
-            if (semicolonPos != std::string::npos) {
-                // Extract type (token[1])
-                result[1] = remainder.substr(0, semicolonPos);
+            // Look for ":=" to separate type and value
+            size_t assignPos = remainder.find(":=");
+            if (assignPos != std::string::npos) {
+                // Has value - original logic
+                result[1] = remainder.substr(0, assignPos);
                 
-                // Get string after semicolon
-                std::string valueAndComment = remainder.substr(semicolonPos + 1);
+                std::string valueAndComment = remainder.substr(assignPos + 2);
                 
-                // Look for comment
-                size_t commentStart = valueAndComment.find("(*");
-                if (commentStart != std::string::npos) {
-                    // Extract value (token[2])
-                    result[2] = valueAndComment.substr(0, commentStart);
+                size_t semicolonPos = valueAndComment.find(';');
+                if (semicolonPos != std::string::npos) {
+                    result[2] = valueAndComment.substr(0, semicolonPos);
                     
-                    // Extract comment (token[3])
-                    size_t commentEnd = valueAndComment.find("*)");
-                    if (commentEnd != std::string::npos) {
-                        result[3] = valueAndComment.substr(commentStart + 2, 
-                                                         commentEnd - commentStart - 2);
+                    std::string afterSemicolon = valueAndComment.substr(semicolonPos);
+                    size_t commentStart = afterSemicolon.find("(*");
+                    if (commentStart != std::string::npos) {
+                        size_t commentEnd = afterSemicolon.find("*)");
+                        if (commentEnd != std::string::npos) {
+                            result[3] = afterSemicolon.substr(commentStart + 2,
+                                                            commentEnd - commentStart - 2);
+                        }
                     }
                 } else {
-                    // No comment, just value
                     result[2] = valueAndComment;
                 }
             } else {
-                // No value/comment, just type
-                result[1] = remainder;
+                // No value - look for comment directly after type
+                size_t semicolonPos = remainder.find(';');
+                if (semicolonPos != std::string::npos) {
+                    result[1] = remainder.substr(0, semicolonPos);
+                    
+                    std::string afterSemicolon = remainder.substr(semicolonPos);
+                    size_t commentStart = afterSemicolon.find("(*");
+                    if (commentStart != std::string::npos) {
+                        size_t commentEnd = afterSemicolon.find("*)");
+                        if (commentEnd != std::string::npos) {
+                            result[3] = afterSemicolon.substr(commentStart + 2,
+                                                            commentEnd - commentStart - 2);
+                        }
+                    }
+                } else {
+                    result[1] = remainder;
+                }
             }
         }
         
