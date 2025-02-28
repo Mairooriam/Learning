@@ -52,7 +52,7 @@ namespace Mir {
         //std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
         
         brTyp test9999 = m_brParser->readDatafile999999("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        std::cout << test9999.toString() << "\n";
+        m_brParser->setTestDataStr(test9999.toString());
         m_brParser->writeFile("C:/Users/35850/Desktop/repositories/learning2/Learning/Tools/test.typ", test9999.toString(), std::ios_base::app);
 
 

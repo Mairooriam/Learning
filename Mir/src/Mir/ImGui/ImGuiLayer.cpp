@@ -120,7 +120,7 @@ namespace Mir{
 
         if (ImGui::Button("Save dummy data")){
             clicked++;
-            Mir::Application::Get().GetBrParser().writeDummyData();
+            //Mir::Application::Get().GetBrParser().writeDummyData();
             
         }    
 

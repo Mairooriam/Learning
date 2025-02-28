@@ -123,10 +123,27 @@ namespace Mir {
 
     struct brTyp {
         std::vector<brStructCollection> typ;
+        mutable std::string m_cachedString;
+        mutable bool m_isDirty = true;
         
         void push_back(const brStructCollection& collection) {
             typ.push_back(collection);
+            m_isDirty = true;
         }
+
+        // Get cached string, update only if dirty
+        const std::string& getCachedString() const {
+            if (m_isDirty) {
+                std::stringstream ss;
+                for (const auto& collection : typ) {
+                    ss << collection.toString();
+                }
+                m_cachedString = ss.str();
+                m_isDirty = false;
+            }
+            return m_cachedString;
+        }
+
 
         std::string toString() const {
             std::stringstream ss;
@@ -144,60 +161,4 @@ namespace Mir {
         return (str.substr(0, 2) == "(*" && str.substr(str.length() - 2) == "*)");
     }
 
-
-    struct brDataTypeNode {
-        brDataTypeNode() = default;
-        brDataTypeNode(const std::string& name, const std::string& typeStr = "", const std::string& comment = "", const std::string& lineIndex = "")
-            : name(name), type(typeStr), comment(comment), lineIndex(lineIndex) {
-        }
-        
-        std::string name;
-        std::string type;
-        std::string comment;
-        std::string lineIndex;
-        };
-
-
-    struct brData {
-        brData() = default;
-        brData(const std::string& datatypeName) {
-            m_data[datatypeName] = std::vector<brDataTypeNode>();
-        }
-
-        void addNode(const std::string& datatypeName, const brDataTypeNode& node) {
-            m_data[datatypeName].push_back(node);
-        }
-
-        void setNode(const std::string& datatypeName, const std::string& name, const std::string& type, const std::string& comment) {
-            m_data[datatypeName].push_back(brDataTypeNode(name, type, comment));
-        }
-
-        void clear() {
-            m_data.clear();
-        }
-
-        std::string toString() const {
-            std::string result;
-            for (const auto& [name, nodes] : m_data) {
-                result += "TYPE\n";
-                result += "\t" + name + " : STRUCT\n";
-                for (const auto& node : nodes) {
-                    result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
-                }
-                result += "\nEND_STRUCT;\nEND_TYPE\n";
-            }
-            return result;
-        }
-
-        // Size function to get the number of datatypes
-        size_t size() const { return m_data.size(); }
-
-        // Get nodes for a specific datatype
-        const std::vector<brDataTypeNode>& getNodes(const std::string& datatypeName) const {
-            return m_data.at(datatypeName);
-        }
-
-        private:
-            std::map<std::string, std::vector<brDataTypeNode>> m_data;
-    };
 }
