@@ -20,6 +20,7 @@ namespace Mir {
         std::string readFile(const std::string& path);
         std::vector<std::string> readDatatypeFile(const std::string& path);
         std::map<std::string, std::vector<brDataTypeNode>> readDataTypeFileOneLineAtaTime(const std::string& path);
+        brTyp readDatafile999999(const std::string& path);
         std::map<std::string, std::vector<brDataTypeNode>> readPlcDataCsv(const std::string& path);
 
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
@@ -27,6 +28,8 @@ namespace Mir {
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
         std::vector<std::string> splitStringStruct(const std::string& str);
+        std::stringstream dataOut();
+
         std::string removeSpaces(std::string& str);
 
         const std::map<std::string, std::vector<brDataTypeNode>>& getData() const { return m_Data; }
@@ -34,20 +37,22 @@ namespace Mir {
 
         size_t size() const { return m_Data.size(); }
         
-
         std::string toString() const {
-            std::string result;
+            std::stringstream ss;
             for (const auto& [name, nodes] : m_Data) {
-                result += "TYPE\n";
-                result += "\t" + name + " : STRUCT\n";
+                ss << "TYPE\n"
+                   << "\t" << name << " : STRUCT\n";
+                
                 for (const auto& node : nodes) {
-                    result += "\t\t" + node.name + " : " + node.type + "; (*" + node.comment + "*)\n";
+                    ss << "\t\t" << node.name << " : " << node.type 
+                       << "; (*" << node.comment << "*)\n";
                 }
-                result += "\nEND_STRUCT;\nEND_TYPE\n";
+                
+                ss << "\nEND_STRUCT;\nEND_TYPE\n";
             }
-            return result;
+            return ss.str();
         }
-
+        
         void mergeMaps(const std::map<std::string, std::vector<brDataTypeNode>>& other) {
             for (const auto& [key, values] : other) {
                 // Insert or append to existing vector
@@ -58,7 +63,9 @@ namespace Mir {
 
         void initDummyData();
     private:
+        brTyp m_testData;
         std::map<std::string, std::vector<brDataTypeNode>> m_Data;
+        std::vector<std::map<std::string, std::vector<brDataTypeNode>>> m_test_dataVector;
     };
 
 }

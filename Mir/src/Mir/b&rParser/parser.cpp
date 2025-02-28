@@ -25,43 +25,56 @@ namespace Mir {
         return tokens;
     }
 
-    std::vector<std::string> brParser::splitStringStruct(const std::string &str)
-    {
-        std::vector<std::string> tokens;
-        std::vector<std::string> Finaltokens;
-        std::string delimeterFirst = ":";
-        std::string delimeterSecond = ";";
-
-        size_t start = 0;
-        size_t end = str.find(delimeterFirst);
+    std::vector<std::string> brParser::splitStringStruct(const std::string &str) {
+        std::vector<std::string> result(4); // Initialize with 4 empty strings
         
-        while (end != std::string::npos) {
-            std::string token = str.substr(start, end - start);
-            tokens.push_back(token);
-            start = end + delimeterFirst.length();
-            end = str.find(delimeterFirst, start);
-        }
-        tokens.push_back(str.substr(start));
-
-  
-        for (auto &token : tokens)
-        {
-            size_t start = 0;
-            size_t end = token.find(delimeterSecond);
-            while (end != std::string::npos) {
-                std::string tokenTemp = token.substr(start, end - start);
-                Finaltokens.push_back(tokenTemp);
-                start = end + delimeterSecond.length();
-                end = token.find(delimeterSecond, start);
-            }
-            Finaltokens.push_back(token.substr(start));
+        // Find the first colon to split name and rest
+        size_t colonPos = str.find(':');
+        if (colonPos != std::string::npos) {
+            // Extract name (token[0])
+            result[0] = str.substr(0, colonPos);
             
+            // Get remaining string after name
+            std::string remainder = str.substr(colonPos + 1);
+            
+            // Find semicolon that separates type from value
+            size_t semicolonPos = remainder.find(';');
+            if (semicolonPos != std::string::npos) {
+                // Extract type (token[1])
+                result[1] = remainder.substr(0, semicolonPos);
+                
+                // Get string after semicolon
+                std::string valueAndComment = remainder.substr(semicolonPos + 1);
+                
+                // Look for comment
+                size_t commentStart = valueAndComment.find("(*");
+                if (commentStart != std::string::npos) {
+                    // Extract value (token[2])
+                    result[2] = valueAndComment.substr(0, commentStart);
+                    
+                    // Extract comment (token[3])
+                    size_t commentEnd = valueAndComment.find("*)");
+                    if (commentEnd != std::string::npos) {
+                        result[3] = valueAndComment.substr(commentStart + 2, 
+                                                         commentEnd - commentStart - 2);
+                    }
+                } else {
+                    // No comment, just value
+                    result[2] = valueAndComment;
+                }
+            } else {
+                // No value/comment, just type
+                result[1] = remainder;
+            }
         }
-        if (Finaltokens.size() > 2) {
-            Finaltokens[2] = Finaltokens[2].substr(Finaltokens[2].find("(*") + 2);
-            Finaltokens[2] = Finaltokens[2].substr(0, Finaltokens[2].find("*)"));
+        
+        // Trim whitespace from all tokens
+        for (auto& token : result) {
+            token.erase(0, token.find_first_not_of(" \t\n\r\f\v"));
+            token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
         }
-        return Finaltokens;
+        
+        return result;
     }
 
     void writeDummyData()
@@ -241,7 +254,11 @@ namespace Mir {
         {
             LineIndex++;
 
-            if (line == "") continue;
+            if (line == ""){
+                lastLine = "";
+                continue;
+            }
+             
 
             if (line == "TYPE"){
                 typeFound = true;
@@ -251,12 +268,22 @@ namespace Mir {
                 
             if (line.length() >= 2 && line[0] == '(' && line[1] == '*')
             {
+                // FOR NEW IMPLEMENTATION
+                std::map<std::string, std::vector<brDataTypeNode>> temp_data;
+
+
+
                 std::string comment = line.substr(2); // Remove (*
                 if (comment.find("*)") != std::string::npos) {
                     comment = comment.substr(0, comment.find("*)"));
                 }
                 brDataTypeNode node("Comment", "", "", std::to_string(LineIndex));
-                outputMap["Comments"].push_back(node);
+                std::string key = "comment" + std::to_string(LineIndex);
+                outputMap[key].push_back(node);
+
+                // FOR new implementation
+                temp_data[key].push_back(node);
+                m_test_dataVector.push_back(temp_data);
             }
 
             
@@ -275,9 +302,17 @@ namespace Mir {
                 // HANDLE STRUCT
                 if (tokens[1] == "STRUCT")
                 {
+                    // FOR NEW IMPLEMENTATION
+                    std::map<std::string, std::vector<brDataTypeNode>> temp_data;
+
+
                     std::string structName = tokens[0];
                     brDataTypeNode node("Line", std::to_string(LineIndex), "");
                     outputMap[structName].push_back(node);
+
+                    // FOR NEW
+                    temp_data[structName].push_back(node);
+
                     bool structFound = true;
                     MIR_CORE_INFO("Hit struct at {0}", LineIndex);
                     while (std::getline(file, line))
@@ -289,6 +324,7 @@ namespace Mir {
                         if (line.find("END_STRUCT") != std::string::npos)
                         {
                             structFound = false;
+                            m_test_dataVector.push_back(temp_data); // FOR NEW IMPL
                             MIR_CORE_INFO("Hit end struct at {0}", LineIndex);
                             break;
                         }
@@ -299,6 +335,10 @@ namespace Mir {
                             tokens = splitStringStruct(removeSpaces(line));
                             brDataTypeNode node(tokens[0], tokens[1], tokens[2]);
                             outputMap[structName].push_back(node);
+
+
+                            // FOR NEW IMPL
+                            temp_data[structName].push_back(node);
                         } else{
                             MIR_CORE_ASSERT(true,"Shouldnt happen. fix before using");
                         }
@@ -317,7 +357,103 @@ namespace Mir {
         }
         return outputMap;
     }
-    std::string brParser::removeSpaces(std::string& str) {
+    brTyp brParser::readDatafile999999(const std::string &path)
+    {
+
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path << std::endl;
+            return brTyp();
+        }
+
+        std::string                 line;
+        size_t                      LineIndex = 1;
+        std::string                 lastLine;
+        std::vector<std::string>    tokens;
+        bool                        typeFound = 0;
+
+        std::stringstream          lineStream(line);
+        std::string                cell;
+
+
+        brTyp result;
+        while(std::getline(file,line))
+        {
+            LineIndex++;
+
+            if (line == "") continue;
+
+
+
+
+            if (line == "TYPE")
+            {   
+                brStructCollection col;
+                brStructNode node;
+                bool structFound1 = false;
+                while (std::getline(file,line))
+                {
+                    removeSpaces(line);
+
+                    if (line == "END_TYPE")
+                    {
+                        result.push_back(col);
+                        break;
+                    }
+                    if (line== "END_STRUCT;")
+                    {
+                        col.nodes.push_back(node);
+                        continue;
+                    }
+                    
+                    
+                    if (brIsComment(lastLine))
+                    {
+                        col.comment = lastLine.substr(2, lastLine.length() - 4);  // Remove "(*" and "*)"
+                        lastLine = "";
+                    }
+                    
+                    if (!structFound1)
+                    {
+                        tokens = splitStringStruct(line);
+                        if (tokens[1]=="STRUCT")
+                        {
+                            node.name = tokens[0];
+                            structFound1 = true;
+                        } 
+                    } else{
+                        brStructData data;               
+
+                        tokens = splitStringStruct(line);
+                        data.name = tokens[0];
+                        data.type = tokens[1];
+                        data.value = tokens[2];
+                        data.comment = tokens[3];  
+                        node.data.push_back(data);
+                    }
+                    
+                    
+                    
+
+
+                }
+                
+               
+
+
+                
+                MIR_INFO("TYPE FOUND");
+            }
+            lastLine = line;
+        }
+
+        return result;
+    }
+
+
+
+    std::string brParser::removeSpaces(std::string &str)
+    {
         str.erase(std::remove_if(str.begin(), str.end(), 
                      [](char c) { return std::isspace(c); }),
                  str.end());
@@ -427,12 +563,15 @@ namespace Mir {
 
         file.close();
     }
+
     void brParser::writeDummyData(){
         std::string datatest = this->toString();
         writeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ",datatest,std::ios_base::app);
     }
 
-    void brParser::initDummyData(){
+
+    void brParser::initDummyData()
+    {
         for (int i = 1; i <= 10; ++i) {
             std::string nodeName = "Sami" + std::to_string(i);
             Mir::brDataTypeNode node(nodeName, "BOOL", "No comment");

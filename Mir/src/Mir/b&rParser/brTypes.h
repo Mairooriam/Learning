@@ -69,6 +69,81 @@ namespace Mir {
         }
     }
 
+    struct brStructData {
+        std::string name;
+        std::string type;
+        std::string value;
+        std::string comment;
+
+        std::string toString() const {
+            std::stringstream ss;
+            ss << name;
+            if (!type.empty()) ss << " : " << type;
+            if (!value.empty()) ss << " := " << value;
+            if (!comment.empty()) ss << "; (*" << comment << "*)";
+            return ss.str();
+        }
+    };
+
+    struct brStructNode {
+        size_t id;
+        std::string name;
+        std::vector<brStructData> data;
+
+        std::string toString() const {
+            std::stringstream ss;
+            ss << name << " :\t" << "STRUCT";
+            for (const auto& d : data) {
+                ss << "\n\t\t " << d.toString();
+            }
+            ss << "\nEND_STRUCT;";
+            return ss.str();
+        }
+    };
+
+    struct brStructCollection {
+        std::string comment;
+        std::vector<brStructNode> nodes;
+    
+        std::string toString() const {
+            std::stringstream ss;
+            if (!comment.empty()) {
+                ss << "(*" << comment << "*)";
+            }
+    
+            ss << "\nTYPE";
+            for (const auto& node : nodes) {
+                ss << "\n" << node.toString();
+            }
+            ss << "\nEND_TYPE\n";
+            
+            return ss.str();
+        }
+    };
+
+    struct brTyp {
+        std::vector<brStructCollection> typ;
+        
+        void push_back(const brStructCollection& collection) {
+            typ.push_back(collection);
+        }
+
+        std::string toString() const {
+            std::stringstream ss;
+            for (const auto& collection : typ) {
+                ss << collection.toString();
+            }
+            return ss.str();
+        }
+    };
+
+    inline bool brIsComment(const std::string& str) {
+        if (str.length() < 4) return false;  // Need at least (**)
+        
+        // Check if string starts with (* and ends with *)
+        return (str.substr(0, 2) == "(*" && str.substr(str.length() - 2) == "*)");
+    }
+
 
     struct brDataTypeNode {
         brDataTypeNode() = default;
