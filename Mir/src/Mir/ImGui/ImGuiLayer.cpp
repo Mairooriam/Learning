@@ -114,14 +114,9 @@ namespace Mir{
             "opc.tcp://192.168.0.57:4840"
         };
 
-
-
-        
-
         if (ImGui::Button("Save dummy data")){
             clicked++;
             //Mir::Application::Get().GetBrParser().writeDummyData();
-            
         }    
 
         if (clicked & 1)
@@ -132,13 +127,11 @@ namespace Mir{
             ImGui::Text(str0);
             ImGui::Text(str0);
         }
-
         
         if (MirUI::InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
             // Handle input change if needed
         }
-        // C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\Luotu.csv
-        // C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\Luotu.csv
+
         if(ImGui::Button("Browse###BrowseInput")){
             m_fileDialog.OpenFile(false);
             fileselection1 = m_fileDialog.GetFileSelection();
@@ -153,66 +146,49 @@ namespace Mir{
         ImGui::SameLine();
         ImGui::InputText("Output Path", &fileselection2.filePath);
 
-
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
-
-
-
-        if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
-        {
-            if (ImGui::BeginTabItem("B&R Parser"))
-            {
-                std::string test1 = Mir::Application::Get().GetBrParser().toString();
-                ImGui::InputTextMultiline(
-                "data.Txt Preview", 
-                &test1,
-                ImVec2(0,0),
-                ImGuiInputTextFlags_ReadOnly);
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Converted CSV"))
-            {
+        brTyp& data = Mir::Application::Get().GetBrParser().getData();
                 
-                if (ImGui::Button("read output csv")){
-                    outputFileStr = Mir::Application::Get().GetBrParser().readFile(fileselection2.filePath);
-                }
-                ImGui::InputTextMultiline(
-                "data.Txt Preview", 
-                &outputFileStr,
-                ImVec2(0,0),
-                ImGuiInputTextFlags_ReadOnly);
+        // 1. Header with dirty indicator
+        ImGui::SeparatorText(data.m_isDirty ? "Type Editor *" : "Type Editor");
 
-                ImGui::EndTabItem();
+        // 2. Content
+        for (size_t i = 0; i < data.typ.size(); i++) {
+            auto& collection = data.typ[i];
+            if (ImGui::InputText("Comment", &collection.comment)) {
+                data.m_isDirty = true;
+                data.updateCachedString();
             }
-            if (ImGui::BeginTabItem("brData edita ble"))
-            {
-                std::map<std::string, std::vector<Mir::brDataTypeNode>>& brData = Mir::Application::Get().GetBrParser().getMutable();
+        }
+
+        ImGui::Text("%s", data.getCachedString().c_str());
+        
+
+        // 4. Show dirty state warning
+        if (data.m_isDirty) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+            ImGui::Text("(Unsaved Changes)");
+            ImGui::PopStyleColor();
             
-                MirUI::tableFromBrData(brData);
-                ImGui::EndTabItem();
+        }
+
+        // 5. Save button with dirty state indication
+        if (data.m_isDirty) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.6f, 0.0f, 1.0f));
+            if (ImGui::Button("Save Changes")) {
+                
             }
-            ImGui::EndTabBar();
+            ImGui::PopStyleColor();
+        } else {
+            ImGui::BeginDisabled();
+            ImGui::Button("Save Changes");
+            ImGui::EndDisabled();
         }
-        ImGui::Separator();
+    }
 
 
-
-        if (ImGui::TreeNode("Borders, background"))
-        {
-
-
-            std::map<std::string, std::vector<Mir::brDataTypeNode>>& brData = Mir::Application::Get().GetBrParser().getMutable();
-            
-            MirUI::tableFromBrData(brData);
-            
-            ImGui::TreePop();
-
-        }
-        }
-
-
-        void ImGuiLayer::Begin(){
+    void ImGuiLayer::Begin(){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();

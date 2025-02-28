@@ -7,11 +7,6 @@
 #include <map>
 #include "brTypes.h"
 namespace Mir {
-
-
-
-
-
     class brParser
     {
     public:
@@ -33,10 +28,11 @@ namespace Mir {
         std::string removeSpaces(std::string& str);
 
         void setDataStr();
+        
+        brTyp& getData() { return m_testData; }
+        void setData(const brTyp& data) { m_testData = data; }
 
     private:
         brTyp m_testData;
-        std::string m_testDataStr;
     };
-
 }

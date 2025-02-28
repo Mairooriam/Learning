@@ -131,26 +131,33 @@ namespace Mir {
             m_isDirty = true;
         }
 
-        // Get cached string, update only if dirty
+        // Get cached string without updating
         const std::string& getCachedString() const {
-            if (m_isDirty) {
-                std::stringstream ss;
-                for (const auto& collection : typ) {
-                    ss << collection.toString();
-                }
-                m_cachedString = ss.str();
-                m_isDirty = false;
-            }
             return m_cachedString;
         }
 
-
-        std::string toString() const {
+        // Explicit update method
+        void updateCachedString() const {
             std::stringstream ss;
             for (const auto& collection : typ) {
                 ss << collection.toString();
             }
-            return ss.str();
+            m_cachedString = ss.str();
+            m_isDirty = false;
+        }
+
+            // Check if cache needs update
+        bool isDirty() const {
+            return m_isDirty;
+        }
+
+        // Mark cache as needing update
+        void markDirty() {
+            m_isDirty = true;
+        }
+
+        std::string toString() const {
+            return getCachedString();
         }
     };
 

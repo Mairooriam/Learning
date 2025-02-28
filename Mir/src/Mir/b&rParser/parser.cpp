@@ -140,6 +140,7 @@ namespace Mir {
                     if (line== "END_STRUCT;")
                     {
                         col.nodes.push_back(node);
+                        structFound1 = false; 
                         continue;
                     }
                     
@@ -172,7 +173,9 @@ namespace Mir {
             }
             lastLine = line;
         }
-
+        
+        setData(result);
+        m_testData.updateCachedString();
         return result;
     }
 
