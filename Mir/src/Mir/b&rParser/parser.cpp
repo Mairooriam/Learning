@@ -153,7 +153,7 @@ namespace Mir {
                     }
                     if (line== "END_STRUCT;")
                     {
-                        col.nodes.push_back(node);
+                        col.structs.push_back(node);
                         node.clear();
                         structFound1 = false; 
                         continue;
@@ -182,7 +182,7 @@ namespace Mir {
                         data.type = tokens[1];
                         data.value = tokens[2];
                         data.comment = tokens[3];  
-                        node.data.push_back(data);
+                        node.values.push_back(data);
                     }
                 }
             }

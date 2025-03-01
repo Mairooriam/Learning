@@ -96,39 +96,19 @@ namespace Mir {
     struct brStructNode {
         size_t id;
         std::string name;
-        std::vector<brStructData> data;
+        std::vector<brStructData> values;
 
         brStructNode& clear() {
-            id = 0;
             name.clear();
-            data.clear();
+            values.clear();
             return *this;
-        }
-
-        // Constructor
-        brStructNode() : id(0) {} // We'll compute this based on contents
-
-        void updateId() {
-            size_t hash = 0;
-            std::hash<std::string> str_hasher;
-            
-            for (const auto& item : data) {
-                // Hash based on data content since brStructData doesn't have id
-                size_t item_hash = str_hasher(item.name + item.type + item.value + item.comment);
-                hash ^= item_hash + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            
-            // Add name to the mix
-            hash ^= str_hasher(name) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            
-            id = hash;
         }
 
         std::string toString() const {
             std::stringstream ss;
             ss << name << " :\t" << "STRUCT";
-            for (const auto& d : data) {
-                ss << "\n\t\t " << d.toString();
+            for (const auto& value : values) {
+                ss << "\n\t\t " << value.toString();
             }
             ss << "\nEND_STRUCT;";
             return ss.str();
@@ -136,35 +116,8 @@ namespace Mir {
     };
 
     struct brStructCollection {
-        size_t id;  
-        std::string comment;
-        std::vector<brStructNode> nodes;
-    
-            // Constructor that generates a unique ID
-            brStructCollection() : id(0) {}
-
-            // Assignment operator
-            brStructCollection& operator=(const brStructCollection& other) {
-                if (this != &other) {
-                    comment = other.comment;
-                    nodes = other.nodes;
-                    updateId();  // Update ID after assignment
-                }
-                return *this;
-            }
-
-        // Update ID based on nodes
-        void updateId() {
-            size_t hash = 0;
-            for (const auto& node : nodes) {
-                hash ^= node.id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            // Add comment to the mix
-            std::hash<std::string> str_hasher;
-            hash ^= str_hasher(comment) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            
-            id = hash;
-        }
+    std::string comment;
+    std::vector<brStructNode> structs;
 
         std::string toString() const {
             std::stringstream ss;
@@ -173,8 +126,8 @@ namespace Mir {
             }
     
             ss << "\nTYPE";
-            for (const auto& node : nodes) {
-                ss << "\n" << node.toString();
+            for (const auto& child : structs) {
+                ss << "\n" << child.toString();
             }
             ss << "\nEND_TYPE\n";
             
@@ -183,42 +136,90 @@ namespace Mir {
     };
 
     struct brTyp {
-        size_t id; 
-        std::vector<brStructCollection> typ;
+        std::vector<brStructCollection> collections;
         mutable std::string m_cachedString;
         mutable bool m_isDirty = true;
+        std::unordered_map<size_t, int> copyCounters;
 
-        brTyp() : id(0) {}
-
-        void updateId() {
-            size_t hash = 0;
-            for (const auto& collection : typ) {
-                hash ^= collection.id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            id = hash;
+        brStructData& getValueAt(size_t i, size_t j, size_t k) {
+            return collections[i].structs[j].values[k];
         }
 
-        const brStructCollection getIndexData(size_t i){
-            if(i < typ.size()){
-                return typ[i];
+        const brStructCollection getIndexData(size_t i) const {
+            if(i < collections.size()){
+                return collections[i];
+            }
+            return brStructCollection{};
+        }
+
+        void duplicateCollectionAt(size_t i) {
+            if(i >= collections.size()) return;
+            
+            brStructCollection copy = collections[i];
+            
+            // Increment copy counter for this index
+            copyCounters[i]++;
+            int copyNum = copyCounters[i];
+            
+            // Add "_copyN" to collection comment
+            copy.comment = copy.comment + "_copy" + std::to_string(copyNum);
+            
+            // Add "_copyN" to each struct name and values
+            for (auto& str : copy.structs) {
+            str.name = str.name + "_copy" + std::to_string(copyNum);
+            for (auto& val : str.values) {
+                val.name = val.name + "_copy" + std::to_string(copyNum);
+            }
+            }
+            
+            collections.push_back(copy);
+            m_isDirty = true;
+        }
+
+        void duplicateStructAt(size_t collectionIndex, size_t structIndex) {
+            if(collectionIndex >= collections.size() || 
+               structIndex >= collections[collectionIndex].structs.size()) return;
+            
+            brStructNode copy = collections[collectionIndex].structs[structIndex];
+            
+            // Increment copy counter for this struct
+            size_t id = copy.id;
+            copyCounters[id]++;
+            int copyNum = copyCounters[id];
+            
+            // Add "_copyN" to struct name and values
+            copy.name = copy.name + "_copy" + std::to_string(copyNum);
+            for (auto& val : copy.values) {
+            val.name = val.name + "_copy" + std::to_string(copyNum);
+            }
+            
+            collections[collectionIndex].structs.push_back(copy);
+            m_isDirty = true;
+        }
+
+        void deleteCollectionAt(size_t i){
+            if(i < collections.size()){
+            collections.erase(collections.begin() + i);
+            m_isDirty = true; 
             }
         }
 
-        void deleteIndex(size_t i){
-            if(i < typ.size()){
-                typ.erase(typ.begin() + i);
-                m_isDirty = true; 
-                updateId();
+        void deleteStructAt(size_t collectionIndex, size_t structIndex) {
+            if(collectionIndex < collections.size() && 
+               structIndex < collections[collectionIndex].structs.size()) {
+            collections[collectionIndex].structs.erase(
+                collections[collectionIndex].structs.begin() + structIndex);
+            m_isDirty = true;
             }
         }
+
 
         void push_back(const brStructCollection& collection) {
-            typ.push_back(collection);
+            collections.push_back(collection);
             m_isDirty = true;
-            updateId();
         }
         // Get the number of collections
-        size_t size() const { return typ.size(); }
+        size_t size() const { return collections.size(); }
 
         // Get cached string without updating
         const std::string& getCachedString() const {
@@ -228,7 +229,7 @@ namespace Mir {
         // Explicit update method
         void updateCachedString() const {
             std::stringstream ss;
-            for (const auto& collection : typ) {
+            for (const auto& collection : collections) {
                 ss << collection.toString();
             }
             m_cachedString = ss.str();
@@ -250,18 +251,6 @@ namespace Mir {
                 updateCachedString();
             }
             return getCachedString();
-        }
-
-        // Add this to brTyp
-        void updateIdsRecursively() {
-            // Update IDs at all levels
-            for (auto& collection : typ) {
-                for (auto& node : collection.nodes) {
-                    node.updateId();  // Update node ID
-                }
-                collection.updateId();  // Update collection ID
-            }
-            updateId();  // Update type ID
         }
         
     };
