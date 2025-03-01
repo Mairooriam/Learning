@@ -154,6 +154,7 @@ namespace Mir {
                     if (line== "END_STRUCT;")
                     {
                         col.nodes.push_back(node);
+                        node.clear();
                         structFound1 = false; 
                         continue;
                     }

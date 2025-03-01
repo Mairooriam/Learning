@@ -33,6 +33,7 @@ namespace Mir {
         
         void setData(const brTyp& data) { m_testData = data; }
 
+
     private:
         brTyp m_testData;
     };

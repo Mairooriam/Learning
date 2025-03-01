@@ -3,11 +3,12 @@
 #include <string>
 #include <vector>
 #include <ios>
-
+#include <random>
 #include <map>
 
 namespace Mir {
-        // Data type suggestions
+
+
     const std::vector<std::string_view> brDataTypesSuggestions = {
             "BOOL", "SINT", "INT", "DINT", "USINT", "UINT", "UDINT", "REAL",
             "STRING", "ULINT", "DATE_AND_TIME", "TIME", "DATE", "LREAL",
@@ -76,6 +77,7 @@ namespace Mir {
     }
 
     struct brStructData {
+        
         std::string name;
         std::string type;
         std::string value;
@@ -96,6 +98,32 @@ namespace Mir {
         std::string name;
         std::vector<brStructData> data;
 
+        brStructNode& clear() {
+            id = 0;
+            name.clear();
+            data.clear();
+            return *this;
+        }
+
+        // Constructor
+        brStructNode() : id(0) {} // We'll compute this based on contents
+
+        void updateId() {
+            size_t hash = 0;
+            std::hash<std::string> str_hasher;
+            
+            for (const auto& item : data) {
+                // Hash based on data content since brStructData doesn't have id
+                size_t item_hash = str_hasher(item.name + item.type + item.value + item.comment);
+                hash ^= item_hash + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            }
+            
+            // Add name to the mix
+            hash ^= str_hasher(name) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            
+            id = hash;
+        }
+
         std::string toString() const {
             std::stringstream ss;
             ss << name << " :\t" << "STRUCT";
@@ -108,9 +136,36 @@ namespace Mir {
     };
 
     struct brStructCollection {
+        size_t id;  
         std::string comment;
         std::vector<brStructNode> nodes;
     
+            // Constructor that generates a unique ID
+            brStructCollection() : id(0) {}
+
+            // Assignment operator
+            brStructCollection& operator=(const brStructCollection& other) {
+                if (this != &other) {
+                    comment = other.comment;
+                    nodes = other.nodes;
+                    updateId();  // Update ID after assignment
+                }
+                return *this;
+            }
+
+        // Update ID based on nodes
+        void updateId() {
+            size_t hash = 0;
+            for (const auto& node : nodes) {
+                hash ^= node.id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            }
+            // Add comment to the mix
+            std::hash<std::string> str_hasher;
+            hash ^= str_hasher(comment) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            
+            id = hash;
+        }
+
         std::string toString() const {
             std::stringstream ss;
             if (!comment.empty()) {
@@ -128,13 +183,39 @@ namespace Mir {
     };
 
     struct brTyp {
+        size_t id; 
         std::vector<brStructCollection> typ;
         mutable std::string m_cachedString;
         mutable bool m_isDirty = true;
-        
+
+        brTyp() : id(0) {}
+
+        void updateId() {
+            size_t hash = 0;
+            for (const auto& collection : typ) {
+                hash ^= collection.id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            }
+            id = hash;
+        }
+
+        const brStructCollection getIndexData(size_t i){
+            if(i < typ.size()){
+                return typ[i];
+            }
+        }
+
+        void deleteIndex(size_t i){
+            if(i < typ.size()){
+                typ.erase(typ.begin() + i);
+                m_isDirty = true; 
+                updateId();
+            }
+        }
+
         void push_back(const brStructCollection& collection) {
             typ.push_back(collection);
             m_isDirty = true;
+            updateId();
         }
         // Get the number of collections
         size_t size() const { return typ.size(); }
@@ -165,8 +246,24 @@ namespace Mir {
         }
 
         std::string toString() const {
+            if (m_isDirty) {
+                updateCachedString();
+            }
             return getCachedString();
         }
+
+        // Add this to brTyp
+        void updateIdsRecursively() {
+            // Update IDs at all levels
+            for (auto& collection : typ) {
+                for (auto& node : collection.nodes) {
+                    node.updateId();  // Update node ID
+                }
+                collection.updateId();  // Update collection ID
+            }
+            updateId();  // Update type ID
+        }
+        
     };
 
     inline bool brIsComment(const std::string& str) {

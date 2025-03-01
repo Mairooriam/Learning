@@ -95,137 +95,52 @@ namespace MirUI {
     
             return value_changed;
         }
-        // void tableFromBrData(){
-            // Expose a few Borders related flags interactively
-            // enum ContentsType { CT_Text, CT_FillButton };
-            // static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
-            // static bool display_headers = false;
-            // static int contents_type = CT_Text;
-
-            // PushStyleCompact();
-            // ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
-            // ImGui::SameLine(); HelpMarker("ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerH\n | ImGuiTableFlags_BordersOuterH");
-            // ImGui::Indent();
-
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersH", &flags, ImGuiTableFlags_BordersH);
-            // ImGui::Indent();
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterH", &flags, ImGuiTableFlags_BordersOuterH);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerH", &flags, ImGuiTableFlags_BordersInnerH);
-            // ImGui::Unindent();
-
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
-            // ImGui::Indent();
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags, ImGuiTableFlags_BordersOuterV);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags, ImGuiTableFlags_BordersInnerV);
-            // ImGui::Unindent();
-
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags, ImGuiTableFlags_BordersOuter);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &flags, ImGuiTableFlags_BordersInner);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags, ImGuiTableFlags_ContextMenuInBody);
-            // ImGui::Unindent();
-
-            // ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
-            // ImGui::SameLine(); ImGui::RadioButton("Text", &contents_type, CT_Text);
-            // ImGui::SameLine(); ImGui::RadioButton("FillButton", &contents_type, CT_FillButton);
-            // ImGui::Checkbox("Display headers", &display_headers);
-            // ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); ImGui::SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appear in Headers");
-            // PopStyleCompact();    
-
+        void multilineTextClipboard()
+        {
+            bool clipboard_valid = false;
+            const char* clipboard_text = nullptr;
+                
+            try {
+                // Capture potential ImGui errors/warnings
+                clipboard_text = ImGui::GetClipboardText();
+                clipboard_valid = (clipboard_text && clipboard_text[0] != '\0');
+            } catch (...) {
+                clipboard_valid = false;
+            }
             
-            
-            // int COLUMNS_COUNT = 3;
-      
-            // // Create persistent buffers if they don't exist
-            // static std::vector<std::vector<NodeBuffer>> buffers;
+            if (clipboard_valid) {
+                static bool show_special_chars = false;
+                ImGui::Checkbox("Show special characters", &show_special_chars);
+                ImGui::SameLine();
+                // Add height slider (default range 3-20 lines)
+                static float textHeightMultiplier = 3.0f;
+                ImGui::PushItemWidth(200.0f); 
+                ImGui::SliderFloat("Text area height", &textHeightMultiplier, 3.0f, 100.0f, "%.0f lines");
+                ImGui::PopItemWidth();
+                // Create a child window with scrolling for large clipboard content
+                ImGui::BeginChild("Clipboard", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * textHeightMultiplier), true);
+                
+                if (show_special_chars) {
+                    // Display text with visible special characters
+                    for (const char* c = clipboard_text; *c != '\0'; c++) {
+                        if (*c == '\n') ImGui::TextUnformatted("\\n");
+                        else if (*c == '\r') ImGui::TextUnformatted("\\r");
+                        else if (*c == '\t') ImGui::TextUnformatted("\\t");
+                        else if (*c < 32) ImGui::Text("\\x%02X", (unsigned char)*c); // Other control chars
+                        else ImGui::Text("%c", *c);
+                        ImGui::SameLine(0.0f, 0.0f);
+                    }
+                } else {
+                    // Original display mode
+                    ImGui::TextWrapped("%s", clipboard_text);
+                }
+                
+                ImGui::EndChild();
+            } else {
+                ImGui::TextDisabled("No text content in clipboard");
+            }
+        }
 
-            // // // Resize buffers if data size changed
-            // // if (buffers.size() != brData.size()) {
-            // //     buffers.resize(brData.size());
-            // //     size_t i = 0;
-            // //     for (const auto& [key, nodeData] : brData) {
-            // //         buffers[i].resize(nodeData.size());
-            // //         i++;
-            // //     }
-            // // }
-
-            // size_t nodeDataIndex = 0;
-            // for (const auto& [key, nodeData] : brData) {
-            //     // Create a bullet menu item for each key
-
-            //     if (ImGui::CollapsingHeader(key.c_str())) {
-
-            //     // If this key's content should be shown
-            //     if (ImGui::BeginTable(("table_" + key).c_str(), COLUMNS_COUNT, flags)) {
-            //         if (display_headers) {
-            //             ImGui::TableSetupColumn("Name");
-            //             ImGui::TableSetupColumn("Type");
-            //             ImGui::TableSetupColumn("Comment");
-            //             ImGui::TableHeadersRow();
-            //         }
-
-            //         size_t row = 0;
-            //         for (const auto& data : nodeData) {
-            //             if (buffers[nodeDataIndex][row].name[0] == '\0') {
-            //                 strncpy(buffers[nodeDataIndex][row].name.data(), data.name.c_str(), buffers[nodeDataIndex][row].name.size() - 1);
-            //                 strncpy(buffers[nodeDataIndex][row].type.data(), data.type.c_str(), buffers[nodeDataIndex][row].type.size() - 1);
-            //                 strncpy(buffers[nodeDataIndex][row].comment.data(), data.comment.c_str(), buffers[nodeDataIndex][row].comment.size() - 1);
-            //             }
-                        
-
-            //             //TODO ADD auto select and maybe no blanks
-                        
-            //             // // Auto-select all when focused
-            //             // static char autoselect[128] = "";
-            //             // ImGui::InputText("Auto-select", autoselect, IM_ARRAYSIZE(autoselect), ImGuiInputTextFlags_AutoSelectAll);
-
-            //             // // Multiple flags can be combined with |
-            //             // static char multiple[128] = "";
-            //             // ImGui::InputText("Multiple flags", multiple, IM_ARRAYSIZE(multiple), 
-            //             // ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
-
-            //             ImGui::TableNextRow();
-                        
-            //             ImGui::TableSetColumnIndex(0);
-            //             ImGui::PushItemWidth(-1);
-            //             if (ImGui::InputText(("##DataName" + key + std::to_string(row)).c_str(), 
-            //                                 buffers[nodeDataIndex][row].name.data(), 
-            //                                 buffers[nodeDataIndex][row].name.size())) {
-            //                 // Handle input change
-            //             }
-            //             ImGui::PopItemWidth();
-
-            //             ImGui::TableSetColumnIndex(1);
-            //             ImGui::PushItemWidth(-1);
-            //             if (ImGui::InputText(("##DataType" + key + std::to_string(row)).c_str(),
-            //                                 buffers[nodeDataIndex][row].type.data(),
-            //                                 buffers[nodeDataIndex][row].type.size())) {
-            //                 // Handle input change
-            //             }
-            //             ImGui::PopItemWidth();
-            //             ImGui::SameLine();
-            //             MirUI::contextPopup(row, 1);
-
-            //             ImGui::TableSetColumnIndex(2);
-            //             ImGui::PushItemWidth(-1);
-            //             if (ImGui::InputText(("##DataComment" + key + std::to_string(row)).c_str(),
-            //                                 buffers[nodeDataIndex][row].comment.data(),
-            //                                 buffers[nodeDataIndex][row].comment.size())) {
-            //                 // Handle input change
-            //             }
-            //             ImGui::PopItemWidth();
-
-            //             row++;
-            //         }
-            //         ImGui::EndTable();
-            //         }
-            //     }
-            //     nodeDataIndex++;
-            // }
-        
-        
-        //}
         void contextPopup(size_t row, size_t column)
         {
             ImGui::PushID((int)(row * 1000 + column)); // this need better implementation
