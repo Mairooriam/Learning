@@ -155,6 +155,14 @@ namespace Mir{
             // Handle input change if needed
         }
 
+        
+
+
+        
+
+
+
+
         if(ImGui::Button("Browse###BrowseInput")){
             m_fileDialog.OpenFile(false);
             fileselection1 = m_fileDialog.GetFileSelection();
@@ -171,118 +179,128 @@ namespace Mir{
 
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
-        // Display clipboard content
-        ImGui::SeparatorText("Clipboard Content");
+
+        ////////////////////////////////////////
+        //////// CLIPBOARD    //////////////////
+        ////////////////////////////////////////
+        ImGui::Begin("Clipboard");
         MirUI::multilineTextClipboard();         
-        ImGui::Separator();
+        ImGui::End();
 
 
         brTyp& data = Mir::Application::Get().GetBrParser().getData();
                 
-        // 1. Header with dirty indicator
-        ImGui::SeparatorText(data.m_isDirty ? "Type Editor *" : "Type Editor");
-        // Add button to show cached string in a window
-        static bool showTypeData = false;
-        if (ImGui::Button("Show Type Data")) {
-            showTypeData = true;
-        }
 
-        // Create a separate window for the cached string
-        if (showTypeData) {
-            ImGui::Begin("Type Data Viewer", &showTypeData);
-            ImGui::TextWrapped("%s", data.getCachedString().c_str());
-            ImGui::End();
-        }
+        ////////////////////////////////////////
+        //////// PARSER DATA TABLE//////////////
+        ////////////////////////////////////////
+        ImGui::Begin("Parser data table");
+        static ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize | ImGuiTableFlags_Resizable;
+        if (ImGui::TreeNode("Table Flags")) {
+            enum ContentsType { CT_Text, CT_FillButton };
+            
+            static bool display_headers = false;
+            static int contents_type = CT_Text;
+    
 
-        
-        // Collection Tree Loop
-        for (size_t i = 0; i < data.size(); i++)
-        {
+            ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &tableFlags, ImGuiTableFlags_RowBg);
+            ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &tableFlags, ImGuiTableFlags_Borders);
+
+            ImGui::Indent();
+    
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersH", &tableFlags, ImGuiTableFlags_BordersH);
+            ImGui::Indent();
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterH", &tableFlags, ImGuiTableFlags_BordersOuterH);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerH", &tableFlags, ImGuiTableFlags_BordersInnerH);
+            ImGui::Unindent();
+    
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersV", &tableFlags, ImGuiTableFlags_BordersV);
+            ImGui::Indent();
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterV", &tableFlags, ImGuiTableFlags_BordersOuterV);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerV", &tableFlags, ImGuiTableFlags_BordersInnerV);
+            ImGui::Unindent();
+    
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &tableFlags, ImGuiTableFlags_BordersOuter);
+            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &tableFlags, ImGuiTableFlags_BordersInner);
+            ImGui::Unindent();
+    
+            ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
+
+            ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &tableFlags, ImGuiTableFlags_NoBordersInBody); 
+            
+            ImGui::TreePop();
+        }
+        // Sturcts tree node creation
+        for (size_t i = 0; i < data.size(); i++){
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
-            ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
             std::string label = "Collection" + std::to_string(i) + "\t\t"  + data.collections[i].comment + "###Collection" + std::to_string(i) + data.collections[i].comment;
-            bool treeOpen = ImGui::TreeNodeEx(label.c_str(), node_flags, "Collection %d\t\t %s",i, data.collections[i].comment.c_str());
+            bool treeOpen = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
             ImGui::PopStyleVar();
 
+
+            ////////////////////////////////////////
+            /////////  CONTEXT MENU ////////////////
+            ////////////////////////////////////////
             bool renameOpen = false;
-                // Context Menu for each Tree
-                if (ImGui::BeginPopupContextItem(("collection_context_menu_" + std::to_string(i)).c_str())) {
-                    if (ImGui::MenuItem(("Delete##collection" + std::to_string(i)).c_str())) {
-                        data.deleteCollectionAt(i);
-                        ImGui::EndPopup();
-                        if (treeOpen) {
-                            ImGui::TreePop();
-                        }
-                        continue;  // Skip to next iteration instead of returning
-                    }
-                                
-                    if (ImGui::MenuItem(("Duplicate##collection" + std::to_string(i)).c_str())) {
-                        data.duplicateCollectionAt(i);
-                        
-                    }
-                    
-                    if (ImGui::MenuItem(("Export##collection" + std::to_string(i)).c_str())) {
-                        // Handle export operation
-                        // For example: data.exportType(i);
-                    }
-                    
-                    ImGui::Separator();
-                    
-                    if (ImGui::MenuItem(("Rename##collection" + std::to_string(i)).c_str())) {
-                        renameOpen = true;
-                    }
 
+            if (ImGui::BeginPopupContextItem(("collection_context_menu_" + std::to_string(i)).c_str())) {
+                if (ImGui::MenuItem(("Delete##collection" + std::to_string(i)).c_str())) {
+                    data.deleteCollectionAt(i);
                     ImGui::EndPopup();
+                    if (treeOpen) { ImGui::TreePop();}
+                    continue;  
+                }  
+                if (ImGui::MenuItem(("Duplicate##collection" + std::to_string(i)).c_str())) { data.duplicateCollectionAt(i); }
+                if (ImGui::MenuItem(("Export##collection" + std::to_string(i)).c_str())) {}
+                ImGui::Separator();
+                if (ImGui::MenuItem(("Rename##collection" + std::to_string(i)).c_str())) {renameOpen = true;}
+                ImGui::EndPopup();
+            }
 
-                  
+
+            if (renameOpen) {
+                ImGui::OpenPopup(("Rename Collection##" + std::to_string(i)).c_str());
+                ImVec2 mousePos = ImGui::GetMousePos();
+                ImGui::SetNextWindowPos(ImVec2(mousePos.x - 100, mousePos.y - 50)); 
+                renameOpen = false; 
+            }
+            if (ImGui::BeginPopupModal(("Rename Collection##" + std::to_string(i)).c_str(), nullptr, 
+                    ImGuiWindowFlags_AlwaysAutoResize)) {
+
+                ImGui::Text("Enter new name:");
+                if (ImGui::IsWindowAppearing()) {ImGui::SetKeyboardFocusHere();}
+                if (ImGui::InputText("##rename_input", &data.collections[i].comment, 
+                    ImGuiInputTextFlags_EnterReturnsTrue | 
+                    ImGuiInputTextFlags_AutoSelectAll)) {
+                    data.m_isDirty = true; 
+                    ImGui::CloseCurrentPopup();
                 }
-                // Render the rename popup
-                if (renameOpen) {
-                    ImGui::OpenPopup(("Rename Collection##" + std::to_string(i)).c_str());
-                    ImVec2 mousePos = ImGui::GetMousePos();
-                    ImGui::SetNextWindowPos(ImVec2(mousePos.x - 100, mousePos.y - 50)); // Offset 100 pixels left and 50 up
-                    renameOpen = false; // Reset flag after opening popup
+                if (ImGui::Button("OK") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+                    data.m_isDirty = true;
+                    ImGui::CloseCurrentPopup();
                 }
-           
-                if (ImGui::BeginPopupModal(("Rename Collection##" + std::to_string(i)).c_str(), nullptr, 
-                        ImGuiWindowFlags_AlwaysAutoResize | 
-                        ImGuiWindowFlags_NoSavedSettings)) {
-                    //static char tempName[256];
-                    // if (ImGui::IsWindowAppearing()) {
-                    //     strcpy(tempName, data.collections[i].comment.c_str());
-                    // }
-
-                    ImGui::Text("Enter new name:");
-                    if (ImGui::IsWindowAppearing()) {
-                        ImGui::SetKeyboardFocusHere();
-                    }
-                    if (ImGui::InputText("##rename_input", &data.collections[i].comment, 
-                        ImGuiInputTextFlags_EnterReturnsTrue | 
-                        ImGuiInputTextFlags_AutoSelectAll)) {
-                        data.m_isDirty = true; 
-                        ImGui::CloseCurrentPopup();
-                    }
-
-                    if (ImGui::Button("OK") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
-                        data.m_isDirty = true;
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel")) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")) {
+                    ImGui::CloseCurrentPopup();
                 }
+                ImGui::EndPopup();
+            }
+            ////////////////////////////////////////
+            ///////// END OF CONTEXT MENU //////////
+            ////////////////////////////////////////
 
-            if(treeOpen){
-                // Sturcts tree node creation
-                for (size_t j = 0; j < data.collections[i].structs.size(); j++) {
 
+
+
+            if (treeOpen){
+                for (size_t j = 0; j < data.collections[0].structs.size(); j++) {
+                    ImGui::Indent(); // Add indentation for the struct level
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
                     std::string structLabel = "Struct" + std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + std::to_string(j) + data.collections[i].structs[j].name;
-                    bool structOpen = ImGui::TreeNodeEx(structLabel.c_str(), node_flags, "Struct %d\t\t %s", j, data.collections[i].structs[j].name.c_str());
+                    bool structOpen = ImGui::CollapsingHeader(structLabel.c_str());
                     ImGui::PopStyleVar();
+                    ImGui::Unindent();
 
                     // Context menu for Structs tree
                     if (ImGui::BeginPopupContextItem(("struct_context_menu_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
@@ -306,17 +324,20 @@ namespace Mir{
                     }
 
 
+
+
                     static float nameWidth = 400.0f;
-                    static float typeWidth = 130.0f;
-                    static float valueWidth = 70.0f;
-                    // if struct tree open ->> make tables
+                    static float typeWidth = 78.0f;
+                    static float valueWidth = 60.0f;
                     if (structOpen)
                     {
+
                         // Display current width info
                         float availWidth = ImGui::GetContentRegionAvail().x;
                         ImGui::Text("Available width: %.1f", availWidth);
 
-                        static ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize | ImGuiTableFlags_Resizable;
+                        ImGui::Indent();
+                        
                         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 2.0f));
                         if (ImGui::BeginTable("Node", 4, tableFlags)) {
                             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, nameWidth);
@@ -332,14 +353,14 @@ namespace Mir{
                                 ImGui::Text("(w: %5.1f)", ImGui::GetColumnWidth(column));
                             }
                             
-
+                            
                             // Values table Creation
                             for (size_t k = 0; k < data.collections[i].structs[j].values.size(); k++) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn(); 
                                 std::string nameLbl = "##name" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k);
                                 ImGui::PushItemWidth(-FLT_MIN);
-                                ImGui::InputText(nameLbl.c_str(), &data.collections[i].structs[j].values[k].name);
+                                if (ImGui::InputText(nameLbl.c_str(), &data.collections[i].structs[j].values[k].name)) { data.m_isDirty = true; }
                                 ImGui::PopItemWidth();
                                 ImGui::TableNextColumn();
 
@@ -461,229 +482,62 @@ namespace Mir{
                                 ImGui::TableNextColumn();
                                 std::string valueLbl = "##value" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k);
                                 ImGui::PushItemWidth(-FLT_MIN);  // Make input fill cell width
-                                ImGui::InputText(valueLbl.c_str(), &data.collections[i].structs[j].values[k].value);
+                                if (ImGui::InputText(valueLbl.c_str(), &data.collections[i].structs[j].values[k].value)) { data.m_isDirty = true; }
                                 ImGui::PopItemWidth();
                                 
                                 ImGui::TableNextColumn(); 
                                 std::string commentLbl = "##comment" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k);
                                 ImGui::PushItemWidth(-FLT_MIN);  // Make input fill cell width
-                                ImGui::InputText(commentLbl.c_str(), &data.collections[i].structs[j].values[k].comment);
+                                if (ImGui::InputText(commentLbl.c_str(), &data.collections[i].structs[j].values[k].comment)) { data.m_isDirty = true; }
                                 ImGui::PopItemWidth();
                             }
                             ImGui::EndTable();
-                            
                         }
-                    
-                    ImGui::PopStyleVar();
-                    ImGui::TreePop();
+                        
+                        ImGui::PopStyleVar();
+                        ImGui::Unindent();
                     }
+                    
                 }
-                ImGui::TreePop();
             }
         }
-    
         data.updateCachedString();
+        ImGui::End();
+        ////////////////////////////////////////
+        //////// PARSER DATA TABLE END//////////
+        ////////////////////////////////////////
+
+
+        ////////////////////////////////////////
+        //////// PARSER DATA STRING VIEW ///////
+        ////////////////////////////////////////
+        ImGui::Begin("Type Data Viewer");
+        ImGui::TextWrapped("%s", data.getCachedString().c_str());
+        ImGui::End();
+    
 
 
 
-        // int node_clicked = -1;
-        // for (size_t i = 0; i < data.size(); i++) {
-        //     ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
-        //     std::string label = "Type" + std::to_string(i) + "\t\t"  + data.typ[i].comment + "###Type" + std::to_string(i) + std::to_string(data.id);
-        //     bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Node\t\t %s", data.typ[i].nodes.data()->name.c_str());
-
-        //     // Handle left-click (original functionality)
-        //     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-        //         node_clicked = i;
-                
-        //     // Add right-click context menu
-        //     if (ImGui::BeginPopupContextItem(("context_menu_" + std::to_string(i)).c_str())) {
-        //         if (ImGui::MenuItem("Delete")) {
-        //             data.deleteIndex(i);
-        //         }
-                
-        //         if (ImGui::MenuItem("Duplicate")) {
-        //             brStructCollection copy = data.getIndexData(i);
-        //             copy.nodes.data()->name = copy.nodes.data()->name + copy.nodes.data()->name;
-        //             data.push_back(copy);
-        //         }
-                
-        //         if (ImGui::MenuItem("Export")) {
-        //             // Handle export operation
-        //             // For example: data.exportType(i);
-        //         }
-                
-        //         ImGui::Separator();
-                
-        //         if (ImGui::MenuItem("Rename")) {
-        //             // Handle rename operation or open a rename dialog
-        //         }
-                
-        //         ImGui::EndPopup();
-        //     }
-        //     if (node_open)
-        //     {
-        //         if (ImGui::BeginTable("Node", 4, ImGuiTableFlags_ContextMenuInBody))
-        //         {
-        //             ImGui::TableSetupColumn("Name");
-        //             ImGui::TableSetupColumn("Type");
-        //             ImGui::TableSetupColumn("Value");
-        //             ImGui::TableSetupColumn("Comment");
-        //             ImGui::TableHeadersRow();
 
 
-        //         //printing for nodes
-        //         for (size_t j = 0; j < data.typ[i].nodes.data()->data.size(); j++) {
-        //             ImGui::TableNextRow();
-        //             ImGui::TableNextColumn();
-        //             std::string nameLbl = "##name" + std::to_string(j) + std::to_string(i) + data.typ[i].nodes.data()->name;
-        //             if(ImGui::InputText(nameLbl.c_str(), &data.typ[i].nodes.data()->data[j].name)){
-        //             }
-                    
-                    
-                    
-                    
-        //             ImGui::TableNextColumn();
 
-                
 
-        //             static char searchBuffers[1000][64] = {};  // Support up to 1000 total cells
-        //             static bool comboFocused[1000] = {};
-        //             static int selectedIndices[1000] = {};
-        //             static bool hasAutoCompleted[1000] = {};
-        //             std::string typeLbl = "##type" + std::to_string(j) + std::to_string(i) + data.typ[i].nodes.data()->name;
-        //             auto& currentType = data.typ[i].nodes.data()->data[j].type;
 
-        //             int stateIndex = i * 100 + j;  // Assuming max 100 rows per table
-        //             char* searchBuffer = searchBuffers[stateIndex % 100]; 
-        //             bool& focused = comboFocused[stateIndex % 100];
-        //             int& selectedIndex = selectedIndices[stateIndex % 100];
-        //             bool& autoCompleted = hasAutoCompleted[stateIndex % 100];
 
-        //             if (ImGui::BeginCombo(typeLbl.c_str(), currentType.c_str(), ImGuiComboFlags_HeightLarge)) {
-        //                 // Add search filter at top of combo
-        //                 ImGui::PushItemWidth(-1);
-        //                 if (!focused) {
-        //                     ImGui::SetKeyboardFocusHere();
-        //                     focused = true;
-        //                     strncpy(searchBuffer, currentType.c_str(), sizeof(searchBuffers[0]) - 1);
-        //                     searchBuffer[sizeof(searchBuffers[0]) - 1] = '\0';
 
-        //                     selectedIndex = -1;
-        //                     autoCompleted = false;
-        //                 }
-                        
-                        
 
-        //                 // Handle keyboard input for auto-completion
-        //                 if (ImGui::InputText("##search", searchBuffer, sizeof(searchBuffers[0]), 
-        //                                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-        //                     // Apply search buffer text directly on Enter
-        //                     currentType = searchBuffer;
-        //                     data.m_isDirty = true;
-        //                     data.updateCachedString();
-        //                     focused = false; // Reset focus state
-        //                     ImGui::CloseCurrentPopup();
-        //                 }
 
-        //                 bool keyPressed = false;
 
-        //                 // TAB KEY HANDLING - FIXED
-        //                 if (ImGui::IsKeyPressed(ImGuiKey_Tab) && !autoCompleted) {
-        //                     std::string_view search(searchBuffer);
-        //                     // First, create a list of visible/filtered suggestions
-        //                     std::vector<size_t> visibleSuggestions;
-        //                     for (size_t idx = 0; idx < brDataTypesSuggestions.size(); idx++) {
-        //                         if (search.empty() || 
-        //                             brDataTypesSuggestions[idx].find(search) != std::string_view::npos) {
-        //                             visibleSuggestions.push_back(idx);
-        //                         }
-        //                     }
-                            
-        //                     // Then select the first visible suggestion
-        //                     if (!visibleSuggestions.empty()) {
-        //                         selectedIndex = visibleSuggestions[0];
-        //                         strncpy(searchBuffer, std::string(brDataTypesSuggestions[selectedIndex]).c_str(), 
-        //                                 sizeof(searchBuffers[0]) - 1);
-        //                         searchBuffer[sizeof(searchBuffers[0]) - 1] = '\0';
-        //                         autoCompleted = true;
-        //                         keyPressed = true;
-        //                     }
-        //                 }
 
-        //                 ImGui::PopItemWidth();
-        //                 ImGui::Separator();
-                        
-        //                 // Show filtered suggestions
-        //                 std::string_view search(searchBuffer);
-        //                 bool hasVisibleItems = false;
-                        
-        //                 for (size_t idx = 0; idx < brDataTypesSuggestions.size(); idx++) {
-        //                     const auto& type = brDataTypesSuggestions[idx];
-                            
-        //                     bool match = search.empty();
-        //                     if (!match) {
-        //                         std::string lowerSearch(search);
-        //                         std::string lowerType(type);
-                                
-        //                         // Convert both strings to lowercase for comparison
-        //                         std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(),
-        //                             [](unsigned char c){ return std::tolower(c); });
-        //                         std::transform(lowerType.begin(), lowerType.end(), lowerType.begin(),
-        //                             [](unsigned char c){ return std::tolower(c); });
-                                
-        //                         match = lowerType.find(lowerSearch) != std::string::npos;
-        //                     }
-                            
-        //                     if (match) {
-        //                         const bool is_selected = (selectedIndex == static_cast<int>(idx));
-                                
-        //                         if (ImGui::Selectable(std::string(type).c_str(), is_selected)) {
-        //                             currentType = std::string(type);
-        //                             data.m_isDirty = true;
-        //                             data.updateCachedString();
-        //                             ImGui::CloseCurrentPopup();
-        //                         }
-                                
-        //                         // Set focus when an item is selected
-        //                         if (is_selected) {
-        //                             ImGui::SetItemDefaultFocus();
-        //                         }
-                                
-        //                         hasVisibleItems = true;
-        //                     }
-        //                 }
-        //                 ImGui::EndCombo();
-        //             } 
-        //             else if (focused) {
-        //                 // Reset focus state when combo is closed
-        //                 focused = false;
-        //             }
 
-        //             ImGui::TableNextColumn();
-        //             std::string valueLbl = "##value" + std::to_string(j) + std::to_string(i) + data.typ[i].nodes.data()->data[j].value;
-                    
-        //             bool valueModified = ImGui::InputText(valueLbl.c_str(), &data.typ[i].nodes.data()->data[j].value);
-        //             ImGui::TableNextColumn();   
-        //             std::string commentLbl = "##comment" + std::to_string(j) + std::to_string(i) + data.typ[i].nodes.data()->data[j].name;
-        //             bool commentModified = ImGui::InputText(commentLbl.c_str(), &data.typ[i].nodes.data()->data[j].comment);
-        //             ImGui::TableNextColumn();
-                 
-        //             data.updateCachedString();
-        //         }
 
-        //             ImGui::EndTable();
-        //         }
-                
-        //         ImGui::TreePop();
-        //     }
-        // }
+       
 
-        // 2. Content
-
+   
+     
         
         
-    }
+    }   
 
 
     void ImGuiLayer::Begin(){
