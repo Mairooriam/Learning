@@ -51,8 +51,11 @@ namespace Mir {
         // m_brParser->initDummyData();
         //std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
         
-        m_brParser->readDatafile999999("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-
+        // m_brParser->readDatafile999999("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
+        // std::vector<std::vector<std::string>> csvData = m_brParser->readPlcDataCsv(R"(C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\luotu.csv)", "Location,Type,BR Name,Card,Eplan name");
+        
+        // brStructCollection test1 = m_brParser->parseCsvIntoBrCollection(csvData);
+        // m_brParser->addCollection(test1);
         //m_brParser->m_testData.;
         //m_brParser->writeFile("C:/Users/35850/Desktop/repositories/learning2/Learning/Tools/test.typ", test9999.toString(), std::ios_base::app);
 

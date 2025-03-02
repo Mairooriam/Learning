@@ -158,7 +158,60 @@ namespace Mir{
         
 
 
+        ImGui::Begin("Fileeeee");
+
+        static int currentItem = 0;
+        const char* items[] = { ".csv", ".typ" };
+        static COMDLG_FILTERSPEC filter = {L"br DataType", L"*.csv*"};
+        static FileSelection selectedFile;  // Default initialization
+
+        if (ImGui::Button("Clear")){
+            Mir::Application::Get().GetBrParser().clear();
+        }
+
+        if (ImGui::Button("Read file")){ 
+            if (selectedFile.fileName != "" & currentItem == 1) {
+                Mir::Application::Get().GetBrParser().readDatafile999999(selectedFile.filePath);
+            }
+
+            if (selectedFile.fileName != "" & currentItem == 0) {
+                Mir::Application::Get().GetBrParser().readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+            }
+        }
         
+
+
+        if (ImGui::Combo("combou", &currentItem, items, IM_ARRAYSIZE(items))) {
+            if (currentItem == 1)
+            {
+                filter ={L"br DataType", L"*.typ*"};
+                selectedFile.clear();
+            } 
+            if (currentItem == 0)
+            {
+                filter = {L"br DataType", L"*.csv*"};
+                selectedFile.clear();
+            }
+            
+            
+        }
+        
+        if (ImGui::InputText("text##Textsss232", &selectedFile.filePath)) {}
+        
+        std::vector<COMDLG_FILTERSPEC> filters = {
+            { L"Image Files", L"*.png;*.jpg;*.jpeg;*.bmp" },
+            { L"Text Files", L"*.txt;*.doc;*.docx" },
+            { L"All Files", L"*.*" },
+            { L"br DataType", L"*.typ*" }
+        };
+
+        if (ImGui::Button("Browse")) {
+            std::vector<COMDLG_FILTERSPEC> filterVec = { filter };
+            m_fileDialog.OpenFile(false, filterVec);
+            selectedFile = m_fileDialog.GetFileSelection();
+        }
+
+        ImGui::End();
 
 
 
@@ -294,7 +347,7 @@ namespace Mir{
 
 
             if (treeOpen){
-                for (size_t j = 0; j < data.collections[0].structs.size(); j++) {
+                for (size_t j = 0; j < data.collections[i].structs.size(); j++) {
                     ImGui::Indent(); // Add indentation for the struct level
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
                     std::string structLabel = "Struct" + std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + std::to_string(j) + data.collections[i].structs[j].name;
@@ -306,7 +359,7 @@ namespace Mir{
                     if (ImGui::BeginPopupContextItem(("struct_context_menu_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
                         if (ImGui::MenuItem(("Delete##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
                             if (structOpen) {
-                                ImGui::TreePop();
+                                
                             }
                             data.deleteStructAt(i,j);
                             ImGui::EndPopup();

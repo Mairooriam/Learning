@@ -226,13 +226,23 @@ namespace Mir {
         }
         cardInfo(std::string cardName) {
             fullname = cardName;
-            number = cardName.substr(cardName.size()-2, 2);
+            if (!cardName.empty()) {
+            // Make sure the card name has at least 2 characters for safe substring
+            if (cardName.size() >= 2) {
+                number = cardName.substr(cardName.size()-2, 2);
+            } else {
+                number = cardName;
+            }
+            } else {
+            number = "";
+            }
             shortName = getShortName();
             datatype = getDataType();
         }
-    };
+        };
 
-    std::string sanitizeString(const std::string& input) {
+
+    std::string brParser::sanitizeString(const std::string& input) {
         std::string result;
         result.reserve(input.length());
         
@@ -259,40 +269,51 @@ namespace Mir {
         return result;
     }
 
+    std::vector<std::vector<std::string>> brParser::readPlcDataCsv(const std::string &path, const std::string& header) {
+        std::vector<std::vector<std::string>> csvStr;
+        std::ifstream file(path);
+        std::string line;
+        
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path << std::endl;
+            return csvStr;
+        }
+        
+        if (!std::getline(file, line) || line != header) {
+            return csvStr;
+        }
+        
+        while (std::getline(file, line)) {
+            std::vector<std::string> row;
+            std::stringstream ss(line);
+            std::string value;
 
-    std::map<std::string, std::vector<brTyp>> brParser::readPlcDataCsv(const std::string &path){
-        // std::ifstream file(path);
-        // std::vector<std::string>   csvStr;
-        // std::string                line;
-        // std::string                cell;
-        // if (!file.is_open()) {
-        //     std::cerr << "Failed to open file: " << path << std::endl;
-        //     return std::map<std::string, std::vector<brDataTypeNode>>();
-        // }
-    
-        // // Check is header is valid
-        // std::getline(file,line);
-        // //if (line != "DEVICE,IOCARD,NAME,COMMENT"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
-        // if (line != "Location,Type,BR Name,Card,Eplan name"){ return std::map<std::string, std::vector<brDataTypeNode>>(); }
+            while (std::getline(ss, value, ',')) {
+                row.push_back(value);
+            }
 
-        // while(std::getline(file,line))
-        // {
-        //     csvStr.push_back(line);
-        // }
+            if (!line.empty() && line.back() == ',') {
+                row.push_back("");
+            }
 
-        // std::map<std::string, std::vector<brDataTypeNode>> hashtable;
-        // for (const auto& str: csvStr){
-        //     std::vector<std::string> tokens = splitString(str,",");
-        //     if (!tokens[2].empty()){
-        //         tokens[2] = sanitizeString(tokens[2]);
-        //         cardInfo cardinfo(tokens[1]); // might be perforamnce pbrobme? creating new cardinfo each time. probably wont matter
-        //         std::string comment = tokens[3] + "." + cardinfo.shortName + "." + cardinfo.number;
-        //         brDataTypeNode node(tokens[2], cardinfo.datatype, comment);
-        //         std::string key = tokens[0] + "_" + cardinfo.shortName + "_Typ";
-        //         hashtable[key].push_back(node);
-        //     }
-        // }
-        // return hashtable;
+            size_t emptyCount = 0;
+            for (auto &&el : row) {
+                if (el == "") 
+                    emptyCount++;  
+            }
+
+            if (emptyCount >= 5) {
+                MIR_CORE_ASSERT(false, "Add handling for when to not count empty fields?");
+            }
+            
+            if (row.size() == 5) {
+                csvStr.push_back(row);
+            } else { 
+                MIR_CORE_ASSERT(false, "Error in csv string add handling"); 
+            }
+        }
+        
+        return csvStr;
     }
 
     void brParser::writeFile(const std::string &path, const std::string &content, std::ios_base::openmode mode)
@@ -306,5 +327,54 @@ namespace Mir {
         file << content;
 
         file.close();
+    }
+    enum csvNames{
+        Location = 0,
+        Type,
+        Name,
+        IoCardName,
+        EplanName
+    };
+
+    brStructCollection brParser::parseCsvIntoBrCollection(std::vector<std::vector<std::string>> &csvStr)
+    {
+        brStructCollection result;
+        brStructNode structNode;
+        
+        // Group entries by card type
+        std::map<std::string, std::vector<brStructData>> cardGroups;
+        
+        for (auto &&row : csvStr)
+        {
+            cardInfo cardinfo(row[Type]);
+            row[Location];
+            row[Type];
+            row[Name];
+            row[IoCardName];
+
+            std::string key = row[Location] + "_" + cardinfo.shortName + "_typ";
+            std::string comment = row[IoCardName] + "." + cardinfo.shortName + "." + cardinfo.number;
+            cardGroups[key].push_back(brStructData(sanitizeString(row[Name]),cardinfo.datatype,"",comment));
+        }
+        
+        for (auto &&[key, value] : cardGroups)
+        {
+            result.comment = "imported stuff";
+            brStructNode node;
+            node.name = key;
+            node.values = value;
+            result.structs.push_back(node);
+        }
+        
+        
+        return result;
+    }
+
+
+    void brParser::readAndupdateFromCSV(std::string path, std::string header)
+    { 
+        auto csvData = readPlcDataCsv(path, header);
+        brStructCollection test1 = parseCsvIntoBrCollection(csvData);
+        addCollection(test1);
     }
 }

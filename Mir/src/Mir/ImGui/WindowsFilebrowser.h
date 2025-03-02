@@ -6,7 +6,14 @@ namespace Mir {
     struct FileSelection {
         std::string fileName;
         std::string filePath;
+        void clear(){
+            fileName = "";
+            filePath = "";
+        }
+        FileSelection() : fileName(""), filePath("") {}
+        FileSelection(const std::string& name, const std::string& path) : fileName(name), filePath(path) {}
     };
+
 
     class WindowsFileBrowser {
         private:

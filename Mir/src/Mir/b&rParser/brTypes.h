@@ -76,13 +76,36 @@ namespace Mir {
         }
     }
 
+    /**
+     * @brief Represents a structure data element with name, type, value and comment
+     */
     struct brStructData {
         
-        std::string name;
-        std::string type;
-        std::string value;
-        std::string comment;
+        std::string name;    ///< Name of the structure element
+        std::string type;    ///< Data type of the structure element
+        std::string value;   ///< Default value of the structure element
+        std::string comment; ///< Comment associated with the structure element
 
+        /**
+         * @brief Default constructor
+         */
+        brStructData() = default;
+
+        /**
+         * @brief Constructor to initialize all fields
+         * @param name The name of the structure element
+         * @param type The data type of the structure element (defaults to empty string)
+         * @param value The default value of the element (defaults to empty string)
+         * @param comment A comment for the structure element (defaults to empty string)
+         */
+        brStructData(const std::string& name, const std::string& type = "", 
+                     const std::string& value = "", const std::string& comment = "")
+            : name(name), type(type), value(value), comment(comment) {}
+
+        /**
+         * @brief Converts the structure data to a string representation
+         * @return A string representation of the structure data
+         */
         std::string toString() const {
             std::stringstream ss;
             ss << name;
@@ -119,6 +142,12 @@ namespace Mir {
     std::string comment;
     std::vector<brStructNode> structs;
 
+        brStructCollection& clear() {
+            comment.clear();
+            structs.clear();
+            return *this;
+        }
+
         std::string toString() const {
             std::stringstream ss;
             if (!comment.empty()) {
@@ -134,12 +163,20 @@ namespace Mir {
             return ss.str();
         }
     };
-
     struct brTyp {
         std::vector<brStructCollection> collections;
         mutable std::string m_cachedString;
         mutable bool m_isDirty = true;
         std::unordered_map<size_t, int> copyCounters;
+
+        // Clear all data and reset state
+        brTyp& clear() {
+            collections.clear();
+            m_cachedString.clear();
+            copyCounters.clear();
+            m_isDirty = true;
+            return *this;
+        }
 
         brStructData& getValueAt(size_t i, size_t j, size_t k) {
             return collections[i].structs[j].values[k];

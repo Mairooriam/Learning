@@ -13,26 +13,27 @@ namespace Mir {
         brParser(/* args */);
         ~brParser();
         std::string readFile(const std::string& path);
-        std::vector<std::string> readDatatypeFile(const std::string& path);
+
+        void clear(){ m_testData.clear(); }
         
         brTyp readDatafile999999(const std::string& path);
-        std::map<std::string, std::vector<brTyp>> readPlcDataCsv(const std::string& path);
+        std::vector<std::vector<std::string>> readPlcDataCsv(const std::string &path, const std::string& header);
 
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
-        void writeDummyData();
+
+        brStructCollection parseCsvIntoBrCollection(std::vector<std::vector<std::string>>& csvStr);
+        void readAndupdateFromCSV(std::string path, std::string header);
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
         std::vector<std::string> splitStringStruct(const std::string& str);
-        std::stringstream dataOut();
+
 
         std::string removeSpaces(std::string& str);
-
-        void setDataStr();
-        
+        std::string sanitizeString(const std::string& input);
         brTyp& getData() { return m_testData; }
         
         void setData(const brTyp& data) { m_testData = data; }
-
+        void addCollection(brStructCollection& col) { m_testData.push_back(col); }
 
     private:
         brTyp m_testData;
