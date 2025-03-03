@@ -165,15 +165,15 @@ namespace Mir {
     };
     struct brTyp {
         std::vector<brStructCollection> collections;
-        mutable std::string m_cachedString;
-        mutable bool m_isDirty = true;
+        std::string m_cachedString;
+        bool m_isDirty = true;
         std::unordered_map<size_t, int> copyCounters;
 
         // Clear all data and reset state
         brTyp& clear() {
-            collections.clear();
-            m_cachedString.clear();
-            copyCounters.clear();
+            std::vector<brStructCollection>().swap(collections);
+            std::string().swap(m_cachedString);
+            std::unordered_map<size_t, int>().swap(copyCounters);
             m_isDirty = true;
             return *this;
         }
@@ -213,9 +213,10 @@ namespace Mir {
             m_isDirty = true;
         }
 
-        void duplicateStructAt(size_t collectionIndex, size_t structIndex) {
+        brStructNode duplicateStructAt(size_t collectionIndex, size_t structIndex) {
             if(collectionIndex >= collections.size() || 
-               structIndex >= collections[collectionIndex].structs.size()) return;
+               structIndex >= collections[collectionIndex].structs.size()) 
+            return brStructNode{};
             
             brStructNode copy = collections[collectionIndex].structs[structIndex];
             
@@ -230,7 +231,22 @@ namespace Mir {
             val.name = val.name + "_copy" + std::to_string(copyNum);
             }
             
-            collections[collectionIndex].structs.push_back(copy);
+            return copy;
+        }
+
+        void insertStructAt(size_t collectionIndex, size_t structIndex, brStructNode structToInsert) {
+            if(collectionIndex >= collections.size()) 
+            return;
+            
+            // If structIndex is out of range, append at the end
+            if(structIndex > collections[collectionIndex].structs.size()) {
+            collections[collectionIndex].structs.push_back(structToInsert);
+            } else {
+            collections[collectionIndex].structs.insert(
+                collections[collectionIndex].structs.begin() + structIndex, 
+                structToInsert
+            );
+            }
             m_isDirty = true;
         }
 
@@ -264,13 +280,18 @@ namespace Mir {
         }
 
         // Explicit update method
-        void updateCachedString() const {
-            std::stringstream ss;
-            for (const auto& collection : collections) {
-                ss << collection.toString();
+        void updateCachedString()  {
+            if (m_isDirty == true)
+            {
+                std::stringstream ss;
+                for (const auto& collection : collections) {
+                    ss << collection.toString();
+                }
+                m_cachedString = ss.str();
+                m_isDirty = false;
             }
-            m_cachedString = ss.str();
-            m_isDirty = false;
+            
+
         }
 
             // Check if cache needs update
@@ -283,7 +304,7 @@ namespace Mir {
             m_isDirty = true;
         }
 
-        std::string toString() const {
+        std::string toString() {
             if (m_isDirty) {
                 updateCachedString();
             }

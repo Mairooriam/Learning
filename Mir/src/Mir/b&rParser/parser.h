@@ -6,7 +6,93 @@
 
 #include <map>
 #include "brTypes.h"
+
+
+
 namespace Mir {
+
+    struct MirClipboard {
+        enum class ContentType {
+            None,
+            String,
+            BrCollection,
+            BrStruct
+        };
+        
+        std::string stringContent;
+        
+        // Add these fields to store the actual copied data
+        brStructCollection collectionData;
+        brStructNode structData;
+        
+        // Indices for the copied item (if needed for reference)
+        size_t collectionIndex = 0;
+        size_t structIndex = 0;
+        
+        ContentType contentType = ContentType::None;
+        
+        // Check content type methods
+        bool isCollection() const {
+            return contentType == ContentType::BrCollection;
+        }
+        
+        bool isStruct() const {
+            return contentType == ContentType::BrStruct;
+        }
+        
+        bool isString() const {
+            return contentType == ContentType::String;
+        }
+        
+        bool isEmpty() const {
+            return contentType == ContentType::None;
+        }
+        
+        // Existing methods...
+        
+        // Add these methods for copying
+        void copyCollection(const brStructCollection& collection, size_t index) {
+            collectionData = collection;
+            collectionIndex = index;
+            contentType = ContentType::BrCollection;
+        }
+        
+        void copyStruct(const brStructNode& structure, size_t colIdx, size_t strIdx) {
+            structData = structure;
+            collectionIndex = colIdx;
+            structIndex = strIdx;
+            contentType = ContentType::BrStruct;
+        }
+        
+        // Improved toString() implementation
+        std::string toString() const {
+            if (contentType == ContentType::String) {
+                return stringContent;
+            } else if (contentType == ContentType::BrCollection) {
+                return collectionData.toString();
+            } else if (contentType == ContentType::BrStruct) {
+                return structData.toString();
+            }
+            return "";
+        }
+        
+        // Methods for pasting
+        void pasteToCollection(brTyp& data) {
+            if (contentType == ContentType::BrCollection) {
+                data.push_back(collectionData);
+            }
+        }
+    
+        void pasteStructToCollection(brTyp& data, size_t targetCollectionIndex) {
+            if (contentType == ContentType::BrStruct && 
+                targetCollectionIndex < data.size()) {
+                data.insertStructAt(targetCollectionIndex, 
+                                    data.collections[targetCollectionIndex].structs.size(),
+                                    structData);
+            }
+        }
+    };
+
     class brParser
     {
     public:
@@ -34,8 +120,11 @@ namespace Mir {
         
         void setData(const brTyp& data) { m_testData = data; }
         void addCollection(brStructCollection& col) { m_testData.push_back(col); }
-
+        
+        MirClipboard clipboard;
     private:
         brTyp m_testData;
+        
+
     };
 }

@@ -20,6 +20,7 @@ namespace Mir {
             std::string sSelectedFile;
             std::string sFilePath;
             bool isInitialized;
+            std::string sInitialFileName;
         
         public:
             WindowsFileBrowser();
@@ -30,8 +31,10 @@ namespace Mir {
             WindowsFileBrowser& operator=(const WindowsFileBrowser&) = delete;
         
             FileSelection GetFileSelection();
-        
+            void SetInitialFileName(const std::string& filename);
+
             bool OpenFile(bool selectFolder = false, const std::vector<COMDLG_FILTERSPEC>& filters = {});
+            bool SaveFile(const std::vector<COMDLG_FILTERSPEC>& filters, const wchar_t* defaultExt);
             bool IsInitialized() const;
         }; 
 }

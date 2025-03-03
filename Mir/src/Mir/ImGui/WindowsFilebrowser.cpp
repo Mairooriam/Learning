@@ -17,7 +17,71 @@ namespace Mir {
             CoUninitialize();
         }
     }
+    void WindowsFileBrowser::SetInitialFileName(const std::string& filename) {
+        sInitialFileName = filename;
+    }
 
+    // Add to WindowsFilebrowser.cpp
+    bool WindowsFileBrowser::SaveFile(const std::vector<COMDLG_FILTERSPEC>& filters, const wchar_t* defaultExt) {
+        if (!isInitialized) {
+            return false;
+        }
+
+        IFileSaveDialog* pFileSave;
+        HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, 
+                                    IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileSave));
+        if (FAILED(hr)) {
+            return false;
+        }
+
+        // Set file types if filters are provided
+        if (!filters.empty()) {
+            pFileSave->SetFileTypes(static_cast<UINT>(filters.size()), filters.data());
+        }
+        
+        // Set default extension if provided
+        if (defaultExt) {
+            pFileSave->SetDefaultExtension(defaultExt);
+        }
+        
+        // Set initial filename if specified
+        if (!sInitialFileName.empty()) {
+            std::wstring wFilename(sInitialFileName.begin(), sInitialFileName.end());
+            pFileSave->SetFileName(wFilename.c_str());
+        }
+
+        // Show the dialog
+        hr = pFileSave->Show(NULL);
+        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+            pFileSave->Release();
+            return false;
+        }
+
+        IShellItem* pItem;
+        hr = pFileSave->GetResult(&pItem);
+        if (FAILED(hr)) {
+            pFileSave->Release();
+            return false;
+        }
+
+        PWSTR pszFilePath;
+        hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+        if (FAILED(hr)) {
+            pItem->Release();
+            pFileSave->Release();
+            return false;
+        }
+
+        std::wstring path(pszFilePath);
+        sFilePath = std::string(path.begin(), path.end());
+        size_t slash = sFilePath.find_last_of("/\\");
+        sSelectedFile = sFilePath.substr(slash + 1);
+
+        CoTaskMemFree(pszFilePath);
+        pItem->Release();
+        pFileSave->Release();
+        return true;
+    }
 bool WindowsFileBrowser::OpenFile(bool selectFolder, const std::vector<COMDLG_FILTERSPEC>& filters) {
     if (!isInitialized) {
         return false;

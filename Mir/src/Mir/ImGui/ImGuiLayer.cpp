@@ -114,7 +114,14 @@ namespace Mir{
 
 
     void ImGuiLayer::OnImGuiRender(){
+        brParser& brparser = Mir::Application::Get().GetBrParser();
+        brTyp& data = Mir::Application::Get().GetBrParser().getData();
+         
         
+
+
+
+
         static bool show = true;
         static char str0[128] = "opc.tcp://192.168.0.55:4840";
 
@@ -171,11 +178,12 @@ namespace Mir{
 
         if (ImGui::Button("Read file")){ 
             if (selectedFile.fileName != "" & currentItem == 1) {
-                Mir::Application::Get().GetBrParser().readDatafile999999(selectedFile.filePath);
+                brparser.clear();
+                brparser.readDatafile999999(selectedFile.filePath);
             }
 
             if (selectedFile.fileName != "" & currentItem == 0) {
-                Mir::Application::Get().GetBrParser().readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+                brparser.readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
             }
         }
         
@@ -241,8 +249,6 @@ namespace Mir{
         ImGui::End();
 
 
-        brTyp& data = Mir::Application::Get().GetBrParser().getData();
-                
 
         ////////////////////////////////////////
         //////// PARSER DATA TABLE//////////////
@@ -288,7 +294,7 @@ namespace Mir{
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
             std::string label = "Collection" + std::to_string(i) + "\t\t"  + data.collections[i].comment + "###Collection" + std::to_string(i) + data.collections[i].comment;
-            bool treeOpen = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+            bool treeOpen = ImGui::CollapsingHeader(label.c_str());
             ImGui::PopStyleVar();
 
 
@@ -296,22 +302,43 @@ namespace Mir{
             /////////  CONTEXT MENU ////////////////
             ////////////////////////////////////////
             bool renameOpen = false;
-
+            bool exportOpen = false;
             if (ImGui::BeginPopupContextItem(("collection_context_menu_" + std::to_string(i)).c_str())) {
                 if (ImGui::MenuItem(("Delete##collection" + std::to_string(i)).c_str())) {
                     data.deleteCollectionAt(i);
                     ImGui::EndPopup();
-                    if (treeOpen) { ImGui::TreePop();}
                     continue;  
                 }  
+                if (ImGui::MenuItem(("Copy##collection" + std::to_string(i)).c_str())) {
+                    brparser.clipboard.copyCollection(data.collections[i], i);
+                    ImGui::SetClipboardText(brparser.clipboard.toString().c_str());
+                }
                 if (ImGui::MenuItem(("Duplicate##collection" + std::to_string(i)).c_str())) { data.duplicateCollectionAt(i); }
-                if (ImGui::MenuItem(("Export##collection" + std::to_string(i)).c_str())) {}
+
+                if (ImGui::MenuItem(("Export##collection" + std::to_string(i)).c_str())) { exportOpen = true; }
+
+                bool clipboardHasContent = brparser.clipboard.isCollection() || brparser.clipboard.isStruct();
+                if (ImGui::MenuItem(("Paste##collection" + std::to_string(i)).c_str(), nullptr, false, clipboardHasContent)) 
+                {
+                    if (brparser.clipboard.isCollection()) {
+                        brparser.clipboard.pasteToCollection(data);
+                    } else if (brparser.clipboard.isStruct()) {
+                        brparser.clipboard.pasteStructToCollection(data, i); // i is your collection index
+                    }
+                }
                 ImGui::Separator();
                 if (ImGui::MenuItem(("Rename##collection" + std::to_string(i)).c_str())) {renameOpen = true;}
                 ImGui::EndPopup();
             }
+            ////////////////////////////////////////
+            ///////// END OF CONTEXT MENU //////////
+            ////////////////////////////////////////
 
 
+
+            ////////////////////////////////////////
+            //////// START OF RENAME POP UP///////////
+            ////////////////////////////////////////
             if (renameOpen) {
                 ImGui::OpenPopup(("Rename Collection##" + std::to_string(i)).c_str());
                 ImVec2 mousePos = ImGui::GetMousePos();
@@ -340,8 +367,72 @@ namespace Mir{
                 ImGui::EndPopup();
             }
             ////////////////////////////////////////
-            ///////// END OF CONTEXT MENU //////////
+            //////// END OF RENAME POP UP///////////
             ////////////////////////////////////////
+
+
+
+            ////////////////////////////////////////
+            //////// START OF EXPORT POP UP/////////
+            ////////////////////////////////////////
+            if (exportOpen) {
+                ImGui::OpenPopup(("Export Collection##" + std::to_string(i)).c_str());
+                ImVec2 mousePos = ImGui::GetMousePos();
+                ImGui::SetNextWindowPos(ImVec2(mousePos.x - 100, mousePos.y - 50)); 
+                exportOpen = false; 
+            }
+            if (ImGui::BeginPopupModal(("Export Collection##" + std::to_string(i)).c_str(), nullptr, 
+                    ImGuiWindowFlags_AlwaysAutoResize)) {
+
+                static FileSelection exportFile;
+
+                ImGui::Text("Export collection to file:");
+                
+                // File path input with browse button on same line
+                if (ImGui::InputText("##export_path", &exportFile.filePath, 
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    // Handle Enter key in path input
+                    if (!exportFile.filePath.empty()) {
+                        // Export code here
+                        //brparser.exportCollectionToFile(data.collections[i], exportFile.filePath);
+                        exportOpen = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Browse")) {
+                    std::vector<COMDLG_FILTERSPEC> filterVec = { {L"B&R Type Files", L"*.typ"} };
+                    m_fileDialog.SetInitialFileName("myexport.typ");
+                    if (m_fileDialog.SaveFile(filterVec, L"typ")) {
+                        exportFile = m_fileDialog.GetFileSelection();
+                    }
+                }
+                
+                // Add status text or preview if needed
+                if (!exportFile.filePath.empty()) {
+                    ImGui::TextWrapped("Will export to: %s", exportFile.filePath.c_str());
+                }
+                
+                // Buttons row
+                if (ImGui::Button("Export", ImVec2(120, 0)) || 
+                    (ImGui::IsKeyPressed(ImGuiKey_Enter) && !exportFile.filePath.empty())) {
+                    brparser.writeFile(exportFile.filePath, data.collections[i].toString(), std::ios::out | std::ios::trunc);
+                    exportOpen = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                    exportOpen = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::EndPopup();
+            }
+            ////////////////////////////////////////
+            //////// END OF EXPORT POP UP///////////
+            ////////////////////////////////////////
+
 
 
 
@@ -350,7 +441,7 @@ namespace Mir{
                 for (size_t j = 0; j < data.collections[i].structs.size(); j++) {
                     ImGui::Indent(); // Add indentation for the struct level
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
-                    std::string structLabel = "Struct" + std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + std::to_string(j) + data.collections[i].structs[j].name;
+                    std::string structLabel = "Struct" +  std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + "_"+ std::to_string(i) +  "_" + std::to_string(j) + data.collections[i].structs[j].name + data.collections[i].comment;
                     bool structOpen = ImGui::CollapsingHeader(structLabel.c_str());
                     ImGui::PopStyleVar();
                     ImGui::Unindent();
@@ -364,10 +455,16 @@ namespace Mir{
                             data.deleteStructAt(i,j);
                             ImGui::EndPopup();
                             continue;  
-                        }         
+                        } 
+                        if (ImGui::MenuItem(("Copy##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
+                            brparser.clipboard.copyStruct(data.collections[i].structs[j], i, j);
+                            ImGui::SetClipboardText(brparser.clipboard.toString().c_str());
+                            MIR_INFO("TEST");
+                        }       
                         if (ImGui::MenuItem(("Duplicate##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
-                            data.duplicateStructAt(i,j);
-                            
+                            brStructNode copy = data.duplicateStructAt(i,j);
+                            ImGui::SetClipboardText(copy.toString().c_str());
+                            data.insertStructAt(i,j,copy);
                         }
                         ImGui::Separator();
                         if (ImGui::MenuItem(("Rename##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {

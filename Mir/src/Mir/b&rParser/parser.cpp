@@ -347,10 +347,6 @@ namespace Mir {
         for (auto &&row : csvStr)
         {
             cardInfo cardinfo(row[Type]);
-            row[Location];
-            row[Type];
-            row[Name];
-            row[IoCardName];
 
             std::string key = row[Location] + "_" + cardinfo.shortName + "_typ";
             std::string comment = row[IoCardName] + "." + cardinfo.shortName + "." + cardinfo.number;
