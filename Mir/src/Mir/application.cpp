@@ -50,7 +50,7 @@ namespace Mir {
         m_brParser = new brParser(); // Direct initialization
         // m_brParser->initDummyData();
         //std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
-        
+
         // m_brParser->readDatafile999999("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
         // std::vector<std::vector<std::string>> csvData = m_brParser->readPlcDataCsv(R"(C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\luotu.csv)", "Location,Type,BR Name,Card,Eplan name");
         

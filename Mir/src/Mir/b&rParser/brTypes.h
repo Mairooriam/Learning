@@ -7,7 +7,52 @@
 #include <map>
 
 namespace Mir {
+    inline std::string getShortCardType(std::string cardType) {
+        if (cardType.find("DigitalInput") != std::string::npos) return "Di";
+        if (cardType.find("DigitalOutput") != std::string::npos) return "Do";
+        if (cardType.find("AnalogInput") != std::string::npos) return "Ai";
+        if (cardType.find("AnalogOutput") != std::string::npos) return "Ao";
+        return "Unknown";
+    }
+    
+    inline std::string getLongCardType(std::string shortCardType) {
+        if (shortCardType == "Di") return "DigitalInput";
+        if (shortCardType == "Do") return "DigitalOutput";
+        if (shortCardType == "Ai") return "AnalogInput";
+        if (shortCardType == "Ao") return "AnalogOutput";
+        return "Unknown";
+    }
 
+    inline std::string shortCardTypeToType(std::string shortCardType) {
+        if (shortCardType == "Di") return "BOOL";
+        if (shortCardType == "Do") return "BOOL";
+        if (shortCardType == "Ai") return "REAL";
+        if (shortCardType == "Ao") return "REAL";
+        return "UNKNOWN";
+    }
+    inline std::string longCardTypeToVarConfigType(std::string longCardType){
+        if (longCardType == "DigitalInput") return "%IX";
+        if (longCardType == "DigitalOutput") return "%QX";
+        if (longCardType == "AnalogInput") return "%IW";
+        if (longCardType == "AnalogOutput") return "%QW";
+        return "UNKNOWN";
+    }
+
+    inline std::string shortCardTypeToVarConfigType(std::string shortCardType){
+        if (shortCardType == "Di") return "%IX";
+        if (shortCardType == "Do") return "%QX";
+        if (shortCardType == "Ai") return "%IW";
+        if (shortCardType == "Ao") return "%QW";
+        return "UNKNOWN";
+    }
+
+    inline std::string varConfigTypeToLongCardType(std::string varConfigType){
+        if (varConfigType == "%IX") return "DigitalInput";
+        if (varConfigType == "%QX") return "DigitalOutput";
+        if (varConfigType == "%IW") return "AnalogInput";
+        if (varConfigType == "%QW") return "AnalogOutput";
+        return "Unknown";
+    }
 
     const std::vector<std::string_view> brDataTypesSuggestions = {
             "BOOL", "SINT", "INT", "DINT", "USINT", "UINT", "UDINT", "REAL",
@@ -319,5 +364,73 @@ namespace Mir {
         // Check if string starts with (* and ends with *)
         return (str.substr(0, 2) == "(*" && str.substr(str.length() - 2) == "*)");
     }
+
+
+
+
+    struct brVarConfigData {
+        
+        std::string ioAdress;    ///< Name of the structure element
+        std::string processVariable;    ///< Data type of the structure element
+        std::string type;   ///< Default value of the structure element
+        std::string comment; ///< Comment associated with the structure element
+        brVarConfigData() = default;
+
+        brVarConfigData(const std::string& ioAdress, const std::string& type = "", 
+                     const std::string& processVariable = "", const std::string& comment = "")
+            : ioAdress(ioAdress), type(type), processVariable(processVariable), comment(comment) {}
+
+
+        std::string toString() const {
+            std::stringstream ss;
+            ss << processVariable + " AT "; 
+            ss << type + ".";
+            ss << ioAdress+ "; ";
+            ss << "(*" << comment << "*)";
+            return ss.str();
+        }
+    };
+
+
+    struct brVarConfigNode {
+        std::string comment;
+        std::vector<brVarConfigData> values;
+
+        brVarConfigNode& clear() {
+            comment.clear();
+            values.clear();
+            return *this;
+        }
+
+        std::string toString() const {
+            std::stringstream ss;
+            ss << "(*" << comment << "*)";
+            ss << "\nVAR_CONFIG" ;
+            for (const auto& value : values) {
+                ss << "\n\t" << value.toString();
+            }
+            ss << "\nEND_VAR";
+            return ss.str();
+        }
+    };
+
+    struct brVarConfigCollection {
+        std::vector<brVarConfigNode> config;
+    
+            brVarConfigCollection& clear() {
+                config.clear();
+                return *this;
+            }
+    
+            std::string toString() const {
+                std::stringstream ss;
+                for (const auto& value : config) {
+                    ss  << value.toString();
+                }
+                return ss.str();
+            }
+        };
+
+
 
 }

@@ -73,6 +73,122 @@ namespace Mir {
         return result;
     }
 
+    brVarConfigCollection brParser::readBrVarConfig(const std::string &path)
+    {
+        brVarConfigCollection configCollection;
+
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path << std::endl;
+
+        }
+
+        std::string                 line;
+        std::string                 lastLine;
+        std::vector<std::string>    tokens;
+
+
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        std::string result;
+
+
+        while(std::getline(file,line))
+        {
+            if (line == "VAR_CONFIG")
+            {
+                brVarConfigData configData;
+                
+                brVarConfigNode bufferconfigNode;
+                
+
+
+                if (brIsComment(lastLine))
+                {
+                    bufferconfigNode.comment = lastLine.substr(2, lastLine.length() - 4);  // Remove "(*" and "*)"
+
+
+                }
+                bool endFound = false;
+                while (std::getline(file,line))
+                {
+                    if(line == ""){
+                        continue;
+                    }
+
+                    if(line == "END_VAR"){
+                        configCollection.config.push_back(bufferconfigNode);
+                        bufferconfigNode.clear();
+                        break;
+                    }
+
+                    
+                    bool commentStarted = false;
+                    std::stringstream ss(line);
+                    std::string value;
+                    std::string commentBuffer;
+        
+                    std::vector<std::string> tokens;
+                    while (std::getline(ss, value, ' ')) {
+                        // Remove leading whitespace
+                        value.erase(0, value.find_first_not_of(" \t\n\r\f\v"));
+                        
+                        if (((value.size() >= 2 && value[0] == '(' && value[1] == '*') || commentStarted)) {
+                            commentStarted = true;
+                            if (!commentBuffer.empty()) {
+                                commentBuffer += " ";
+                            }
+                            commentBuffer += value;
+                            
+                            // Check if comment ends in this token
+                            if (value.size() >= 2 && 
+                                value[value.size()-2] == '*' && 
+                                value[value.size()-1] == ')') {
+                                commentStarted = false;
+                                // Remove leading and trailing comment markers for the final result
+                                commentBuffer.erase(0, commentBuffer.find("(*") + 2);
+                                commentBuffer.erase(commentBuffer.find("*)"));
+                                tokens.push_back(commentBuffer);
+                                commentBuffer.clear();
+                            }
+                            continue; 
+                        }
+                        tokens.push_back(value);
+                    }
+
+            
+                    if (tokens[1] == "AT" )
+                    {
+                        if (!tokens[2].empty()) {
+                            size_t dotPos = tokens[2].find('.');
+                            if (dotPos != std::string::npos) {
+                                configData.type = tokens[2].substr(0, dotPos);   
+                            }
+                        }
+                        configData.ioAdress = tokens[2].substr(4); // Remove %XX. prefix
+                        // Extract the I/O type prefix (%IX, %QX, etc.) from the address
+                        
+                        configData.processVariable = tokens[0];
+                        if (tokens.size() <= 3)
+                        {
+                            configData.comment = "";
+                        }else{
+                            configData.comment = tokens[3];
+                            if (!configData.ioAdress.empty()) {
+                                configData.ioAdress.pop_back();
+                            }
+                        }
+                        
+                    }
+            
+                    bufferconfigNode.values.push_back(configData);    
+                }    
+            }
+            lastLine = line;
+        }    
+        return configCollection;
+    }
+
     void writeDummyData()
     {
 
@@ -366,6 +482,48 @@ namespace Mir {
         return result;
     }
 
+    brVarConfigNode brParser::parseTypToConfig(const brStructNode &node)
+    {
+        brVarConfigNode configNode;
+        brVarConfigCollection configCol;
+
+
+
+        std::string name = node.name.substr(0, node.name.length() - 4);
+
+
+        std::string comment;
+        for (size_t j = 0; j < node.values.size(); j++)
+        {
+            std::string processVariable = "::" + name + "." + node.values[j].name;
+            comment = node.values[j].comment;
+
+            std::string ioAddress;
+            std::stringstream ss(comment);
+            std::string segment;
+            size_t i = 0;
+            brVarConfigData configData;
+            while (std::getline(ss, segment, '.')) {
+                if (i == 0){ ioAddress += "\"" + segment + "\"."; }
+                if (i == 2){ ioAddress += segment; } 
+
+                if (i == 1){ 
+                    ioAddress += getLongCardType(segment); 
+                    configData.type = shortCardTypeToVarConfigType(segment);
+                }
+                        
+                i++;
+            }
+            
+            configData.ioAdress = ioAddress;
+            configData.processVariable = processVariable;
+            configData.comment = "Generated with Mir";
+            configNode.values.push_back(configData);
+        }
+        configNode.comment = "Generated with Mir";
+        return configNode;
+
+    }
 
     void brParser::readAndupdateFromCSV(std::string path, std::string header)
     { 

@@ -108,11 +108,12 @@ namespace Mir {
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
 
         brStructCollection parseCsvIntoBrCollection(std::vector<std::vector<std::string>>& csvStr);
+        brVarConfigNode parseTypToConfig(const brStructNode& col);
         void readAndupdateFromCSV(std::string path, std::string header);
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
         std::vector<std::string> splitStringStruct(const std::string& str);
-
+        brVarConfigCollection readBrVarConfig(const std::string& path);
 
         std::string removeSpaces(std::string& str);
         std::string sanitizeString(const std::string& input);
@@ -121,6 +122,8 @@ namespace Mir {
         void setData(const brTyp& data) { m_testData = data; }
         void addCollection(brStructCollection& col) { m_testData.push_back(col); }
         
+
+
         MirClipboard clipboard;
     private:
         brTyp m_testData;

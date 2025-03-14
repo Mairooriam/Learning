@@ -219,6 +219,10 @@ namespace Mir{
             selectedFile = m_fileDialog.GetFileSelection();
         }
 
+        if(ImGui::Button("Readconfig")){
+            brVarConfigCollection resultt = brparser.readBrVarConfig(R"(C:\projects\OpcUa_Sample\Physical\ArSim\X20CP0482\IoMap.iom)");
+            ImGui::SetClipboardText(resultt.toString().c_str());
+        }
         ImGui::End();
 
 
@@ -235,7 +239,7 @@ namespace Mir{
             m_fileDialog.OpenFile(false, filters);
             fileselection2 = m_fileDialog.GetFileSelection();
         }
-        ImGui::SameLine();
+        ImGui::SameLine(); 
         ImGui::InputText("Output Path", &fileselection2.filePath);
 
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
@@ -467,8 +471,9 @@ namespace Mir{
                             data.insertStructAt(i,j,copy);
                         }
                         ImGui::Separator();
-                        if (ImGui::MenuItem(("Rename##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
-                            // Add rename stufff later
+                        if (ImGui::MenuItem(("Copy as [.iom]##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
+                            brVarConfigNode node = brparser.parseTypToConfig(data.collections[i].structs[j]);
+                            ImGui::SetClipboardText(node.toString().c_str());
                         }
                         ImGui::EndPopup();
                     }
@@ -630,7 +635,7 @@ namespace Mir{
                                 ImGui::PopItemWidth();
                                 
                                 ImGui::TableNextColumn();
-                                std::string valueLbl = "##value" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k);
+                                std::string valueLbl = "##value" + std::to_string(k) + "_" + std::to_string(j) + "_" + std::to_string(k);
                                 ImGui::PushItemWidth(-FLT_MIN);  // Make input fill cell width
                                 if (ImGui::InputText(valueLbl.c_str(), &data.collections[i].structs[j].values[k].value)) { data.m_isDirty = true; }
                                 ImGui::PopItemWidth();
@@ -664,6 +669,11 @@ namespace Mir{
         ImGui::Begin("Type Data Viewer");
         ImGui::TextWrapped("%s", data.getCachedString().c_str());
         ImGui::End();
+        ////////////////////////////////////////
+        //////// PARSER DATA STRING VIEW ///////
+        ////////////////////////////////////////
+
+
     
 
 
