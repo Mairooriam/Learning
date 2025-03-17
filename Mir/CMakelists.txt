@@ -132,6 +132,7 @@ set(D3_SOURCE_FILES
         src/Mir/ImGui/ImguiWidgets.cpp
         src/Mir/ImGui/WindowsFilebrowser.cpp
 
+
         src/Mir/b&rParser/parser.cpp
 
         src/Mir/Opcua/OpcuaClient.cpp
@@ -184,6 +185,7 @@ set(D3_HEADER_FILES
         src/Mir/ImGui/ImGuiLayer.h
         src/Mir/ImGui/ImguiWidgets.h
         src/Mir/ImGui/WindowsFilebrowser.h
+
 
         src/Mir/b&rParser/parser.h
 

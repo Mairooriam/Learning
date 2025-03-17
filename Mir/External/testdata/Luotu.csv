@@ -1,33 +1,9 @@
 Location,Type,BR Name,Card,Eplan name
 CC1,DigitalOutput01,ModixReadyToStart,AF102,READY TO START FOR EXTERNAL  PROCESS
-CC1,DigitalOutput02,WaterPump_MCT,AF102,WATER CIRCULATION PUMP CONTACTOR
-CC1,DigitalOutput03,VacyymPump_MCT,AF102,VACUUM PUMP CONTACTOR
-CC1,DigitalOutput04,WaterFillValve,AF102,WATER FILL VALVE
-CC1,DigitalOutput05,SequenceOnLED,AF102,SEQUENCE ON
-CC1,DigitalOutput06,ModixReadyToStart,AF102,READY TO START FOR EXTERNAL  PROCESS
-CC1,DigitalOutput07,WaterPump_MCT,AF102,WATER CIRCULATION PUMP CONTACTOR
-CC1,DigitalOutput08,VacyymPump_MCT,AF102,VACUUM PUMP CONTACTOR
-CC1,DigitalOutput09,WaterFillValve,AF102,WATER FILL VALVE
-CC1,DigitalOutput10,SequenceOnLED,AF102,SEQUENCE ON
-CC1,DigitalOutput01,ModixReadyToStart,AF103,
-CC1,DigitalOutput02,WaterPump_MCT,AF103,
-CC1,DigitalOutput03,VacyymPump_MCT,AF103,
-CC1,DigitalOutput04,WaterFillValve,AF103,
-CC1,DigitalOutput05,SequenceOnLED,AF103,
-CC1,DigitalOutput06,ModixReadyToStart,AF103,
-CC1,DigitalOutput07,WaterPump_MCT,AF103,
-CC1,DigitalOutput08,VacyymPump_MCT,AF103,
-CC1,DigitalOutput09,WaterFillValve,AF103,
-CC1,DigitalOutput10,SequenceOnLED,AF103,
-CC1,DigitalOutput11,ModixReadyToStart,AF103,
-CC1,DigitalOutput12,WaterFillValve,AF103,
-CC1,AnalogInput01,SequenceOnLED,AF104,
-CC1,AnalogInput02,ModixReadyToStart,AF104,
-CC1,AnalogInput03,WaterPump_MCT,AF104,
-CC1,AnalogInput04,VacyymPump_MCT,AF104,
-CC1,AnalogInput05,WaterFillValve,AF104,
-CC1,AnalogInput06,SequenceOnLED,AF104,
-CC1,AnalogInput07,ModixReadyToStart,AF104,
-CC1,AnalogInput08,WaterFillValve,AF104,
-CC1,AnalogInput09,SequenceOnLED,AF104,
-CC1,AnalogInput10,ModixReadyToStart,AF104,
+CC1,AnalogInput01,WaterPump_MCT,AF103,WATER CIRCULATION PUMP CONTACTOR
+CC1,DigitalInput01,VacyymPump_MCT,AF104,VACUUM PUMP CONTACTOR
+CC1,AnalogOutput01,WaterFillValve,AF105,WATER FILL VALVE
+CC1,DigitalOutput01,Test1,AF102,READY TO START FOR EXTERNAL  PROCESS
+CC1,AnalogInput01,test2,AF103,WATER CIRCULATION PUMP CONTACTOR
+CC1,DigitalInput01,test4,AF104,VACUUM PUMP CONTACTOR
+CC1,AnalogOutput01,test5,AF105,WATER FILL VALVE

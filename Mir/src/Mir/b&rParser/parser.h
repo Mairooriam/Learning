@@ -108,7 +108,9 @@ namespace Mir {
         void writeFile(const std::string& path, const std::string& content, std::ios_base::openmode mode);
 
         brStructCollection parseCsvIntoBrCollection(std::vector<std::vector<std::string>>& csvStr);
-        brVarConfigNode parseTypToConfig(const brStructNode& col);
+        brVarConfigNode parseSturctToConfig(const brStructNode& col);
+        brVarConfigNode parseCollectionToConfig(const brStructCollection& col);
+        std::vector<brVarConfigNode> parseCollectionToConfigMap(const brStructCollection& col);
         void readAndupdateFromCSV(std::string path, std::string header);
 
         std::vector<std::string> splitString(const std::string& str, const std::string& delimiter);
@@ -117,16 +119,26 @@ namespace Mir {
 
         std::string removeSpaces(std::string& str);
         std::string sanitizeString(const std::string& input);
-        brTyp& getData() { return m_testData; }
         
+        brTyp& getData() { return m_testData; }
+        brVarConfigCollection& getVarConfig() { return m_varConfig; }
+    
         void setData(const brTyp& data) { m_testData = data; }
+        void setVarConfig(const brVarConfigCollection& varConfig) { m_varConfig = varConfig; }
+            
+        void addVarConfigNode(brVarConfigNode varConfigNode) { m_varConfig.push_back(varConfigNode); }
         void addCollection(brStructCollection& col) { m_testData.push_back(col); }
         
 
+        
+        void updateDataString() { m_testData.updateCachedString(); }
+        void updateVarConfigString() { m_varConfig.updateCachedString();}
+        std::string getVarConfigString() const { return m_varConfig.m_cachedString; }
 
         MirClipboard clipboard;
     private:
         brTyp m_testData;
+        brVarConfigCollection m_varConfig;
         
 
     };

@@ -305,8 +305,7 @@ namespace Mir {
             lastLine = line;
         }
         
-        setData(result);
-        m_testData.updateCachedString();
+
         return result;
     }
 
@@ -384,6 +383,8 @@ namespace Mir {
         
         return result;
     }
+
+
 
     std::vector<std::vector<std::string>> brParser::readPlcDataCsv(const std::string &path, const std::string& header) {
         std::vector<std::vector<std::string>> csvStr;
@@ -482,7 +483,7 @@ namespace Mir {
         return result;
     }
 
-    brVarConfigNode brParser::parseTypToConfig(const brStructNode &node)
+    brVarConfigNode brParser::parseSturctToConfig(const brStructNode &node)
     {
         brVarConfigNode configNode;
         brVarConfigCollection configCol;
@@ -525,10 +526,122 @@ namespace Mir {
 
     }
 
+    brVarConfigNode brParser::parseCollectionToConfig(const brStructCollection &col)
+    {
+        brVarConfigNode configNode;
+        brVarConfigCollection configCol;
+        for (auto &brStruct : col)
+        {
+            std::string name = brStruct.name.substr(0, brStruct.name.length() - 4);
+
+
+            std::string comment;
+            for (size_t j = 0; j < brStruct.values.size(); j++)
+            {
+                std::string processVariable = "::" + name + "." + brStruct.values[j].name;
+                comment = brStruct.values[j].comment;
+    
+                std::string ioAddress;
+                std::stringstream ss(comment);
+                std::string segment;
+                size_t i = 0;
+                brVarConfigData configData;
+                while (std::getline(ss, segment, '.')) {
+                    if (i == 0){ ioAddress += "\"" + segment + "\"."; }
+                    if (i == 2){ ioAddress += segment; } 
+    
+                    if (i == 1){ 
+                        ioAddress += getLongCardType(segment); 
+                        configData.type = shortCardTypeToVarConfigType(segment);
+                    }
+                            
+                    i++;
+                }
+                
+                configData.ioAdress = ioAddress;
+                configData.processVariable = processVariable;
+                configData.comment = "Generated with Mir";
+                configNode.values.push_back(configData);
+            }
+            configNode.comment = "Generated with Mir";
+           
+        }
+        return configNode;
+    }
+
+    std::vector<brVarConfigNode> brParser::parseCollectionToConfigMap(const brStructCollection &col)
+    {
+        // Map to temporarily organize data by card name
+        std::unordered_map<std::string, brVarConfigNode> tempNodeMap;
+        
+        for (auto &brStruct : col)
+        {
+            std::string name = brStruct.name.substr(0, brStruct.name.length() - 4);
+    
+            for (size_t j = 0; j < brStruct.values.size(); j++)
+            {
+                std::string processVariable = "::" + name + "." + brStruct.values[j].name;
+                std::string comment = brStruct.values[j].comment;
+    
+                std::string ioAddress;
+                std::stringstream ss(comment);
+                std::string segment;
+                size_t i = 0;
+                brVarConfigData configData;
+                
+                // Card name to be extracted
+                std::string cardName;
+                
+                while (std::getline(ss, segment, '.')) {
+                    if (i == 0) {
+                        // Extract card name (e.g., "af104")
+                        cardName = segment;
+                        // Remove quotes if present
+                        if (cardName.front() == '"' && cardName.back() == '"') {
+                            cardName = cardName.substr(1, cardName.length() - 2);
+                        }
+                        // Convert to uppercase for consistent mapping
+                        std::transform(cardName.begin(), cardName.end(), cardName.begin(), ::toupper);
+                        
+                        ioAddress += "\"" + segment + "\".";
+                    }
+                    if (i == 2){ ioAddress += segment; } 
+    
+                    if (i == 1){ 
+                        ioAddress += getLongCardType(segment); 
+                        configData.type = shortCardTypeToVarConfigType(segment);
+                    }
+                            
+                    i++;
+                }
+                
+                configData.ioAdress = ioAddress;
+                configData.processVariable = processVariable;
+                configData.comment = cardName; // Use card name as comment
+                
+                // Add the config data to the appropriate card's node
+                tempNodeMap[cardName].values.push_back(configData);
+                // Set the comment for the node to the card name
+                tempNodeMap[cardName].comment = cardName;
+            }
+        }
+        
+        // Convert the map to a vector
+        std::vector<brVarConfigNode> configNodes;
+        for (const auto& [cardName, node] : tempNodeMap) {
+            configNodes.push_back(node);
+        }
+        
+        return configNodes;
+    }
+
     void brParser::readAndupdateFromCSV(std::string path, std::string header)
     { 
         auto csvData = readPlcDataCsv(path, header);
         brStructCollection test1 = parseCsvIntoBrCollection(csvData);
         addCollection(test1);
     }
+
+
+
 }

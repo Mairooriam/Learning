@@ -157,8 +157,47 @@ namespace MirUI {
         }
 
 
+
+
         void treeNodeForTypes(const Mir::brTyp& typ){
 
+        }
+
+
+        void RenderTableRows(Mir::brVarConfigNode& varConfig, size_t tableIndex) {
+            static const char* FIELD_NAMES[] = {
+                "ioAdress",
+                "processVariable",
+                "type",
+                "comment"
+            };
+            
+            size_t rowIndex = 0;
+            for (auto& values : varConfig) {
+                ImGui::TableNextRow();
+                
+                // Get references to the value fields - no const_cast needed
+                std::string* valueFields[] = {
+                    &values.ioAdress,
+                    &values.processVariable,
+                    &values.type,
+                    &values.comment
+                };
+                
+                // Render each column in the row
+                for (int col = 0; col < 4; col++) {
+                    ImGui::TableNextColumn();
+                    std::string label = "##" + std::string(FIELD_NAMES[col]) + 
+                               std::to_string(tableIndex) + "_" + std::to_string(rowIndex);
+                    ImGui::PushItemWidth(-FLT_MIN);
+                    if (ImGui::InputText(label.c_str(), valueFields[col])) {
+                        // Handle changes here if needed
+                    }
+                    ImGui::PopItemWidth();
+                }
+                
+                rowIndex++;
+            }
         }
         //////////////////////////////////////////////////////
         //////////////      Widgets     //////////////////////

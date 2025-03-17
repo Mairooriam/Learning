@@ -7,6 +7,8 @@
 #include <map>
 
 namespace Mir {
+   
+
     inline std::string getShortCardType(std::string cardType) {
         if (cardType.find("DigitalInput") != std::string::npos) return "Di";
         if (cardType.find("DigitalOutput") != std::string::npos) return "Do";
@@ -45,6 +47,7 @@ namespace Mir {
         if (shortCardType == "Ao") return "%QW";
         return "UNKNOWN";
     }
+
 
     inline std::string varConfigTypeToLongCardType(std::string varConfigType){
         if (varConfigType == "%IX") return "DigitalInput";
@@ -193,6 +196,16 @@ namespace Mir {
             return *this;
         }
 
+        // Iterator methods
+        auto begin() { return structs.begin(); }
+        auto end() { return structs.end(); }
+        auto begin() const { return structs.begin(); }
+        auto end() const { return structs.end(); }
+        
+        // if you want to brSturctCollection[i] instead of brsturctollection.structs[i]
+        //brStructNode& operator[](size_t index) { return structs[index]; }
+        //const brStructNode& operator[](size_t index) const { return structs[index]; }
+
         std::string toString() const {
             std::stringstream ss;
             if (!comment.empty()) {
@@ -213,6 +226,11 @@ namespace Mir {
         std::string m_cachedString;
         bool m_isDirty = true;
         std::unordered_map<size_t, int> copyCounters;
+
+        bool empty() { 
+            if (collections.empty()) { return true; }
+            else { return false; }
+        }    
 
         // Clear all data and reset state
         brTyp& clear() {
@@ -335,8 +353,6 @@ namespace Mir {
                 m_cachedString = ss.str();
                 m_isDirty = false;
             }
-            
-
         }
 
             // Check if cache needs update
@@ -369,29 +385,22 @@ namespace Mir {
 
 
     struct brVarConfigData {
-        
-        std::string ioAdress;    ///< Name of the structure element
-        std::string processVariable;    ///< Data type of the structure element
-        std::string type;   ///< Default value of the structure element
-        std::string comment; ///< Comment associated with the structure element
+
+        std::string ioAdress{};
+        std::string processVariable{};    
+        std::string type{}; 
+        std::string comment{}; 
         brVarConfigData() = default;
-
-        brVarConfigData(const std::string& ioAdress, const std::string& type = "", 
-                     const std::string& processVariable = "", const std::string& comment = "")
-            : ioAdress(ioAdress), type(type), processVariable(processVariable), comment(comment) {}
-
 
         std::string toString() const {
             std::stringstream ss;
             ss << processVariable + " AT "; 
             ss << type + ".";
-            ss << ioAdress+ "; ";
+            ss << ioAdress + "; ";
             ss << "(*" << comment << "*)";
             return ss.str();
         }
     };
-
-
     struct brVarConfigNode {
         std::string comment;
         std::vector<brVarConfigData> values;
@@ -401,6 +410,12 @@ namespace Mir {
             values.clear();
             return *this;
         }
+        
+        // Iterator methods for range-based for loop
+        auto begin() { return values.begin(); }
+        auto end() { return values.end(); }
+        auto begin() const { return values.begin(); }
+        auto end() const { return values.end(); }
 
         std::string toString() const {
             std::stringstream ss;
@@ -409,27 +424,74 @@ namespace Mir {
             for (const auto& value : values) {
                 ss << "\n\t" << value.toString();
             }
-            ss << "\nEND_VAR";
+            ss << "\nEND_VAR\n";
+            return ss.str();
+        }
+
+        std::string toStringPlain() const {
+            std::stringstream ss;
+            for (const auto& value : values) {
+                ss << "\t" << value.toString() << "\n";
+            }
             return ss.str();
         }
     };
 
     struct brVarConfigCollection {
         std::vector<brVarConfigNode> config;
-    
-            brVarConfigCollection& clear() {
-                config.clear();
-                return *this;
+        std::string m_cachedString;
+        bool m_isDirty = true;
+        //std::unordered_map<size_t, int> copyCounters;
+        bool empty(){ return config.empty(); }
+        brVarConfigCollection& clear() {
+            config.clear();
+            return *this;
+        }
+        
+        bool isDirty() const {
+            return m_isDirty;
+        }
+
+        // Mark cache as needing update
+        void markDirty() {
+            m_isDirty = true;
+        }
+        
+        std::string toString() const {
+            std::stringstream ss;
+            for (const auto& value : config) {
+                ss << value.toString();
             }
-    
-            std::string toString() const {
-                std::stringstream ss;
-                for (const auto& value : config) {
-                    ss  << value.toString();
-                }
-                return ss.str();
+            return ss.str();
+        }
+
+        std::string toStringPlain() const {
+            std::stringstream ss;
+            for (const auto& value : config) {
+                ss << value.toStringPlain();
             }
-        };
+            return ss.str();
+        }
+
+        size_t size() const { return config.size(); }
+
+        void updateCachedString() {
+            if (m_isDirty == true) {
+                m_cachedString = toString();
+                m_isDirty = false;
+            }
+        }
+
+        void push_back(brVarConfigNode varConfigNode) {
+            config.push_back(varConfigNode);
+        }
+
+        // Iterator methods for range-based for loop
+        auto begin() { return config.begin(); }
+        auto end() { return config.end(); }
+        auto begin() const { return config.begin(); }
+        auto end() const { return config.end(); }
+    };;
 
 
 

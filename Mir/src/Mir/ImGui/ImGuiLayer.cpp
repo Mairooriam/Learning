@@ -168,7 +168,7 @@ namespace Mir{
         ImGui::Begin("Fileeeee");
 
         static int currentItem = 0;
-        const char* items[] = { ".csv", ".typ" };
+        const char* items[] = { ".csv", ".typ", ".iom"};
         static COMDLG_FILTERSPEC filter = {L"br DataType", L"*.csv*"};
         static FileSelection selectedFile;  // Default initialization
 
@@ -177,29 +177,45 @@ namespace Mir{
         }
 
         if (ImGui::Button("Read file")){ 
-            if (selectedFile.fileName != "" & currentItem == 1) {
-                brparser.clear();
-                brparser.readDatafile999999(selectedFile.filePath);
+            if (selectedFile.fileName != "") {
+                if (currentItem == 0) {
+                    brparser.readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+                } 
+                else if (currentItem == 1) {
+                    brparser.clear(); //BUG might cause bug or unwanted behavior not usre
+                    auto datafile = brparser.readDatafile999999(selectedFile.filePath);
+                    brparser.setData(datafile);
+                    brparser.updateDataString();
+                } 
+                else if (currentItem == 2) {
+                    brparser.clear(); 
+                    auto varConfig = brparser.readBrVarConfig(selectedFile.filePath);
+                    brparser.setVarConfig(varConfig);
+                    brparser.updateVarConfigString();
+                }
             }
 
-            if (selectedFile.fileName != "" & currentItem == 0) {
-                brparser.readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
-            }
         }
         
 
 
         if (ImGui::Combo("combou", &currentItem, items, IM_ARRAYSIZE(items))) {
-            if (currentItem == 1)
-            {
-                filter ={L"br DataType", L"*.typ*"};
-                selectedFile.clear();
-            } 
             if (currentItem == 0)
             {
                 filter = {L"br DataType", L"*.csv*"};
                 selectedFile.clear();
             }
+            if (currentItem == 1)
+            {
+                filter ={L"br DataType", L"*.typ*"};
+                selectedFile.clear();
+            } 
+            if (currentItem == 2)
+            {
+                filter ={L"br Mapping", L"*.iom*"};
+                selectedFile.clear();
+            } 
+            
             
             
         }
@@ -257,7 +273,7 @@ namespace Mir{
         ////////////////////////////////////////
         //////// PARSER DATA TABLE//////////////
         ////////////////////////////////////////
-        ImGui::Begin("Parser data table");
+        ImGui::Begin(".typ Editor");
         static ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize | ImGuiTableFlags_Resizable;
         if (ImGui::TreeNode("Table Flags")) {
             enum ContentsType { CT_Text, CT_FillButton };
@@ -320,7 +336,29 @@ namespace Mir{
                 if (ImGui::MenuItem(("Duplicate##collection" + std::to_string(i)).c_str())) { data.duplicateCollectionAt(i); }
 
                 if (ImGui::MenuItem(("Export##collection" + std::to_string(i)).c_str())) { exportOpen = true; }
+                if (ImGui::MenuItem(("Generate iom ##collection" + std::to_string(i)).c_str())) { 
+                    if (!data.empty())
+                    {
+                        std::vector<brVarConfigNode> parsedCollection = brparser.parseCollectionToConfigMap(data.collections[i]);
+                        for (auto &node : parsedCollection)
+                        {
+                            brparser.addVarConfigNode(node);
+                        }
+                        
+                        brparser.getVarConfig().markDirty();
+                    }
+                    
 
+                 }
+                
+                if (ImGui::MenuItem(("Copy as [.iom]##collection" + std::to_string(i)).c_str())) { 
+                    std::string buffer;
+                    for (auto &brstruct : data.collections[i])
+                    {
+                        buffer += brparser.parseSturctToConfig(brstruct).toStringPlain();
+                    }
+                    ImGui::SetClipboardText(buffer.c_str());
+                }
                 bool clipboardHasContent = brparser.clipboard.isCollection() || brparser.clipboard.isStruct();
                 if (ImGui::MenuItem(("Paste##collection" + std::to_string(i)).c_str(), nullptr, false, clipboardHasContent)) 
                 {
@@ -472,7 +510,7 @@ namespace Mir{
                         }
                         ImGui::Separator();
                         if (ImGui::MenuItem(("Copy as [.iom]##struct_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
-                            brVarConfigNode node = brparser.parseTypToConfig(data.collections[i].structs[j]);
+                            brVarConfigNode node = brparser.parseSturctToConfig(data.collections[i].structs[j]);
                             ImGui::SetClipboardText(node.toString().c_str());
                         }
                         ImGui::EndPopup();
@@ -657,6 +695,7 @@ namespace Mir{
             }
         }
         data.updateCachedString();
+        brparser.updateVarConfigString();
         ImGui::End();
         ////////////////////////////////////////
         //////// PARSER DATA TABLE END//////////
@@ -673,31 +712,138 @@ namespace Mir{
         //////// PARSER DATA STRING VIEW ///////
         ////////////////////////////////////////
 
+        ////////////////////////////////////////
+        //////// PARSER DATA STRING VIEW ///////
+        ////////////////////////////////////////
+        ImGui::Begin("Var Config Viewer");
+        ImGui::TextWrapped("%s", brparser.getVarConfigString().c_str());
+        ImGui::End();
+        ////////////////////////////////////////
+        //////// PARSER DATA STRING VIEW ///////
+        ////////////////////////////////////////
 
+
+        ImGui::Begin(".iom editor");
+        brVarConfigCollection VarConfigCollection = brparser.getVarConfig();
+        
+        // for now just bool. maybe add bit operations later for compact flags
+        static bool displayCellSize = false;
+        if (ImGui::TreeNode("Table Flags")) {
+            ImGui::Checkbox("display table cell size", &displayCellSize);
+            ImGui::TreePop();
+        }
+
+        static bool treeOpen = false;
+        if (!VarConfigCollection.empty())
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+            std::string label = "IO Data Table###IO Data Table";
+            treeOpen = ImGui::CollapsingHeader(label.c_str());
+            ImGui::PopStyleVar();
+            ImGui::Indent();
+        }
+        
+
+        if (treeOpen)
+        {
+            size_t i = 0;
+            for (auto &varConfig : VarConfigCollection){
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+                std::string label = "IO Data \t\t"  + varConfig.comment + "###IO Data Table" + std::to_string(i);
+                bool innerTreeOpen = ImGui::CollapsingHeader(label.c_str());
+                ImGui::PopStyleVar();
     
+                if (innerTreeOpen)
+                {
+                    static float nameWidth = 400.0f;
+                    static float typeWidth = 78.0f;
+                    static float valueWidth = 60.0f;
+                    
+                
+                    if (displayCellSize)
+                    {
+                        float availWidth = ImGui::GetContentRegionAvail().x;
+                        ImGui::Text("Available width: %.1f", availWidth);
+                    }
 
+                    
+                    ImGui::Indent();
+                    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 2.0f));
+                    if (ImGui::BeginTable("Node", 4, tableFlags)) 
+                    {
+                        ImGui::TableSetupColumn("IO Adress", ImGuiTableColumnFlags_WidthFixed, nameWidth);
+                        ImGui::TableSetupColumn("Process Variable", ImGuiTableColumnFlags_WidthFixed, typeWidth);
+                        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, valueWidth);
+                        ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthFixed, valueWidth);
+                        ImGui::TableHeadersRow();
+    
+                        ImGui::TableNextRow();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
+                        if (displayCellSize)
+                        {
+                            for (int column = 0; column < 4; column++) {
+                                ImGui::TableSetColumnIndex(column);
+                                ImGui::Text("(w: %5.1f)", ImGui::GetColumnWidth(column));
+                            }     
+                        }
+                        
    
-     
+                        size_t j = 0;
+                        for (auto &values : varConfig)
+                        {
+                            ImGui::TableNextRow();
+                            
+                            ImGui::TableNextColumn(); 
+                            std::string nameLbl = "##ioAdress" + std::to_string(i) + "_" + std::to_string(j);
+                            ImGui::PushItemWidth(-FLT_MIN);
+                            std::string text1 = "text1";
+                            if (ImGui::InputText(nameLbl.c_str(), &values.ioAdress)) {}
+                            ImGui::PopItemWidth();
+                            
+                            ImGui::TableNextColumn();
+                            std::string typeLbl = "##processVariable" + std::to_string(i) + "_" + std::to_string(j);
+                            ImGui::PushItemWidth(-FLT_MIN);
+                            std::string text2 = "text2";
+                            if (ImGui::InputText(typeLbl.c_str(), &values.processVariable)) {}
+                            ImGui::PopItemWidth();
+                            
+                            ImGui::TableNextColumn();
+                            std::string valueLbl = "##type" + std::to_string(i) + "_" + std::to_string(j);
+                            ImGui::PushItemWidth(-FLT_MIN);  
+                            std::string text3 = "text3";
+                            if (ImGui::InputText(valueLbl.c_str(), &values.type)) {}
+                            ImGui::PopItemWidth();
+    
+                            ImGui::TableNextColumn();
+                            std::string commentLbl = "##comment" + std::to_string(i) + "_" + std::to_string(j);
+                            ImGui::PushItemWidth(-FLT_MIN);  
+                            std::string text4 = "text3";
+                            if (ImGui::InputText(commentLbl.c_str(), &values.comment)) {}
+                            ImGui::PopItemWidth();
+                            
+                            j++;
+                        }
+                        
+                        ImGui::EndTable();
+                    }
+                    
+                    ImGui::PopStyleVar();
+                    ImGui::Unindent();
+                }
+                i++;
+            }
+            ImGui::Unindent();
+        }
+        ImGui::End();
+        ////////////////////////////////////////
+        //////// PARSER DATA STRING VIEW ///////
+        ////////////////////////////////////////
+
+
+    }
+
         
-        
-    }   
+      
 
 
     void ImGuiLayer::Begin(){

@@ -9,7 +9,7 @@
 
 #include "imgui.h"
 #include "b&rParser/brTypes.h"
-
+#include "misc/cpp/imgui_stdlib.h"
 class WindowsFileBrowser;  // Forward declaration
 
 namespace MirUI {
@@ -31,6 +31,8 @@ namespace MirUI {
 
     void treeNodeForTypes(const Mir::brTyp& typ);
 
+
+    void RenderTableRows(Mir::brVarConfigNode& varConfig, size_t tableIndex);
     
 
     
