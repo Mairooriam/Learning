@@ -35,42 +35,17 @@ namespace Mir {
         // Path to your Python script
         std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
         
-        // Arguments for the script (excel file path and optional csv file path)
+
         std::vector<std::string> args = {
             "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\manual_edited.xlsx",
             "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
         };
         
-        // Run the script
+
         pythonTool.RunPythonScript(scriptPath, args);    
 
-        
-
-
-        m_brParser = new brParser(); // Direct initialization
-        // m_brParser->initDummyData();
-        //std::map<std::string, std::vector<brDataTypeNode>> plcdata = m_brParser->readPlcDataCsv("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv");
-
-        // m_brParser->readDatafile999999("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        // std::vector<std::vector<std::string>> csvData = m_brParser->readPlcDataCsv(R"(C:\Users\35850\Desktop\repositories\learning2\Learning\Mir\External\testdata\luotu.csv)", "Location,Type,BR Name,Card,Eplan name");
-        
-        // brStructCollection test1 = m_brParser->parseCsvIntoBrCollection(csvData);
-        // m_brParser->addCollection(test1);
-        //m_brParser->m_testData.;
-        //m_brParser->writeFile("C:/Users/35850/Desktop/repositories/learning2/Learning/Tools/test.typ", test9999.toString(), std::ios_base::app);
-
-
-        //std::map<std::string, std::vector<brDataTypeNode>> test222 = m_brParser->readDataTypeFileOneLineAtaTime("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        //std::vector<std::string> datatypefile = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        //m_brParser->mergeMaps(test222);
-
-        //std::vector<std::string> filecontent = m_brParser->readDatatypeFile("C:\\projects\\OpcUa_Sample\\Logical\\Types.typ");
-        //m_brParser->writeDummyData();
-
-        
-        
-   }
-
+        m_brParser = new brParser(); 
+    }
 
 
 

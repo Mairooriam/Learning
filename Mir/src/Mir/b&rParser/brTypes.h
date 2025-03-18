@@ -445,6 +445,7 @@ namespace Mir {
         bool empty(){ return config.empty(); }
         brVarConfigCollection& clear() {
             config.clear();
+            m_cachedString.clear();
             return *this;
         }
         
@@ -454,6 +455,19 @@ namespace Mir {
 
         // Mark cache as needing update
         void markDirty() {
+            m_isDirty = true;
+        }
+        
+        void insertNodeAt(size_t nodeIndex, brVarConfigNode nodeToInsert) {
+            // If nodeIndex is out of range, append at the end
+            if(nodeIndex > config.size()) {
+                config.push_back(nodeToInsert);
+            } else {
+                config.insert(
+                    config.begin() + nodeIndex,
+                    nodeToInsert
+                );
+            }
             m_isDirty = true;
         }
         

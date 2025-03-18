@@ -60,19 +60,18 @@ namespace Mir{
     void ImGuiLayer::OnAttach(){
 
         // Setup Dear ImGui context
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
         // disables clipboard error msg GLFW ERROR 65545
         g_PreviousErrorCallback = glfwSetErrorCallback(CustomGLFWErrorCallback);
 
-
-		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
 
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
@@ -90,10 +89,10 @@ namespace Mir{
 
         fileselection2.filePath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
        
-
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 410");
+
     }
 
     void ImGuiLayer::OnDetach(){
@@ -114,53 +113,16 @@ namespace Mir{
 
 
     void ImGuiLayer::OnImGuiRender(){
+        static bool dooockkk = true;
+        MirUI::ShowExampleAppDockSpace(&dooockkk);
+
         brParser& brparser = Mir::Application::Get().GetBrParser();
         brTyp& data = Mir::Application::Get().GetBrParser().getData();
          
-        
-
-
-
 
         static bool show = true;
-        static char str0[128] = "opc.tcp://192.168.0.55:4840";
-
         ImGui::ShowDemoWindow(&show);
 
-        ImGui::SeparatorText("General");
-
-        static int clicked = 0;
-        if (ImGui::Button("Button")){
-            clicked++;
-            Mir::Application::Get().CreateOpcUaClient(str0);
-        }
-
-        ImGui::SameLine();
-
-        // Example suggestions
-        std::vector<std::string_view> suggestions = {
-            "opc.tcp://192.168.0.55:4840",
-            "opc.tcp://192.168.0.56:4840",
-            "opc.tcp://192.168.0.57:4840"
-        };
-
-        if (ImGui::Button("Save dummy data")){
-            clicked++;
-            //Mir::Application::Get().GetBrParser().writeDummyData();
-        }    
-
-        if (clicked & 1)
-        {
-            ImGui::Text(str0);
-            ImGui::Text(str0);
-            ImGui::Text(str0);
-            ImGui::Text(str0);
-            ImGui::Text(str0);
-        }
-        
-        if (MirUI::InputTextWithSuggestions("input text", str0, IM_ARRAYSIZE(str0), suggestions)) {
-            // Handle input change if needed
-        }
 
         
 
@@ -174,8 +136,9 @@ namespace Mir{
 
         if (ImGui::Button("Clear")){
             Mir::Application::Get().GetBrParser().clear();
+    
         }
-
+        ImGui::SameLine();
         if (ImGui::Button("Read file")){ 
             if (selectedFile.fileName != "") {
                 if (currentItem == 0) {
@@ -185,13 +148,13 @@ namespace Mir{
                     brparser.clear(); //BUG might cause bug or unwanted behavior not usre
                     auto datafile = brparser.readDatafile999999(selectedFile.filePath);
                     brparser.setData(datafile);
-                    brparser.updateDataString();
+                    brparser.getData().markDirty();
                 } 
                 else if (currentItem == 2) {
                     brparser.clear(); 
                     auto varConfig = brparser.readBrVarConfig(selectedFile.filePath);
                     brparser.setVarConfig(varConfig);
-                    brparser.updateVarConfigString();
+                    brparser.getVarConfig().markDirty();
                 }
             }
 
@@ -215,9 +178,6 @@ namespace Mir{
                 filter ={L"br Mapping", L"*.iom*"};
                 selectedFile.clear();
             } 
-            
-            
-            
         }
         
         if (ImGui::InputText("text##Textsss232", &selectedFile.filePath)) {}
@@ -240,25 +200,6 @@ namespace Mir{
             ImGui::SetClipboardText(resultt.toString().c_str());
         }
         ImGui::End();
-
-
-
-
-        if(ImGui::Button("Browse###BrowseInput")){
-            m_fileDialog.OpenFile(false);
-            fileselection1 = m_fileDialog.GetFileSelection();
-        }
-        ImGui::SameLine();
-        ImGui::InputText("Input Path", &fileselection1.filePath);
-
-        if(ImGui::Button("Browse###BrowseOutput")){
-            m_fileDialog.OpenFile(false, filters);
-            fileselection2 = m_fileDialog.GetFileSelection();
-        }
-        ImGui::SameLine(); 
-        ImGui::InputText("Output Path", &fileselection2.filePath);
-
-        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
 
         ////////////////////////////////////////
@@ -518,27 +459,26 @@ namespace Mir{
 
 
 
-
-                    static float nameWidth = 400.0f;
-                    static float typeWidth = 78.0f;
-                    static float valueWidth = 60.0f;
                     if (structOpen)
                     {
-
-                        // Display current width info
-                        float availWidth = ImGui::GetContentRegionAvail().x;
-                        ImGui::Text("Available width: %.1f", availWidth);
-
+                        // Get available width for the table
+                        static float availWidth = ImGui::GetContentRegionAvail().x;
+                        
+                        // Define column widths as percentages of available space
+                        static float nameWidthPercent = 0.35f;   // 35% of available width
+                        static float typeWidthPercent = 0.20f;   // 20% of available width
+                        static float valueWidthPercent = 0.15f;  // 15% of available width
+                        // Comment column will take remaining 30% via ImGuiTableColumnFlags_WidthStretch
+                        
                         ImGui::Indent();
                         
                         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 2.0f));
                         if (ImGui::BeginTable("Node", 4, tableFlags)) {
-                            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, nameWidth);
-                            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, typeWidth);
-                            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, valueWidth);
+                            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, availWidth * nameWidthPercent);
+                            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, availWidth * typeWidthPercent);
+                            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, availWidth * valueWidthPercent);
                             ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthStretch);
                             ImGui::TableHeadersRow();
-
 
                             ImGui::TableNextRow();
                             for (int column = 0; column < 4; column++) {
@@ -742,8 +682,18 @@ namespace Mir{
             ImGui::PopStyleVar();
             ImGui::Indent();
         }
-        
 
+        // Context menu for Structs tree
+        if (ImGui::BeginPopupContextItem("varConfig_context_menu")) { 
+        if (ImGui::MenuItem("Delete##varConfig")) { brparser.clearVarConfig(); } 
+        if (ImGui::MenuItem("Copy##varConfig")) { 
+            brparser.clipboard.copyVarConfigCollection(VarConfigCollection);
+            ImGui::SetClipboardText(brparser.getVarConfigString().c_str());
+        }       
+        ImGui::Separator();
+        if (ImGui::MenuItem("Copy as [.iom]##varConfig")) { }
+        ImGui::EndPopup();
+        }
         if (treeOpen)
         {
             size_t i = 0;

@@ -19,7 +19,7 @@ namespace MirUI {
         std::array<char, 512> comment;
     };
 
-
+    void ShowExampleAppDockSpace(bool* p_open);
 
     void ToggleKeyboardNavigationEnabled(std::optional<bool> enabled = std::nullopt);
     bool InputTextWithSuggestions(const char* label, char* buf, size_t buf_size, const std::vector<std::string_view>& suggestions);

@@ -16,7 +16,9 @@ namespace Mir {
             None,
             String,
             BrCollection,
-            BrStruct
+            BrStruct,
+            VarConfigCollection,
+            VarConfigNode
         };
         
         std::string stringContent;
@@ -24,10 +26,13 @@ namespace Mir {
         // Add these fields to store the actual copied data
         brStructCollection collectionData;
         brStructNode structData;
+        brVarConfigCollection varConfigCollectionData;
+        brVarConfigNode varConfigNodeData;
         
         // Indices for the copied item (if needed for reference)
         size_t collectionIndex = 0;
         size_t structIndex = 0;
+        size_t varConfigIndex = 0;
         
         ContentType contentType = ContentType::None;
         
@@ -44,13 +49,19 @@ namespace Mir {
             return contentType == ContentType::String;
         }
         
+        bool isVarConfigCollection() const {
+            return contentType == ContentType::VarConfigCollection;
+        }
+        
+        bool isVarConfigNode() const {
+            return contentType == ContentType::VarConfigNode;
+        }
+        
         bool isEmpty() const {
             return contentType == ContentType::None;
         }
         
-        // Existing methods...
-        
-        // Add these methods for copying
+        // Copying methods
         void copyCollection(const brStructCollection& collection, size_t index) {
             collectionData = collection;
             collectionIndex = index;
@@ -64,16 +75,33 @@ namespace Mir {
             contentType = ContentType::BrStruct;
         }
         
-        // Improved toString() implementation
+        void copyVarConfigCollection(const brVarConfigCollection& collection) {
+            varConfigCollectionData = collection;
+            contentType = ContentType::VarConfigCollection;
+        }
+        
+        void copyVarConfigNode(const brVarConfigNode& node, size_t idx) {
+            varConfigNodeData = node;
+            varConfigIndex = idx;
+            contentType = ContentType::VarConfigNode;
+        }
+        
+        // ToString implementation
         std::string toString() const {
-            if (contentType == ContentType::String) {
-                return stringContent;
-            } else if (contentType == ContentType::BrCollection) {
-                return collectionData.toString();
-            } else if (contentType == ContentType::BrStruct) {
-                return structData.toString();
+            switch (contentType) {
+                case ContentType::String:
+                    return stringContent;
+                case ContentType::BrCollection:
+                    return collectionData.toString();
+                case ContentType::BrStruct:
+                    return structData.toString();
+                case ContentType::VarConfigCollection:
+                    return varConfigCollectionData.toString();
+                case ContentType::VarConfigNode:
+                    return varConfigNodeData.toString();
+                default:
+                    return "";
             }
-            return "";
         }
         
         // Methods for pasting
@@ -91,6 +119,23 @@ namespace Mir {
                                     structData);
             }
         }
+        
+        void pasteToVarConfigCollection(brVarConfigCollection& data) {
+            if (contentType == ContentType::VarConfigCollection) {
+                // Append all nodes from the copied collection
+                for (const auto& node : varConfigCollectionData) {
+                    data.push_back(node);
+                }
+            } else if (contentType == ContentType::VarConfigNode) {
+                data.push_back(varConfigNodeData);
+            }
+        }
+        
+        // void pasteVarConfigNodeAt(brVarConfigCollection& data, size_t targetCollectionIndex) {
+        //     if (contentType == ContentType::VarConfigNode && targetCollectionIndex <= data.size()) {
+        //         data.insertNodeAt(data.begin() + targetCollectionIndex, varConfigNodeData);
+        //     }
+        // }
     };
 
     class brParser
@@ -100,8 +145,10 @@ namespace Mir {
         ~brParser();
         std::string readFile(const std::string& path);
 
-        void clear(){ m_testData.clear(); }
-        
+        void clear() { clearTyp(); clearVarConfig();}
+        void clearTyp(){ m_testData.clear(); }
+        void clearVarConfig() { m_varConfig.clear(); }
+
         brTyp readDatafile999999(const std::string& path);
         std::vector<std::vector<std::string>> readPlcDataCsv(const std::string &path, const std::string& header);
 
