@@ -186,10 +186,10 @@ set(D3_HEADER_FILES
         src/Mir/ImGui/ImGuiLayer.h
         src/Mir/ImGui/ImguiWidgets.h
         src/Mir/ImGui/WindowsFilebrowser.h
-
+        src/Mir/ImGui/styles.h
 
         src/Mir/b&rParser/parser.h
-
+        
 
         src/Mir/CPython/PythonTool.h
 

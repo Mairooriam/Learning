@@ -21,6 +21,31 @@
 #include "ImguiWidgets.h"
 #include "misc/cpp/imgui_stdlib.h"
 
+#include "imgui_internal.h"
+
+#include "styles.h"
+
+// TODO:
+/*
+- CLEAN TCODE
+- CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
+- ADD NEW MEMBER TO STRUCT -> RIGHT CLICK ON STRCUT? BUTTON?
+- STYLING
+- SETTINGS IN ONE PLACE ( DISPLAY HEADER WIDTH FOR NOW )
+- WINDOWS FILE EXPLORER FILE TYPE INTEGRATION
+- OPENGL WINDOW TITLE BAR TO DARK MODE??
+- COPY FOR VAR CONFIG SINGLE STRINGS? MAYBE NOT?
+- STYLES FROM STRUCT TABLE TO VAR CONFIG
+- FORMAT VALIDATION WHEN TYPING NAMES -> NO SPACES 
+- FORMAT VALIDATION WHEN TYPING KNOWN TYPES -> BOOL 1 = TRUE 0 = FALSE ETC.
+- CTRL + C COPY FOR KEYBOARD NAVIGATION?
+- HOTKEY DISPLAY ON RIGHT CLICK MENU?
+- AS STUDIO PROJECT OPEN IN THE LEFT?
+
+*/
+
+
+
 namespace Mir{
 
     // Store the original GLFW error callback
@@ -42,11 +67,12 @@ namespace Mir{
     }
 
 
-
     std::string test1 = "HELLO WORDL MIRO";
     FileSelection fileselection1;
     FileSelection fileselection2;
-    std::string outputFileStr; 
+    std::string outputFileStr;
+    float temptime = 0; 
+    bool hightlight = false;
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -71,7 +97,8 @@ namespace Mir{
         g_PreviousErrorCallback = glfwSetErrorCallback(CustomGLFWErrorCallback);
 
         // Setup Dear ImGui style
-        ImGui::StyleColorsDark();
+        //ImGui::StyleColorsDark();
+        Mir::SetStyle(m_currentStyle);
 
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
@@ -110,19 +137,47 @@ namespace Mir{
         { L"All Files", L"*.*" },
         { L"br DataType", L"*.typ*" }
     };
-
-
+    
+    
     void ImGuiLayer::OnImGuiRender(){
         static bool dooockkk = true;
         MirUI::ShowExampleAppDockSpace(&dooockkk);
+        
+
+
+        // Create a style selector in your UI
+        if (ImGui::Begin("Settings")) {
+            // Display dropdown for style selection
+            const char* currentStyleName = Mir::GetStyleName(m_currentStyle);
+            if (ImGui::BeginCombo("Theme", currentStyleName)) {
+                for (int i = 0; i < Mir::GetStyleCount(); i++) {
+                    bool isSelected = (m_currentStyle == i);
+                    if (ImGui::Selectable(Mir::GetStyleName(i), isSelected)) {
+                        m_currentStyle = i;
+                        Mir::SetStyle(m_currentStyle);
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::End();
+        }
+
+
+        if (hightlight)
+        {
+            ImGui::PushStyleColor(ImGuiCol_TabActive, IM_COL32(0xff, 0x00, 0xff, 0xff));
+
+        }
+
+
 
         brParser& brparser = Mir::Application::Get().GetBrParser();
         brTyp& data = Mir::Application::Get().GetBrParser().getData();
          
-
         static bool show = true;
         ImGui::ShowDemoWindow(&show);
-
 
         
 
@@ -134,11 +189,39 @@ namespace Mir{
         static COMDLG_FILTERSPEC filter = {L"br DataType", L"*.csv*"};
         static FileSelection selectedFile;  // Default initialization
 
-        if (ImGui::Button("Clear")){
-            Mir::Application::Get().GetBrParser().clear();
-    
-        }
+
+
+
+
+        ImGui::SeparatorText("Browse path");
+        if (ImGui::InputText("##browseField", &selectedFile.filePath)) {}
         ImGui::SameLine();
+        if (ImGui::Button("Browse")) {
+            std::vector<COMDLG_FILTERSPEC> filterVec = { filter };
+            m_fileDialog.OpenFile(false, filterVec);
+            selectedFile = m_fileDialog.GetFileSelection();
+        }
+        ImGui::Separator();
+
+        ImGui::SetNextItemWidth(100.0f); 
+        if (ImGui::Combo("File type", &currentItem, items, IM_ARRAYSIZE(items))) {
+            if (currentItem == 0)
+            {
+            filter = {L"br DataType", L"*.csv*"};
+            selectedFile.clear();
+            }
+            if (currentItem == 1)
+            {
+            filter ={L"br DataType", L"*.typ*"};
+            selectedFile.clear();
+            } 
+            if (currentItem == 2)
+            {
+            filter ={L"br Mapping", L"*.iom*"};
+            selectedFile.clear();
+            } 
+        }
+
         if (ImGui::Button("Read file")){ 
             if (selectedFile.fileName != "") {
                 if (currentItem == 0) {
@@ -159,41 +242,26 @@ namespace Mir{
             }
 
         }
-        
 
+        ImGui::SameLine();
 
-        if (ImGui::Combo("combou", &currentItem, items, IM_ARRAYSIZE(items))) {
-            if (currentItem == 0)
-            {
-                filter = {L"br DataType", L"*.csv*"};
-                selectedFile.clear();
-            }
-            if (currentItem == 1)
-            {
-                filter ={L"br DataType", L"*.typ*"};
-                selectedFile.clear();
-            } 
-            if (currentItem == 2)
-            {
-                filter ={L"br Mapping", L"*.iom*"};
-                selectedFile.clear();
-            } 
+        if (ImGui::Button("Clear")){
+            Mir::Application::Get().GetBrParser().clear();
+    
         }
+
         
-        if (ImGui::InputText("text##Textsss232", &selectedFile.filePath)) {}
         
+
+
+
+
         std::vector<COMDLG_FILTERSPEC> filters = {
             { L"Image Files", L"*.png;*.jpg;*.jpeg;*.bmp" },
             { L"Text Files", L"*.txt;*.doc;*.docx" },
             { L"All Files", L"*.*" },
             { L"br DataType", L"*.typ*" }
         };
-
-        if (ImGui::Button("Browse")) {
-            std::vector<COMDLG_FILTERSPEC> filterVec = { filter };
-            m_fileDialog.OpenFile(false, filterVec);
-            selectedFile = m_fileDialog.GetFileSelection();
-        }
 
         if(ImGui::Button("Readconfig")){
             brVarConfigCollection resultt = brparser.readBrVarConfig(R"(C:\projects\OpcUa_Sample\Physical\ArSim\X20CP0482\IoMap.iom)");
@@ -211,52 +279,30 @@ namespace Mir{
 
 
 
+       
+
+        ImGui::SetNextWindowSize(ImVec2(200, 200));
         ////////////////////////////////////////
         //////// PARSER DATA TABLE//////////////
         ////////////////////////////////////////
         ImGui::Begin(".typ Editor");
-        static ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize | ImGuiTableFlags_Resizable;
+        
+        static bool displayTypTableHeaderWidth = false;
+        static ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg;
         if (ImGui::TreeNode("Table Flags")) {
-            enum ContentsType { CT_Text, CT_FillButton };
-            
-            static bool display_headers = false;
-            static int contents_type = CT_Text;
-    
-
-            ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &tableFlags, ImGuiTableFlags_RowBg);
-            ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &tableFlags, ImGuiTableFlags_Borders);
-
-            ImGui::Indent();
-    
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersH", &tableFlags, ImGuiTableFlags_BordersH);
-            ImGui::Indent();
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterH", &tableFlags, ImGuiTableFlags_BordersOuterH);
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerH", &tableFlags, ImGuiTableFlags_BordersInnerH);
-            ImGui::Unindent();
-    
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersV", &tableFlags, ImGuiTableFlags_BordersV);
-            ImGui::Indent();
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuterV", &tableFlags, ImGuiTableFlags_BordersOuterV);
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInnerV", &tableFlags, ImGuiTableFlags_BordersInnerV);
-            ImGui::Unindent();
-    
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersOuter", &tableFlags, ImGuiTableFlags_BordersOuter);
-            ImGui::CheckboxFlags("ImGuiTableFlags_BordersInner", &tableFlags, ImGuiTableFlags_BordersInner);
-            ImGui::Unindent();
-    
-            ImGui::AlignTextToFramePadding(); ImGui::Text("Cell contents:");
-
-            ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &tableFlags, ImGuiTableFlags_NoBordersInBody); 
-            
+            ImGui::CheckboxFlags("Table Row Highlight", &tableFlags, ImGuiTableFlags_RowBg);
+            ImGui::Checkbox("Display Header Width", &displayTypTableHeaderWidth);
             ImGui::TreePop();
         }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
         // Sturcts tree node creation
         for (size_t i = 0; i < data.size(); i++){
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+            
             std::string label = "Collection" + std::to_string(i) + "\t\t"  + data.collections[i].comment + "###Collection" + std::to_string(i) + data.collections[i].comment;
             bool treeOpen = ImGui::CollapsingHeader(label.c_str());
-            ImGui::PopStyleVar();
+
 
 
             ////////////////////////////////////////
@@ -371,13 +417,10 @@ namespace Mir{
 
                 ImGui::Text("Export collection to file:");
                 
-                // File path input with browse button on same line
                 if (ImGui::InputText("##export_path", &exportFile.filePath, 
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                     // Handle Enter key in path input
                     if (!exportFile.filePath.empty()) {
-                        // Export code here
-                        //brparser.exportCollectionToFile(data.collections[i], exportFile.filePath);
                         exportOpen = false;
                         ImGui::CloseCurrentPopup();
                     }
@@ -422,12 +465,20 @@ namespace Mir{
 
             if (treeOpen){
                 for (size_t j = 0; j < data.collections[i].structs.size(); j++) {
-                    ImGui::Indent(); // Add indentation for the struct level
+
+                    /////////////// STYLE SET STRUCT COLLAPSING HEADER ///////////////
+                    float structHeaderIndent = ImGui::GetStyle().IndentSpacing * 0.25f;
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+                    ImGui::Indent(structHeaderIndent); 
+                    /////////////// STYLE SET STRUCT COLLAPSING HEADER ///////////////
+
                     std::string structLabel = "Struct" +  std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + "_"+ std::to_string(i) +  "_" + std::to_string(j) + data.collections[i].structs[j].name + data.collections[i].comment;
                     bool structOpen = ImGui::CollapsingHeader(structLabel.c_str());
+            
+                    /////////////// STYLE POP STRUCT COLLAPSING HEADER ///////////////
                     ImGui::PopStyleVar();
-                    ImGui::Unindent();
+                    ImGui::Unindent(structHeaderIndent);
+                    /////////////// STYLE POP STRUCT COLLAPSING HEADER ///////////////
 
                     // Context menu for Structs tree
                     if (ImGui::BeginPopupContextItem(("struct_context_menu_" + std::to_string(i) + "_" + std::to_string(j)).c_str())) {
@@ -461,30 +512,37 @@ namespace Mir{
 
                     if (structOpen)
                     {
-                        // Get available width for the table
                         static float availWidth = ImGui::GetContentRegionAvail().x;
-                        
-                        // Define column widths as percentages of available space
-                        static float nameWidthPercent = 0.35f;   // 35% of available width
-                        static float typeWidthPercent = 0.20f;   // 20% of available width
-                        static float valueWidthPercent = 0.15f;  // 15% of available width
-                        // Comment column will take remaining 30% via ImGuiTableColumnFlags_WidthStretch
-                        
-                        ImGui::Indent();
-                        
-                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 2.0f));
+                        static float percentages[4] = {0.35f, 0.20f, 0.15f, 0.30f};
+
+                        static bool pendingWidthChange = false;
+                        static int columnToResize = -1;
+                        static float newColumnWidth = 0.0f;
+                        static bool resizeAllColumns = false;
+                        static bool resetColumnWidth = false;
+                                                
+                        /////////////// TABLE STYLES SET ///////////////
+                        float tableIndent = ImGui::GetStyle().IndentSpacing * 0.75f;
+                        ImGui::Indent(tableIndent);
+                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
+                        /////////////// TABLE STYLES SET ///////////////
                         if (ImGui::BeginTable("Node", 4, tableFlags)) {
-                            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, availWidth * nameWidthPercent);
-                            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, availWidth * typeWidthPercent);
-                            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, availWidth * valueWidthPercent);
-                            ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthStretch);
+                            // Setup columns
+                            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, percentages[0]);
+                            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, percentages[1]);
+                            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, percentages[2]);
+                            ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthStretch, percentages[3]);
                             ImGui::TableHeadersRow();
 
                             ImGui::TableNextRow();
-                            for (int column = 0; column < 4; column++) {
-                                ImGui::TableSetColumnIndex(column);
-                                ImGui::Text("(w: %5.1f)", ImGui::GetColumnWidth(column));
+                            if (displayTypTableHeaderWidth){
+                                for (int column = 0; column < 4; column++) {
+                                    ImGui::TableSetColumnIndex(column);
+                                    ImGui::Text("(w: %5.1f)", ImGui::GetColumnWidth(column));
+                                }
+                                
                             }
+                            
                             
                             
                             // Values table Creation
@@ -626,17 +684,24 @@ namespace Mir{
                             }
                             ImGui::EndTable();
                         }
-                        
-                        ImGui::PopStyleVar();
-                        ImGui::Unindent();
+    
+                        /////////////// TABLE STYLES POP ///////////////
+                        ImGui::Unindent(tableIndent); 
+                        ImGui::PopStyleVar(); 
+                        /////////////// TABLE STYLES POP ///////////////
                     }
                     
                 }
             }
         }
+
+        ImGui::PopStyleVar(); 
+        
         data.updateCachedString();
         brparser.updateVarConfigString();
+
         ImGui::End();
+
         ////////////////////////////////////////
         //////// PARSER DATA TABLE END//////////
         ////////////////////////////////////////
@@ -653,13 +718,13 @@ namespace Mir{
         ////////////////////////////////////////
 
         ////////////////////////////////////////
-        //////// PARSER DATA STRING VIEW ///////
+        //////// VAR CONFIG  STRING VIEW ///////
         ////////////////////////////////////////
         ImGui::Begin("Var Config Viewer");
         ImGui::TextWrapped("%s", brparser.getVarConfigString().c_str());
         ImGui::End();
         ////////////////////////////////////////
-        //////// PARSER DATA STRING VIEW ///////
+        //////// VAR CONFIG  STRING VIEW ///////
         ////////////////////////////////////////
 
 
@@ -789,6 +854,11 @@ namespace Mir{
         //////// PARSER DATA STRING VIEW ///////
         ////////////////////////////////////////
 
+        if (hightlight)
+        {
+            ImGui::PopStyleColor();
+        }
+        
 
     }
 

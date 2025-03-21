@@ -165,7 +165,7 @@ namespace MirUI {
         {
             bool clipboard_valid = false;
             const char* clipboard_text = nullptr;
-                
+            
             try {
                 // Capture potential ImGui errors/warnings
                 clipboard_text = ImGui::GetClipboardText();
@@ -177,28 +177,34 @@ namespace MirUI {
             if (clipboard_valid) {
                 static bool show_special_chars = false;
                 ImGui::Checkbox("Show special characters", &show_special_chars);
-                ImGui::SameLine();
-                // Add height slider (default range 3-20 lines)
-                static float textHeightMultiplier = 3.0f;
-                ImGui::PushItemWidth(200.0f); 
-                ImGui::SliderFloat("Text area height", &textHeightMultiplier, 3.0f, 100.0f, "%.0f lines");
-                ImGui::PopItemWidth();
-                // Create a child window with scrolling for large clipboard content
-                ImGui::BeginChild("Clipboard", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * textHeightMultiplier), true);
+                
+                // Get available content area size to use full space
+                ImVec2 availableSize = ImGui::GetContentRegionAvail();
+                // Reserve space for the checkbox
+                availableSize.y -= ImGui::GetTextLineHeightWithSpacing();
+                
+                ImGui::BeginChild("Clipboard", availableSize, true, ImGuiWindowFlags_HorizontalScrollbar);
                 
                 if (show_special_chars) {
-                    // Display text with visible special characters
+                    // Display text with visible special characters but preserving newlines
+                    std::string formatted_text;
                     for (const char* c = clipboard_text; *c != '\0'; c++) {
-                        if (*c == '\n') ImGui::TextUnformatted("\\n");
-                        else if (*c == '\r') ImGui::TextUnformatted("\\r");
-                        else if (*c == '\t') ImGui::TextUnformatted("\\t");
-                        else if (*c < 32) ImGui::Text("\\x%02X", (unsigned char)*c); // Other control chars
-                        else ImGui::Text("%c", *c);
-                        ImGui::SameLine(0.0f, 0.0f);
+                        if (*c == '\r') formatted_text += "\\r";
+                        else if (*c == '\t') formatted_text += "\\t";
+                        else if (*c < 32 && *c != '\n') {
+                            char buf[5];
+                            snprintf(buf, sizeof(buf), "\\x%02X", (unsigned char)*c);
+                            formatted_text += buf;
+                        } else {
+                            formatted_text += *c;
+                        }
                     }
+                    ImGui::InputTextMultiline("##clipboard_special", &formatted_text, ImVec2(-FLT_MIN, -FLT_MIN), ImGuiInputTextFlags_ReadOnly);
                 } else {
-                    // Original display mode
-                    ImGui::TextWrapped("%s", clipboard_text);
+                    // Original display mode with selectable text
+                    static std::string editable_text;
+                    editable_text = clipboard_text;
+                    ImGui::InputTextMultiline("##clipboard_content", &editable_text, ImVec2(-FLT_MIN, -FLT_MIN), ImGuiInputTextFlags_ReadOnly);
                 }
                 
                 ImGui::EndChild();

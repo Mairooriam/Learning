@@ -25,6 +25,7 @@ namespace Mir {
         void End();
     private:
         float m_Time = 0.0f;
+        int m_currentStyle = 0;
         WindowsFileBrowser m_fileDialog;
 
     };
