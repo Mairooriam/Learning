@@ -6,8 +6,93 @@
 #include <random>
 #include <map>
 
+
+#include <iostream>
+#include <variant>
 namespace Mir {
    
+        ////////////////////////////////////////
+    //// SELECTABLE ELEMENT ID MAP /////////
+    ////////////////////////////////////////
+    enum class typTypes {
+        None = 0,
+        Collection,
+        Struct,
+        Value
+    };
+    
+    struct CollectionInfo{
+        size_t i;
+        std::string name;
+    };
+    
+    struct StructInfo{
+        size_t i;
+        size_t j;
+        std::string name;
+    };
+    
+    struct ValueInfo{
+        size_t i;
+        size_t j;
+        size_t k;
+        std::string name;
+    };
+    
+    inline std::string typTypeToString(typTypes type) {
+        switch (type) {
+            case typTypes::None: return "None";
+            case typTypes::Collection: return "Collection";
+            case typTypes::Struct: return "Struct";
+            case typTypes::Value: return "Value";
+            default: return "Unknown";
+        }
+    }
+
+    // Move the class definition outside of main
+    struct selectableElement {
+        typTypes type = typTypes::None;
+        std::variant<std::monostate, CollectionInfo, StructInfo, ValueInfo> data;
+        
+        selectableElement() = default;
+    
+
+        template<typename T>
+        const T* GetData() const {
+            if (std::holds_alternative<T>(data)) {
+                return &std::get<T>(data);
+            }
+            return nullptr;
+        }
+        template<typename T>
+        selectableElement(typTypes type_, T&& data_)
+            : type(type_), data(std::forward<T>(data_)) {}
+
+        bool isType(typTypes _type) { return _type == type; }
+
+        void toString() {
+            std::cout << "Type: " << typTypeToString(type) << " - ";
+            std::visit([](auto&& arg) {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, std::monostate>)
+                    std::cout << "No data";
+                else if constexpr (std::is_same_v<T, CollectionInfo>)
+                    std::cout << "Collection: " << arg.name << "i:" << arg.i;
+                else if constexpr (std::is_same_v<T, StructInfo>)
+                    std::cout << "Struct: " << arg.name << ", i: " << arg.i << ", j: " << arg.j;
+                else if constexpr (std::is_same_v<T, ValueInfo>)
+                    std::cout << "Value at " << arg.name << ", i: " << arg.i << ", j: " << arg.j << ", k: "<< arg.k;
+            }, data);
+            std::cout << std::endl;
+        }
+    };
+    ////////////////////////////////////////
+    //// SELECTABLE ELEMENT ID MAP /////////
+    ////////////////////////////////////////
+
+
+
+
 
     inline std::string getShortCardType(std::string cardType) {
         if (cardType.find("DigitalInput") != std::string::npos) return "Di";
@@ -169,6 +254,20 @@ namespace Mir {
         std::string name;
         std::vector<brStructData> values;
 
+        // Default constructor
+        brStructNode() = default;
+
+        brStructNode(const std::string& name, const std::vector<brStructData>& values = {})
+        : name(name), values(values) {}
+
+        // Constructor with parameters
+        brStructNode(size_t id, const std::string& name, const std::vector<brStructData>& values = {})
+            : id(id), name(name), values(values) {}
+
+        void push_back(const brStructData& data) {
+            values.push_back(data);
+        }
+
         brStructNode& clear() {
             name.clear();
             values.clear();
@@ -187,14 +286,21 @@ namespace Mir {
     };
 
     struct brStructCollection {
-    std::string comment;
-    std::vector<brStructNode> structs;
+        std::string comment;
+        std::vector<brStructNode> structs;
 
         brStructCollection& clear() {
             comment.clear();
             structs.clear();
             return *this;
         }
+
+        // Default constructor
+        brStructCollection() = default;
+
+        // Constructor with parameters to specify contents
+        brStructCollection(const std::string& comment, const std::vector<brStructNode>& structs = {})
+            : comment(comment), structs(structs) {}
 
         // Iterator methods
         auto begin() { return structs.begin(); }
@@ -211,7 +317,7 @@ namespace Mir {
             if (!comment.empty()) {
                 ss << "(*" << comment << "*)";
             }
-    
+
             ss << "\nTYPE";
             for (const auto& child : structs) {
                 ss << "\n" << child.toString();
@@ -220,7 +326,7 @@ namespace Mir {
             
             return ss.str();
         }
-    };
+    };;
     struct brTyp {
         std::vector<brStructCollection> collections;
         std::string m_cachedString;
@@ -324,7 +430,17 @@ namespace Mir {
             if(collectionIndex < collections.size() && 
                structIndex < collections[collectionIndex].structs.size()) {
             collections[collectionIndex].structs.erase(
-                collections[collectionIndex].structs.begin() + structIndex);
+            collections[collectionIndex].structs.begin() + structIndex);
+            m_isDirty = true;
+            }
+        }
+
+        void deleteValueAt(size_t collectionIndex, size_t structIndex, size_t valueIndex) {
+            if(collectionIndex < collections.size() && 
+               structIndex < collections[collectionIndex].structs.size() &&
+               valueIndex < collections[collectionIndex].structs[structIndex].values.size()) {
+            collections[collectionIndex].structs[structIndex].values.erase(
+                collections[collectionIndex].structs[structIndex].values.begin() + valueIndex);
             m_isDirty = true;
             }
         }

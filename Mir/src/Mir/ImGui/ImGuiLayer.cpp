@@ -24,22 +24,28 @@
 #include "imgui_internal.h"
 
 #include "styles.h"
-
+#include "IconsFontAwesome6.h"
 // TODO:
 /*
-- CLEAN TCODE
 - CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
 - ADD NEW MEMBER TO STRUCT -> RIGHT CLICK ON STRCUT? BUTTON?
-- STYLING
-- SETTINGS IN ONE PLACE ( DISPLAY HEADER WIDTH FOR NOW )
-- WINDOWS FILE EXPLORER FILE TYPE INTEGRATION
-- OPENGL WINDOW TITLE BAR TO DARK MODE??
-- COPY FOR VAR CONFIG SINGLE STRINGS? MAYBE NOT?
-- STYLES FROM STRUCT TABLE TO VAR CONFIG
+-
 - FORMAT VALIDATION WHEN TYPING NAMES -> NO SPACES 
 - FORMAT VALIDATION WHEN TYPING KNOWN TYPES -> BOOL 1 = TRUE 0 = FALSE ETC.
-- CTRL + C COPY FOR KEYBOARD NAVIGATION?
 - HOTKEY DISPLAY ON RIGHT CLICK MENU?
+- FIX IOM STYLING TO MATCH TYP
+- Redo icon based buttons as image buttons
+- Undo/redo for maybe 2 steps
+- When using trashcan delete have it take next available selectable item of same kind
+
+
+- CLEAN TCODE
+- STYLING
+- WINDOWS FILE EXPLORER FILE TYPE INTEGRATION
+- COPY FOR VAR CONFIG SINGLE STRINGS? MAYBE NOT?
+- OPENGL WINDOW TITLE BAR TO DARK MODE??
+- STYLES FROM STRUCT TABLE TO VAR CONFIG
+- CTRL + C COPY FOR KEYBOARD NAVIGATION?
 - AS STUDIO PROJECT OPEN IN THE LEFT?
 
 */
@@ -48,6 +54,11 @@
 
 namespace Mir{
 
+
+
+
+
+    
     // Store the original GLFW error callback
     GLFWerrorfun g_PreviousErrorCallback = nullptr;
 
@@ -71,8 +82,10 @@ namespace Mir{
     FileSelection fileselection1;
     FileSelection fileselection2;
     std::string outputFileStr;
+    static ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg;
     float temptime = 0; 
     bool hightlight = false;
+    selectableElement m_LastSelectableElement;
  
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -85,6 +98,8 @@ namespace Mir{
 
     void ImGuiLayer::OnAttach(){
 
+        MirSettings m_Settings;
+
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -96,17 +111,52 @@ namespace Mir{
         // disables clipboard error msg GLFW ERROR 65545
         g_PreviousErrorCallback = glfwSetErrorCallback(CustomGLFWErrorCallback);
 
-        // Setup Dear ImGui style
-        //ImGui::StyleColorsDark();
-        Mir::SetStyle(m_currentStyle);
 
-        // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+        Mir::SetStyle(m_currentStyle);
         ImGuiStyle& style = ImGui::GetStyle();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
+        /////////////// FONTS ///////////////
+        // Font selection at compile time with a define
+        #define USE_ROBOTO_FONT 0  // Set to 0 to use ImGui default font instead
+        
+        ImFont* baseFont = nullptr;
+        
+        #if USE_ROBOTO_FONT
+            // 1. Try to load Roboto font
+            std::string robotoPath = "C:/Users/35850/Desktop/repositories/learning2/Learning/Mir/Assets/Fonts/Roboto-Regular.ttf";
+            baseFont = io.Fonts->AddFontFromFileTTF(robotoPath.c_str(), 16.0f);
+            
+            // Fall back to default if Roboto failed to load
+            if (!baseFont) {
+            MIR_WARN("Failed to load Roboto font, falling back to default");
+            baseFont = io.Fonts->AddFontDefault();
+            }
+        #else
+            // Use ImGui default font
+            baseFont = io.Fonts->AddFontDefault();
+        #endif
+        
+        // 2. Setup icon font size and config
+        float baseFontSize = 16.0f; // Base font size
+        float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome icons scale
+        
+        // 3. Merge Font Awesome icons into the base font
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+        ImFontConfig icons_config; 
+        icons_config.MergeMode = true; // Important: This merges with the previous font
+        icons_config.PixelSnapH = true; 
+        icons_config.GlyphMinAdvanceX = iconFontSize;
+        std::string fontPath = "C:/Users/35850/Desktop/repositories/learning2/Learning/Mir/Assets/Fonts/";
+        fontPath += FONT_ICON_FILE_NAME_FAS;
+        
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), iconFontSize, &icons_config, icons_ranges);
+        /////////////// FONTS ///////////////
+        
+    
 
         Application& app = Application::Get();
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
@@ -144,6 +194,54 @@ namespace Mir{
         MirUI::ShowExampleAppDockSpace(&dooockkk);
         
 
+        ////////////////////////////////////////
+        //////// ICONS EXAMPLE  ////////////////
+        ////////////////////////////////////////
+        if (ImGui::Begin("Icons Example")) {
+            ImGui::Text("%s File Operations", ICON_FA_FOLDER);
+            
+            if (ImGui::Button(ICON_FA_SACK_DOLLAR " Save File")) {
+                // Save file logic
+            }
+            
+            if (ImGui::Button(ICON_FA_FOLDER_OPEN " Open")) {
+                // Open file logic
+            }
+            
+            if (ImGui::Button(ICON_FA_TRASH " Delete")) {
+                // Delete file logic
+            }
+            
+            // Display a grid of icons
+            ImGui::Separator();
+            ImGui::Text("Icon Gallery:");
+            
+            const char* icons[] = {
+                ICON_FA_ADDRESS_BOOK, ICON_FA_ARROW_RIGHT, ICON_FA_BELL, ICON_FA_BOOKMARK,
+                ICON_FA_CALENDAR, ICON_FA_CAMERA, ICON_FA_CHART_LINE, ICON_FA_CIRCLE_INFO, 
+                ICON_FA_DATABASE, ICON_FA_DOWNLOAD, ICON_FA_ENVELOPE, ICON_FA_FILE
+            };
+            
+            for (int i = 0; i < IM_ARRAYSIZE(icons); i++) {
+                ImGui::PushID(i);
+                if (ImGui::Button(icons[i], ImVec2(40, 40))) {
+                    // Copy to clipboard or perform action
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Icon %d", i);
+                ImGui::PopID();
+                
+                if ((i + 1) % 4 != 0)
+                    ImGui::SameLine();
+            }
+            
+            ImGui::End();
+        }
+        ////////////////////////////////////////
+        //////// ICONS EXAMPLE  ////////////////
+        ////////////////////////////////////////
+
+
 
         // Create a style selector in your UI
         if (ImGui::Begin("Settings")) {
@@ -161,6 +259,8 @@ namespace Mir{
                 }
                 ImGui::EndCombo();
             }
+            ImGui::Checkbox("Display Header Width", &m_Settings.showHeaderWidth);
+            ImGui::CheckboxFlags("Table Row Highlight", &tableFlags, ImGuiTableFlags_RowBg);
             ImGui::End();
         }
 
@@ -286,14 +386,132 @@ namespace Mir{
         //////// PARSER DATA TABLE//////////////
         ////////////////////////////////////////
         ImGui::Begin(".typ Editor");
-        
-        static bool displayTypTableHeaderWidth = false;
-        static ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg;
-        if (ImGui::TreeNode("Table Flags")) {
-            ImGui::CheckboxFlags("Table Row Highlight", &tableFlags, ImGuiTableFlags_RowBg);
-            ImGui::Checkbox("Display Header Width", &displayTypTableHeaderWidth);
-            ImGui::TreePop();
+    
+
+        // Make button bigger with custom size
+        ImVec2 bigButtonSize(40, 40);
+        float oldScale = ImGui::GetIO().FontGlobalScale;
+        ImGui::GetIO().FontGlobalScale = 2.0f;
+
+        ImGui::GetIO().FontGlobalScale = oldScale;
+
+
+        static std::vector<int> selectedStruct(2);
+        if (ImGui::Begin("Debug Info")) {
+            ImGuiID activeID = ImGui::GetActiveID();
+            ImGuiID hoveredID = ImGui::GetHoveredID();
+            ImGuiID focusedID = ImGui::GetFocusID();
+            
+            ImGui::Text("Active ID: %u", activeID);
+            ImGui::Text("Hovered ID: %u", hoveredID);
+            ImGui::Text("Focus ID: %u", focusedID);
+            ImGui::Text("Previous Focus ID: %u", m_PreviousFocus);
+            ImGui::Text("Focus Changed: %s", (focusedID != m_PreviousFocus) ? "YES" : "NO");
+            ImGui::Text("Selected col: %u, struct: %u", selectedStruct[0], selectedStruct[1]);
+            
+            if (m_LastSelectableElement.isType(typTypes::Collection))
+            {
+            CollectionInfo info = std::get<CollectionInfo>(m_LastSelectableElement.data);
+            ImGui::Text("[LAST SELECTABLE]: Collection selected i: %u [%s]", info.i, info.name.c_str());
+               // std::cout << "printing from if i: " << info.i << "\n";
+            } else if (m_LastSelectableElement.isType(typTypes::Struct))
+            {
+            StructInfo info = std::get<StructInfo>(m_LastSelectableElement.data);
+            ImGui::Text("[LAST SELECTABLE]: Struct selected i: %u j: %u [%s]", info.i, info.j, info.name.c_str());
+            } else if (m_LastSelectableElement.isType(typTypes::Value))
+            {
+            ValueInfo info = std::get<ValueInfo>(m_LastSelectableElement.data);
+            ImGui::Text("[LAST SELECTABLE]: Value selected i: %u j: %u k: %u [%s]", info.i, info.j, info.k, info.name.c_str());
+            }
+            ImGui::End();
+            if (m_PreviousFocus != focusedID){
+                    m_PreviousFocus = focusedID;  // Single history item
+                    if (brparser.m_IdMap[focusedID].type != typTypes::None)
+                    {
+                        m_LastSelectableElement = brparser.m_IdMap[focusedID];
+                    }
+                    
+                    
+
+                        
+                  
+            }
         }
+        
+       
+        
+
+        selectableElement focusedElement = brparser.getId(ImGui::GetFocusID());
+        selectableElement previousfocusedElement = brparser.getId(m_PreviousFocus);
+        ImGui::BeginDisabled(!focusedElement.isType(typTypes::None));
+        if (ImGui::Button(ICON_FA_EXPLOSION, bigButtonSize)){ 
+                brStructCollection tempCol("Added with button");
+                brparser.addCollection(tempCol);
+
+                // case typTypes::Collection:
+                // { 
+                //     CollectionInfo colInfo = *focusedElement.GetData<CollectionInfo>();
+                //     brStructNode tempStruct("Added with button");
+                    
+                //     brparser.addStructToCol(colInfo.i,tempStruct);
+                // }
+                // break;
+                // case typTypes::Struct: {
+                //     brStructData tempData("added with button");
+                //     StructInfo structinfo = *focusedElement.GetData<StructInfo>();
+                //     brparser.addDataToStruct(tempData, structinfo.i,structinfo.j);
+                // }
+                // break;
+                // case typTypes::Value: 
+                //     break;
+                // default:
+                //     break;
+        }    
+        
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        ImGui::BeginDisabled(!m_LastSelectableElement.isType(typTypes::Collection));
+        if (ImGui::Button("2", bigButtonSize)){ 
+            CollectionInfo colInfo = *m_LastSelectableElement.GetData<CollectionInfo>();
+            brStructNode tempStruct("Added with button");
+            brparser.addStructToCol(colInfo.i,tempStruct);
+
+        } ImGui::SameLine();
+        ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(!m_LastSelectableElement.isType(typTypes::Struct));
+        if (ImGui::Button("3", bigButtonSize)){ 
+            brStructData tempData("added with button");
+            StructInfo structinfo = *m_LastSelectableElement.GetData<StructInfo>();
+            brparser.addDataToStruct(tempData, structinfo.i,structinfo.j);
+        } ImGui::SameLine();
+        ImGui::EndDisabled();
+
+        if (ImGui::Button("4", bigButtonSize)){ } ImGui::SameLine();
+        if (ImGui::Button("5", bigButtonSize)){ } ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_TRASH_CAN, bigButtonSize)){ 
+            switch (m_LastSelectableElement.type)
+            {
+            case typTypes::Collection:
+                brparser.getData().deleteCollectionAt(m_LastSelectableElement.GetData<CollectionInfo>()->i);
+                break;
+            case typTypes::Struct: {
+                StructInfo structInfo = *m_LastSelectableElement.GetData<StructInfo>();
+                brparser.getData().deleteStructAt(structInfo.i, structInfo.j); 
+                break;
+            }
+            case typTypes::Value: {
+                ValueInfo valueInfo = *m_LastSelectableElement.GetData<ValueInfo>();
+                brparser.getData().deleteValueAt(valueInfo.i, valueInfo.j, valueInfo.k);
+                break;
+            }
+            case typTypes::None:
+                break;
+            
+            default:
+                break;
+            }
+         } 
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
         // Sturcts tree node creation
@@ -302,7 +520,9 @@ namespace Mir{
             
             std::string label = "Collection" + std::to_string(i) + "\t\t"  + data.collections[i].comment + "###Collection" + std::to_string(i) + data.collections[i].comment;
             bool treeOpen = ImGui::CollapsingHeader(label.c_str());
-
+            
+            // ID MAPPING COLLECTIONS
+            brparser.m_IdMap[ImGui::GetItemID()] = selectableElement(typTypes::Collection, CollectionInfo{i, data.collections[i].comment});
 
 
             ////////////////////////////////////////
@@ -462,7 +682,6 @@ namespace Mir{
 
 
 
-
             if (treeOpen){
                 for (size_t j = 0; j < data.collections[i].structs.size(); j++) {
 
@@ -474,7 +693,12 @@ namespace Mir{
 
                     std::string structLabel = "Struct" +  std::to_string(j) + "\t\t"  + data.collections[i].structs[j].name + "###Struct" + "_"+ std::to_string(i) +  "_" + std::to_string(j) + data.collections[i].structs[j].name + data.collections[i].comment;
                     bool structOpen = ImGui::CollapsingHeader(structLabel.c_str());
-            
+
+                    // ID MAPPING STRUCTS
+                    brparser.m_IdMap[ImGui::GetItemID()] = selectableElement(typTypes::Struct, StructInfo{i,j, data.collections[i].structs[j].name});
+
+
+
                     /////////////// STYLE POP STRUCT COLLAPSING HEADER ///////////////
                     ImGui::PopStyleVar();
                     ImGui::Unindent(structHeaderIndent);
@@ -535,7 +759,7 @@ namespace Mir{
                             ImGui::TableHeadersRow();
 
                             ImGui::TableNextRow();
-                            if (displayTypTableHeaderWidth){
+                            if (m_Settings.showHeaderWidth){
                                 for (int column = 0; column < 4; column++) {
                                     ImGui::TableSetColumnIndex(column);
                                     ImGui::Text("(w: %5.1f)", ImGui::GetColumnWidth(column));
@@ -554,6 +778,8 @@ namespace Mir{
                                 if (ImGui::InputText(nameLbl.c_str(), &data.collections[i].structs[j].values[k].name)) { data.m_isDirty = true; }
                                 ImGui::PopItemWidth();
                                 ImGui::TableNextColumn();
+
+                                brparser.m_IdMap[ImGui::GetItemID()] = selectableElement(typTypes::Value, ValueInfo{i,j,k, data.collections[i].structs[j].values[k].name});
 
                                 
                                 
@@ -689,6 +915,9 @@ namespace Mir{
                         ImGui::Unindent(tableIndent); 
                         ImGui::PopStyleVar(); 
                         /////////////// TABLE STYLES POP ///////////////
+
+ 
+                 
                     }
                     
                 }
@@ -732,11 +961,7 @@ namespace Mir{
         brVarConfigCollection VarConfigCollection = brparser.getVarConfig();
         
         // for now just bool. maybe add bit operations later for compact flags
-        static bool displayCellSize = false;
-        if (ImGui::TreeNode("Table Flags")) {
-            ImGui::Checkbox("display table cell size", &displayCellSize);
-            ImGui::TreePop();
-        }
+
 
         static bool treeOpen = false;
         if (!VarConfigCollection.empty())
@@ -775,11 +1000,11 @@ namespace Mir{
                     static float valueWidth = 60.0f;
                     
                 
-                    if (displayCellSize)
-                    {
-                        float availWidth = ImGui::GetContentRegionAvail().x;
-                        ImGui::Text("Available width: %.1f", availWidth);
-                    }
+                    // if (displayCellSize)
+                    // {
+                    //     float availWidth = ImGui::GetContentRegionAvail().x;
+                    //     ImGui::Text("Available width: %.1f", availWidth);
+                    // }
 
                     
                     ImGui::Indent();
@@ -794,7 +1019,7 @@ namespace Mir{
     
                         ImGui::TableNextRow();
 
-                        if (displayCellSize)
+                        if (m_Settings.showHeaderWidth)
                         {
                             for (int column = 0; column < 4; column++) {
                                 ImGui::TableSetColumnIndex(column);
@@ -860,6 +1085,7 @@ namespace Mir{
         }
         
 
+        
     }
 
         
@@ -888,4 +1114,4 @@ namespace Mir{
             glfwMakeContextCurrent(backup_current_context);
         } 
     }
-} 
+}

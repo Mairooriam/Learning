@@ -39,9 +39,18 @@ namespace Mir {
     // Implementation of the style functions
     inline void ApplyMirDarkStyle() {
         ImVec4* colors = ImGui::GetStyle().Colors;
+        colors[ImGuiCol_Button]                 = ImVec4(1.00f, 0.54f, 0.01f, 0.81f);
+        colors[ImGuiCol_TabHovered]             = ImVec4(0.98f, 0.66f, 0.28f, 0.80f);
+        colors[ImGuiCol_Tab]                    = ImVec4(0.60f, 0.33f, 0.00f, 1.00f);
+        colors[ImGuiCol_TabSelected]            = ImVec4(1.00f, 0.53f, 0.00f, 1.00f);
+        colors[ImGuiCol_TabDimmedSelected]      = ImVec4(0.81f, 0.44f, 0.00f, 1.00f);
+
+
+
+
         colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
         colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-        colors[ImGuiCol_WindowBg]               = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
+        colors[ImGuiCol_WindowBg]               = ImVec4(0.10f, 0.08f, 0.06f, 1.00f);
         colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[ImGuiCol_PopupBg]                = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
         colors[ImGuiCol_Border]                 = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
@@ -60,7 +69,7 @@ namespace Mir {
         colors[ImGuiCol_CheckMark]              = ImVec4(0.98f, 0.65f, 0.26f, 1.00f);
         colors[ImGuiCol_SliderGrab]             = ImVec4(0.88f, 0.59f, 0.24f, 1.00f);
         colors[ImGuiCol_SliderGrabActive]       = ImVec4(1.00f, 0.66f, 0.27f, 1.00f);
-        colors[ImGuiCol_Button]                 = ImVec4(1.00f, 0.66f, 0.27f, 0.40f);
+        
         colors[ImGuiCol_ButtonHovered]          = ImVec4(0.98f, 0.65f, 0.26f, 1.00f);
         colors[ImGuiCol_ButtonActive]           = ImVec4(0.98f, 0.56f, 0.06f, 1.00f);
         colors[ImGuiCol_Header]                 = ImVec4(0.98f, 0.65f, 0.26f, 0.31f);
@@ -73,12 +82,12 @@ namespace Mir {
         colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.98f, 0.65f, 0.26f, 0.67f);
         colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.98f, 0.65f, 0.26f, 0.95f);
         colors[ImGuiCol_InputTextCursor]        = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-        colors[ImGuiCol_TabHovered]             = ImVec4(0.98f, 0.65f, 0.26f, 0.80f);
-        colors[ImGuiCol_Tab]                    = ImVec4(0.58f, 0.40f, 0.18f, 0.86f);
-        colors[ImGuiCol_TabSelected]            = ImVec4(0.68f, 0.46f, 0.20f, 1.00f);
+       
+        
+        
         colors[ImGuiCol_TabSelectedOverline]    = ImVec4(0.98f, 0.65f, 0.26f, 1.00f);
         colors[ImGuiCol_TabDimmed]              = ImVec4(0.15f, 0.11f, 0.07f, 0.97f);
-        colors[ImGuiCol_TabDimmedSelected]      = ImVec4(0.42f, 0.29f, 0.14f, 1.00f);
+        
         colors[ImGuiCol_TabDimmedSelectedOverline]  = ImVec4(0.50f, 0.50f, 0.50f, 0.00f);
         colors[ImGuiCol_DockingPreview]         = ImVec4(0.98f, 0.65f, 0.26f, 0.70f);
         colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);

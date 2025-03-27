@@ -187,7 +187,7 @@ set(D3_HEADER_FILES
         src/Mir/ImGui/ImguiWidgets.h
         src/Mir/ImGui/WindowsFilebrowser.h
         src/Mir/ImGui/styles.h
-
+        src/Mir/ImGui/IconsFontAwesome6.h
         src/Mir/b&rParser/parser.h
         
 

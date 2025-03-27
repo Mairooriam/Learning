@@ -9,9 +9,15 @@
 
 #include "imgui.h"
 #include "WindowsFilebrowser.h"
+
 namespace Mir {
 
        struct ImGuiData;
+       
+    struct MirSettings{
+        bool showHeaderWidth = false;
+
+    };
 
     class MIR_API ImGuiLayer : public Layer{
     public:
@@ -26,7 +32,12 @@ namespace Mir {
     private:
         float m_Time = 0.0f;
         int m_currentStyle = 0;
+        MirSettings m_Settings;
         WindowsFileBrowser m_fileDialog;
+        ImGuiID m_LastFrameFocus;
+        ImGuiID m_PreviousFocus;
+        
+        int m_FocusChangeFrameCount = 0;
 
     };
 

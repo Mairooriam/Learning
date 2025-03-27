@@ -5,11 +5,15 @@
 #include <ios>
 
 #include <map>
+#include <unordered_map>
 #include "brTypes.h"
 
 
 
 namespace Mir {
+
+
+
 
     struct MirClipboard {
         enum class ContentType {
@@ -174,6 +178,8 @@ namespace Mir {
         void setVarConfig(const brVarConfigCollection& varConfig) { m_varConfig = varConfig; }
             
         void addVarConfigNode(brVarConfigNode varConfigNode) { m_varConfig.push_back(varConfigNode); }
+        inline void addStructToCol(size_t i, brStructNode structNode) { m_testData.collections[i].structs.push_back(structNode); }
+        inline void addDataToStruct(brStructData sturctData, size_t i, size_t j) { m_testData.collections[i].structs[j].values.push_back(sturctData); }
         void addCollection(brStructCollection& col) { m_testData.push_back(col); }
         
 
@@ -182,7 +188,10 @@ namespace Mir {
         void updateVarConfigString() { m_varConfig.updateCachedString();}
         std::string getVarConfigString() const { return m_varConfig.m_cachedString; }
 
+        selectableElement getId(size_t id){ return m_IdMap[id];}
+
         MirClipboard clipboard;
+        std::unordered_map<size_t, selectableElement> m_IdMap;
     private:
         brTyp m_testData;
         brVarConfigCollection m_varConfig;
