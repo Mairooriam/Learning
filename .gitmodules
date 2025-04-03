@@ -16,3 +16,6 @@
 [submodule "Mir/External/IconsFontAwesome5"]
 	path = Mir/External/IconsFontAwesome5
 	url = https://github.com/juliettef/IconFontCppHeaders
+[submodule "Mir/External/tinyxml2"]
+	path = Mir/External/tinyxml2
+	url = https://github.com/leethomason/tinyxml2
