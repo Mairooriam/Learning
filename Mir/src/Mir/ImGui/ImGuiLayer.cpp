@@ -25,6 +25,11 @@
 
 #include "styles.h"
 #include "IconsFontAwesome6.h"
+
+#include <tinyxml2.h>
+
+#include "ImGuiTableWidget.h"
+#include "b&rParser/classTypes.h"
 // TODO:
 /*
 - CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
@@ -37,7 +42,14 @@
 - Redo icon based buttons as image buttons
 - Undo/redo for maybe 2 steps
 - When using trashcan delete have it take next available selectable item of same kind
-
+- Move filebrowser into widgets. make it reusable. also refine implementation of it
+- add Table that takes xml table recusivly? or some other way.
+- Test read xml
+- Read available IO cards. -> dropdown menu on which to add struct to.
+- Search for B&R cards directory -> ability to add cards to config.
+- iom display red if duplicate IO adress / names
+- When opening specific Struct "AF101 " -> opens corresponding IOM.ABC
+- If struct contains multiple of same IO dont make .iom on read -> error popup -> show mismatch -> have "generate .iom"
 
 - CLEAN TCODE
 - STYLING
@@ -55,7 +67,21 @@
 namespace Mir{
 
 
-
+    bool shouldIgnoreModule(const char* namePtr) {
+        if (!namePtr) return false;
+        
+        std::string_view name(namePtr);
+        static const std::array<std::string_view, 6> ignorePrefixes = {
+            "X20TB12", "X20BM11", "X20cBM11", "X20BB67", "X20CP", "X20PS"
+        };
+        
+        for (const auto& prefix : ignorePrefixes) {
+            if (name.size() >= prefix.size() && name.substr(0, prefix.size()) == prefix) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     
@@ -195,6 +221,204 @@ namespace Mir{
         
 
         ////////////////////////////////////////
+        //////// READ XML TEST//////////////////
+        ////////////////////////////////////////
+        ImGui::Begin("Read XML");
+        if (ImGui::Button("Read"))
+        {
+            tinyxml2::XMLDocument doc;
+            doc.LoadFile("C:\\projects\\OpcUa_Sample\\Physical\\ArSim\\Hardware.hw");
+            
+            // Get the Hardware root element
+            tinyxml2::XMLElement* hardwareElement = doc.FirstChildElement("Hardware");
+            if (hardwareElement)
+            {
+                // Loop through all Module elements
+                tinyxml2::XMLElement* moduleElement = hardwareElement->FirstChildElement("Module");
+                while (moduleElement)
+                {
+                    // Get module attributes
+                    const char* name = moduleElement->Attribute("Name");
+ 
+                    
+                    
+                    const char* type = moduleElement->Attribute("Type");
+                    if (shouldIgnoreModule(type)) {  
+                        moduleElement = moduleElement->NextSiblingElement("Module");
+                        continue;
+                    }   
+                    const char* version = moduleElement->Attribute("Version");
+                    
+                    printf("Module: Name=%s, Type=%s, Version=%s\n", 
+                           name ? name : "Unknown",
+                           type ? type : "Unknown", 
+                           version ? version : "Unknown");
+                    
+                    moduleElement = moduleElement->NextSiblingElement("Module");
+                }
+            }
+            else
+            {
+                printf("Error: Could not find Hardware element\n");
+            }
+
+
+            
+
+        }
+
+        std::vector<std::string> dropdownOptions = {
+            "Option 1", 
+            "Option 2", 
+            "Option 3",
+            "Hello World",
+            "Test String 1",
+            "Test String 2"
+        };
+        static StringValue testStringvalue = StringValue();
+        static StringValue testStringvalue2 = StringValue();
+        
+        
+        // Create the settings
+        BaseTableSettings settings("My Table23222");
+        settings.WithColumn("Name")
+                .WithColumn("Age")
+                .WithDropdownColumn("Gender", {"Male", "Female", "Other"})
+                .WithColumn("Notes");
+
+        // Create the table
+        static BaseTable myTable(settings);
+        static StructTable structTable("Variables");
+
+        static int hihi = 0;
+        if (hihi == 0)
+        {
+            myTable.AddRow({"Test1", "test2", "test3", "test4"});
+            structTable.AddRow({"speed", "float", "0.0", "Speed in m/s"});
+            structTable.AddRow({"isActive", "bool", "true", "Activation status"});
+            structTable.AddRow({"counter", "int", "42", "Loop counter"});
+            structTable.AddRow({"name", "string", "\"Motor\"", "Device identifier"});
+            hihi++;
+        }
+       
+        structTable.Render();
+        myTable.Render();
+    //     static brStruct testStruct = brStruct("test sturct 1");
+    //     static brStruct testStruct2 = brStruct("test sturct 2");
+    //     static int hihi = 0;
+    //     if (hihi < 10)
+    //     {
+    //         testStruct.push_back("Test1", "test2", "test3", "test4");
+    //         hihi++;
+    //     }
+        
+    //     if (ImGui::Button("Delete value at index"))
+    //     {
+    //         testStruct.deleteAt(4);
+    //     }
+    //     static std::vector<StringValue> testbuf;
+    //     if (ImGui::Button("copy at index 0"))
+    //     {
+    //         testbuf = testStruct.copyAtIndex(0);
+    //     }
+    //     if (ImGui::Button("Paste to index last"))
+    //     {
+    //         testStruct.pasteToIndex(1000,testbuf);
+    //     }
+    //     testStruct.SetTypeSuggestions(dropdownOptions);
+    //     testStruct2.SetTypeSuggestions(dropdownOptions);
+    //     MIR_INFO("testStringvalue ID: {0}", testStringvalue.GetID());
+    //     MIR_INFO("testStringvalue2 ID: {0}", testStringvalue2.GetID());
+    //     MIR_INFO("testStruct ID: {0}", testStruct.GetID());
+    //     MIR_INFO("testStruct IDs: {0}", testStruct.GetAllIDsAsString());
+    //     testStruct.Render();
+    //     testStruct2.Render();
+    //     // Add dropdown to select render type
+    //     static int currentRenderType = 0;
+    //     const char* renderTypes[] = { "Default", "Input", "MultiLine", "Dropdown"};
+        
+    //     ImGui::SetNextItemWidth(150.0f);
+    //     if (ImGui::Combo("Render Type", &currentRenderType, renderTypes, IM_ARRAYSIZE(renderTypes))) {
+    //         // Set render type based on selection
+    //         switch (currentRenderType) {
+    //         case 0: 
+    //             testStringvalue.SetRenderType(StringValue::RenderType::Default); 
+    //             testStringvalue2.SetRenderType(StringValue::RenderType::Default); 
+    //         break;
+    //         case 1: 
+    //             testStringvalue.SetRenderType(StringValue::RenderType::Input); 
+    //             testStringvalue2.SetRenderType(StringValue::RenderType::Input); 
+    //             break;
+    //         case 2: 
+    //             testStringvalue.SetRenderType(StringValue::RenderType::MultiLine);
+    //             testStringvalue2.SetRenderType(StringValue::RenderType::MultiLine);  
+    //             break;
+    //         case 3: 
+    //             testStringvalue.SetRenderType(StringValue::RenderType::Dropdown);
+    //             testStringvalue2.SetRenderType(StringValue::RenderType::Dropdown);  
+
+    //             testStringvalue.SetSuggestions(dropdownOptions);
+    //             testStringvalue2.SetSuggestions(dropdownOptions);
+    //         break;
+    //         }
+    //     }
+        
+    // testStringvalue.Render();
+    // testStringvalue2.Render();
+
+
+
+        brTyp myTypData;
+        brStructData testdata = brStructData("TestName", "TestType", "testValue", "TestComment");
+        std::vector<brStructData> testDataVector;
+        testDataVector.push_back(testdata);
+        brStructNode testNode = brStructNode("SturctTestname", testDataVector);
+        std::vector<brStructNode> testSturctVector;
+        testSturctVector.push_back(testNode);
+        myTypData.collections.push_back(brStructCollection("CollectionTestName",testSturctVector));
+        static brVarConfigCollection myConfigData;
+        static int test2 = 2;
+        // Create and configure typed table widgets
+        static Mir::Widgets::TableWidget<brTyp> typTable("BR Type Table", 3);
+        static Mir::Widgets::TableWidget<brVarConfigCollection> configTable("Var Config Table", 3);
+        static Mir::Widgets::TableWidget<int> intTable("Var Config Table", 3);
+
+        // Set data pointers
+        typTable.SetData(&myTypData);
+        configTable.SetData(&myConfigData);
+        intTable.SetData(&test2);
+        
+        // Optional: Configure table settings
+        typTable.GetSettings()
+            .ShowHeaderWidth(false)
+            .ShowLineNumbers(true);
+
+        configTable.GetSettings()
+            .ShowHeaderWidth(true)
+            .ShowLineNumbers(false);
+        
+        if (ImGui::CollapsingHeader("BR Type Data")) {
+            typTable.Render();
+        }
+        
+        ImGui::Separator();
+        
+        if (ImGui::CollapsingHeader("Var Config Data")) {
+            configTable.Render();
+        }
+
+        if (ImGui::CollapsingHeader("int test")) {
+            intTable.Render();
+        }
+
+        ImGui::End();
+        ////////////////////////////////////////
+        //////// READ XML TEST//////////////////
+        ////////////////////////////////////////
+
+
+
+        ////////////////////////////////////////
         //////// ICONS EXAMPLE  ////////////////
         ////////////////////////////////////////
         if (ImGui::Begin("Icons Example")) {
@@ -325,12 +549,22 @@ namespace Mir{
         if (ImGui::Button("Read file")){ 
             if (selectedFile.fileName != "") {
                 if (currentItem == 0) {
-                    brparser.readAndupdateFromCSV(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+                    auto csvData = brparser.readPlcDataCsv(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+                    brStructCollection col =brparser.parseCsvIntoBrCollection(csvData);
+                    brparser.addCollection(col);
+                    
+                    std::vector<brVarConfigNode> parsedConfig = brparser.parseCollectionToConfigMap(col);
+                    for (auto &&config : parsedConfig)
+                    {
+                        brparser.addVarConfigNode(config);
+                    }
+                    
                 } 
                 else if (currentItem == 1) {
                     brparser.clear(); //BUG might cause bug or unwanted behavior not usre
-                    auto datafile = brparser.readDatafile999999(selectedFile.filePath);
-                    brparser.setData(datafile);
+                    brTyp data = brparser.readDatafile999999(selectedFile.filePath);
+                
+                    brparser.setData(data);
                     brparser.getData().markDirty();
                 } 
                 else if (currentItem == 2) {
@@ -447,25 +681,6 @@ namespace Mir{
         if (ImGui::Button(ICON_FA_EXPLOSION, bigButtonSize)){ 
                 brStructCollection tempCol("Added with button");
                 brparser.addCollection(tempCol);
-
-                // case typTypes::Collection:
-                // { 
-                //     CollectionInfo colInfo = *focusedElement.GetData<CollectionInfo>();
-                //     brStructNode tempStruct("Added with button");
-                    
-                //     brparser.addStructToCol(colInfo.i,tempStruct);
-                // }
-                // break;
-                // case typTypes::Struct: {
-                //     brStructData tempData("added with button");
-                //     StructInfo structinfo = *focusedElement.GetData<StructInfo>();
-                //     brparser.addDataToStruct(tempData, structinfo.i,structinfo.j);
-                // }
-                // break;
-                // case typTypes::Value: 
-                //     break;
-                // default:
-                //     break;
         }    
         
         ImGui::EndDisabled();
@@ -745,11 +960,12 @@ namespace Mir{
                         static bool resizeAllColumns = false;
                         static bool resetColumnWidth = false;
                                                 
-                        /////////////// TABLE STYLES SET ///////////////
+                        /////////////// .TYP TABLE STYLES SET ///////////////
                         float tableIndent = ImGui::GetStyle().IndentSpacing * 0.75f;
                         ImGui::Indent(tableIndent);
                         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
-                        /////////////// TABLE STYLES SET ///////////////
+                        /////////////// .TYP TABLE STYLES SET ///////////////
+
                         if (ImGui::BeginTable("Node", 4, tableFlags)) {
                             // Setup columns
                             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, percentages[0]);
@@ -911,10 +1127,10 @@ namespace Mir{
                             ImGui::EndTable();
                         }
     
-                        /////////////// TABLE STYLES POP ///////////////
+                        /////////////// STYLES SET .TYP TABLE POP ///////////////
                         ImGui::Unindent(tableIndent); 
                         ImGui::PopStyleVar(); 
-                        /////////////// TABLE STYLES POP ///////////////
+                        /////////////// STYLES SET .TYP TABLE POP ///////////////
 
  
                  
@@ -960,9 +1176,6 @@ namespace Mir{
         ImGui::Begin(".iom editor");
         brVarConfigCollection VarConfigCollection = brparser.getVarConfig();
         
-        // for now just bool. maybe add bit operations later for compact flags
-
-
         static bool treeOpen = false;
         if (!VarConfigCollection.empty())
         {
@@ -970,7 +1183,6 @@ namespace Mir{
             std::string label = "IO Data Table###IO Data Table";
             treeOpen = ImGui::CollapsingHeader(label.c_str());
             ImGui::PopStyleVar();
-            ImGui::Indent();
         }
 
         // Context menu for Structs tree
@@ -988,10 +1200,26 @@ namespace Mir{
         {
             size_t i = 0;
             for (auto &varConfig : VarConfigCollection){
+
+                /////////////// STYLE SET IO DATA COLLAPSING HEADER ///////////////
+                float ioDataHeaderIndent = ImGui::GetStyle().IndentSpacing * 0.25f;
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+                ImGui::Indent(ioDataHeaderIndent); 
+                /////////////// STYLE IO DATA COLLAPSING HEADER ///////////////
+
                 std::string label = "IO Data \t\t"  + varConfig.comment + "###IO Data Table" + std::to_string(i);
                 bool innerTreeOpen = ImGui::CollapsingHeader(label.c_str());
+
+                // ID MAPPING STRUCTS
+                //brparser.m_IdMap[ImGui::GetItemID()] = selectableElement(typTypes::Struct, StructInfo{i,j, data.collections[i].structs[j].name});
+
+
+
+                /////////////// STYLE POP IO DATA COLLAPSING HEADER ///////////////
                 ImGui::PopStyleVar();
+                ImGui::Unindent(ioDataHeaderIndent);
+                /////////////// STYLE POP IO DATA COLLAPSING HEADER ///////////////
+
     
                 if (innerTreeOpen)
                 {
@@ -1006,15 +1234,20 @@ namespace Mir{
                     //     ImGui::Text("Available width: %.1f", availWidth);
                     // }
 
-                    
-                    ImGui::Indent();
-                    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 2.0f));
+
+                    /////////////// TABLE STYLES SET ///////////////
+                    float ioTableIndent = ImGui::GetStyle().IndentSpacing * 0.75f;
+                    ImGui::Indent(ioTableIndent);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
+                    /////////////// TABLE STYLES SET ///////////////
+
                     if (ImGui::BeginTable("Node", 4, tableFlags)) 
                     {
                         ImGui::TableSetupColumn("IO Adress", ImGuiTableColumnFlags_WidthFixed, nameWidth);
                         ImGui::TableSetupColumn("Process Variable", ImGuiTableColumnFlags_WidthFixed, typeWidth);
                         ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, valueWidth);
-                        ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthFixed, valueWidth);
+                        ImGui::TableSetupColumn("Comment", ImGuiTableColumnFlags_WidthStretch, valueWidth);
                         ImGui::TableHeadersRow();
     
                         ImGui::TableNextRow();
@@ -1027,7 +1260,7 @@ namespace Mir{
                             }     
                         }
                         
-   
+                        
                         size_t j = 0;
                         for (auto &values : varConfig)
                         {
@@ -1067,8 +1300,10 @@ namespace Mir{
                         ImGui::EndTable();
                     }
                     
-                    ImGui::PopStyleVar();
-                    ImGui::Unindent();
+                    /////////////// STYLES SET IO TABLE POP ///////////////
+                    ImGui::Unindent(ioTableIndent); 
+                    ImGui::PopStyleVar(2); 
+                    /////////////// STYLES SET IO TABLE POP ///////////////
                 }
                 i++;
             }

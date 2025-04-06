@@ -19,7 +19,7 @@ public:
         m_VertexArray.reset(Mir::VertexArray::Create());
 
 		float vertices[3 * 7] = {
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
+			-0.5f, -0.3f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
 			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
@@ -41,10 +41,10 @@ public:
 		m_SquareVA.reset(Mir::VertexArray::Create());
 
 		float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
+			-0.75f, -0.25f, 0.0f,
 			 0.75f, -0.55f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
+			 0.75f,  0.1f, 0.0f,
+			-0.75f,  0.9f, 0.0f
 		};
 
 		std::shared_ptr<Mir::VertexBuffer> squareVB;

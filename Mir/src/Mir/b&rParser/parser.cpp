@@ -635,12 +635,7 @@ namespace Mir {
         return configNodes;
     }
 
-    void brParser::readAndupdateFromCSV(std::string path, std::string header)
-    { 
-        auto csvData = readPlcDataCsv(path, header);
-        brStructCollection test1 = parseCsvIntoBrCollection(csvData);
-        addCollection(test1);
-    }
+
 
 
 
