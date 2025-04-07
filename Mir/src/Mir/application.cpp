@@ -30,19 +30,19 @@ namespace Mir {
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-        PythonTool pythonTool;
+        // PythonTool pythonTool;
     
-        // Path to your Python script
-        std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
+        // // Path to your Python script
+        // std::string scriptPath = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\CPython\\excelTools.py";
         
 
-        std::vector<std::string> args = {
-            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\manual_edited.xlsx",
-            "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
-        };
+        // std::vector<std::string> args = {
+        //     "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\manual_edited.xlsx",
+        //     "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\testdata222.csv"  // optional
+        // };
         
 
-        pythonTool.RunPythonScript(scriptPath, args);    
+        // pythonTool.RunPythonScript(scriptPath, args);    
 
         m_brParser = new brParser(); 
     }

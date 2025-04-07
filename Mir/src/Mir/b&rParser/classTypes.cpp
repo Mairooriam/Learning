@@ -22,22 +22,21 @@ namespace Mir {
     
     StringValue::~StringValue(){ }
     
-    StringValue StringValue::CreateCopy(const StringValue& other) {
-        // Pass 0 to force generation of a new ID
-        StringValue copy(other.GetValue(), other.GetRenderType(), 0);
-        
-        if (other.GetRenderType() == RenderType::Dropdown) {
-            copy.SetSuggestions(other.GetDropdownItems());
-        }
+    StringValue StringValue::CreateCopy(const StringValue &other, bool preserveID)
+    {
+        StringValue copy(other.value, other.m_RenderType, 
+        preserveID ? other.GetID() : 0);
+
+        copy.m_DropdownItems = other.m_DropdownItems;
         return copy;
     }
 
-    void StringValue::Render()
+    RenderResultFlags StringValue::Render()
     {
-        ImGui::PushID(static_cast<int>(GetID()));
-        
-        bool changed = false;
 
+        RenderResultFlags result = RenderResultFlags::None;
+
+        ImGui::PushID(static_cast<int>(GetID()));
         
         if (IsRenderType(RenderType::Default))
         {
@@ -45,21 +44,24 @@ namespace Mir {
         } else if (IsRenderType(RenderType::MultiLine))
         {
             ImGui::SetNextItemWidth(300.0f);
-            changed = ImGui::InputTextMultiline("", &value, ImVec2(0, 100.0f));
+            if (ImGui::InputTextMultiline("", &value, ImVec2(0, 100.0f))){
+                result |= RenderResultFlags::ValueChanged;
+            }
+            
         } else if (IsRenderType(RenderType::Input))
         {
             ImGui::SetNextItemWidth(200.0f);
-            changed = ImGui::InputText("", &value);
+            if (ImGui::InputText("", &value)){
+                result |= RenderResultFlags::ValueChanged;
+            }
         } else if (IsRenderType(RenderType::Dropdown))
         {
             ImGui::SetNextItemWidth(200.0f);
                 
                 if (m_DropdownItems.empty()) {
-                    //ImGui::TextUnformatted("No dropdown items"); 
                     MIR_ASSERT(false,"Set suggestions for field before calling render on Dropdown");
                 }
-                
-                // Store local references to dropdown state for clarity
+
                 auto& searchBuffer = m_DropdownState.searchBuffer;
                 auto& focused = m_DropdownState.focused;
                 auto& selectedIndex = m_DropdownState.selectedIndex;
@@ -82,7 +84,7 @@ namespace Mir {
                     if (ImGui::InputText("##search", searchBuffer, sizeof(searchBuffer),
                         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                         value = searchBuffer;
-                        changed = true;
+                        result |= RenderResultFlags::ValueChanged;
                         focused = false;
                         ImGui::CloseCurrentPopup();
                     }
@@ -137,7 +139,7 @@ namespace Mir {
                             
                             if (ImGui::Selectable(item.c_str(), is_selected)) {
                                 value = item;
-                                changed = true;
+                                result |= RenderResultFlags::ValueChanged;
                                 ImGui::CloseCurrentPopup();
                             }
                             
@@ -159,13 +161,20 @@ namespace Mir {
 
         
         ImGui::PopID();
-
-        if (changed) {
+        
+        if (HasFlag(result, RenderResultFlags::ValueChanged)) {
             SetDirty(true);
         }
+        
+        return result;
     }
+
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // STRING VALUE END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // BASE TABLE START
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     BaseTable::BaseTable(const BaseTableSettings& settings)
     : IbrBase(settings.id), m_tableName(settings.tableName)
@@ -185,7 +194,32 @@ namespace Mir {
             m_columnWidths[i] = settings.columns[i].width;
         }
     }
-    
+
+    BaseTable::BaseTable(const BaseTable &other, bool preserveIDs)
+        : IbrBase(preserveIDs ? other.GetID() : IDGenerator::GetInstance().GenerateID()),
+        m_tableName(other.m_tableName),
+        m_columnNames(other.m_columnNames),
+        m_columnRenderTypes(other.m_columnRenderTypes),
+        m_columnSuggestions(other.m_columnSuggestions),
+        m_columnWidths(other.m_columnWidths),
+        m_isOpen(other.m_isOpen),
+        m_showContextMenuHeader(other.m_showContextMenuHeader), 
+        m_activeContextMenuColumn(other.m_activeContextMenuColumn),   
+        m_showColumnContextMenu(other.m_showColumnContextMenu) 
+    {
+    // Deep copy all columns and their StringValues
+    m_columns.resize(other.m_columns.size());
+    for (size_t col = 0; col < other.m_columns.size(); col++) {
+        m_columns[col].reserve(other.m_columns[col].size());
+        
+        for (const auto& cell : other.m_columns[col]) {
+            StringValue copiedCell = StringValue::CreateCopy(cell, preserveIDs);
+            m_columns[col].push_back(copiedCell);
+        }
+    }
+    }
+
+
     void BaseTable::SetColumnNames(const std::vector<std::string> &names)
     {
         if (names.size() == m_columnNames.size() )
@@ -225,14 +259,26 @@ namespace Mir {
         }
     }
 
-    void BaseTable::Render()
+    RenderResultFlags BaseTable::Render()
     {
-       bool changed = false;
-        
+        RenderResultFlags result = RenderResultFlags::None;
+
         ImGui::PushID(static_cast<int>(GetID()));
+        //bool wasOpen = m_isOpen;
+
         bool headerOpen = ImGui::CollapsingHeader(m_tableName.c_str());
-        ImGui::PopID();
         
+        // if (wasOpen != m_isOpen) {
+        //     result |= RenderResultFlags::VisibilityChanged;
+        // }
+        
+        ImGui::PopID();
+
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+            m_showContextMenuHeader = true;
+            result |= RenderResultFlags::ContextMenuOpened;
+        }
+
         if (headerOpen && !m_columnNames.empty()) {
             if (ImGui::BeginTable("TableData", m_columnNames.size())) {
                 // Setup columns
@@ -243,7 +289,16 @@ namespace Mir {
                     ImGui::TableSetupColumn(m_columnNames[i].c_str(), flags, m_columnWidths[i]);
                 }
                 ImGui::TableHeadersRow();
-                
+
+                for (int column = 0; column < (int)m_columnNames.size(); column++) {
+                    if (ImGui::TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered &&
+                        ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+                        m_activeContextMenuColumn = column;
+                        m_showColumnContextMenu = true;
+                    }
+                }
+
+
                 // Render rows
                 size_t rowCount = RowCount();
                 for (size_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
@@ -254,11 +309,9 @@ namespace Mir {
                         ImGui::TableNextColumn();
                         ImGui::PushID(static_cast<int>(m_columns[colIdx][rowIdx].GetID()));
                         
-                        m_columns[colIdx][rowIdx].Render();
-                        if (m_columns[colIdx][rowIdx].IsDirty()) {
-                            m_columns[colIdx][rowIdx].SetDirty(false);
-                            changed = true;
-                        }
+                        RenderResultFlags cellResult = m_columns[colIdx][rowIdx].Render();
+                        
+                        result |= cellResult;
                         
                         ImGui::PopID();
                     }
@@ -268,9 +321,63 @@ namespace Mir {
             }
         }
         
-        if (changed) {
+        // Show context menu if activated
+        if (m_showContextMenuHeader) {
+            ImGui::OpenPopup(("##TableContextMenu" + std::to_string(GetID())).c_str());
+            m_showContextMenuHeader = false;
+        }
+        
+        // Render the context menu
+        if (ImGui::BeginPopup(("##TableContextMenu" + std::to_string(GetID())).c_str())) {
+            RenderContextMenuHeader();
+            ImGui::EndPopup();
+        }
+
+        // Show column context menu if activated
+        if (m_showColumnContextMenu) {
+            ImGui::OpenPopup(("##ColumnContextMenu" + std::to_string(GetID())).c_str());
+            m_showColumnContextMenu = false;
+        }
+        
+        // Render the column context menu
+        if (ImGui::BeginPopup(("##ColumnContextMenu" + std::to_string(GetID())).c_str())) {
+            RenderContextMenuColumns(m_activeContextMenuColumn);
+            ImGui::EndPopup();
+        }
+        if (HasFlag(result, RenderResultFlags::DataModified)) {
             SetDirty(true);
         }
+
+        return result;
+    }
+
+    void BaseTable::SortByColumn(int column, bool ascending) {
+        // Create a vector of indices
+        std::vector<size_t> indices(RowCount());
+        for (size_t i = 0; i < indices.size(); i++) {
+            indices[i] = i;
+        }
+        
+        // Sort indices based on the column values
+        std::sort(indices.begin(), indices.end(),
+            [this, column, ascending](size_t a, size_t b) {
+                const std::string& valA = this->GetCell(a, column).GetValue();
+                const std::string& valB = this->GetCell(b, column).GetValue();
+                return ascending ? valA < valB : valA > valB;
+            }
+        );
+        
+        // Create new sorted columns
+        std::vector<std::vector<StringValue>> sortedColumns(m_columns.size());
+        for (size_t col = 0; col < m_columns.size(); col++) {
+            sortedColumns[col].resize(m_columns[col].size());
+            for (size_t row = 0; row < indices.size(); row++) {
+                sortedColumns[col][row] = m_columns[col][indices[row]];
+            }
+        }
+        
+        // Replace with sorted data
+        m_columns = std::move(sortedColumns);
     }
 
     StringValue& BaseTable::GetCell(size_t rowIndex, size_t columnIndex)
@@ -298,13 +405,14 @@ namespace Mir {
 
     void BaseTable::PasteRow(size_t rowIndex, const std::vector<StringValue>& values)
     {
-        if (values.size() != m_columns.size()) return;
-        if (rowIndex > RowCount()) rowIndex = RowCount();
+        MIR_ASSERT(false, "IMPLEMENT THIS");
+        // if (values.size() != m_columns.size()) return;
+        // if (rowIndex > RowCount()) rowIndex = RowCount();
         
-        for (size_t i = 0; i < m_columns.size(); i++) {
-            m_columns[i].insert(m_columns[i].begin() + rowIndex, 
-                            StringValue::CreateCopy(values[i]));
-        }
+        // for (size_t i = 0; i < m_columns.size(); i++) {
+        //     m_columns[i].insert(m_columns[i].begin() + rowIndex, 
+        //                     StringValue::CreateCopy(values[i]));
+        // }
     }
 
     std::vector<size_t> BaseTable::GetChildIDs() const
@@ -335,14 +443,89 @@ namespace Mir {
         MIR_ASSERT(false, "not implemented");
         return "PLACEHOLDER";
     }
-    //--------------------------------------------------------------------------------------------------------------------------------------------------
-    // BASE TABLE START
-    //--------------------------------------------------------------------------------------------------------------------------------------------------
 
+    void BaseTable::RenderContextMenuHeader()
+    {
+                // Default implementation
+                if (ImGui::MenuItem("Clear Table")) {
+                    Clear();
+                }
+                if (ImGui::MenuItem("Add Row")) {
+                    std::vector<std::string> emptyRow(GetColumnCount(), "");
+                    AddRow(emptyRow);
+                }
+                if (ImGui::MenuItem("Copy All")) {
+                    std::string buffer;
+                    size_t rowCount = RowCount();
+                    size_t colCount = m_columnNames.size();
+                    
+                    // Create CSV format
+                    for (size_t i = 0; i < rowCount; i++) {
+                        for (size_t j = 0; j < colCount; j++) {
+                            buffer += GetCell(i, j).GetValue();
+                            if (j < colCount - 1) buffer += ",";
+                        }
+                        buffer += "\n";
+                    }
+                    ImGui::SetClipboardText(buffer.c_str());
+                }
+    }
+    void BaseTable::RenderContextMenuColumns(int column)
+    {
+        if (column >= 0 && column < static_cast<int>(m_columnNames.size())) {
+            if (ImGui::BeginMenu(("Column: " + m_columnNames[column]).c_str())) {
+                if (ImGui::MenuItem("Sort Ascending")) {
+                    SortByColumn(column, true);
+                }
+                if (ImGui::MenuItem("Sort Descending")) {
+                    SortByColumn(column, false);
+                }
+                if (ImGui::MenuItem("Reset Width")) {
+                    m_columnWidths[column] = 0.0f;
+                }
+                
+                // Add more column-specific options
+                ImGui::Separator();
+                
+                // Example: Change column title
+                static char nameBuffer[128];
+                strncpy(nameBuffer, m_columnNames[column].c_str(), sizeof(nameBuffer) - 1);
+                nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+                
+                if (ImGui::InputText("Column Name", nameBuffer, sizeof(nameBuffer), 
+                                    ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    m_columnNames[column] = nameBuffer;
+                }
+                
+                // Example: Show column specific data
+                ImGui::Text("Column index: %d", column);
+                ImGui::Text("Items: %zu", RowCount());
+                
+                ImGui::EndMenu();
+            }
+            
+            ImGui::Separator();
+            
+            // General column operations
+            if (ImGui::MenuItem("Hide Column")) {
+                // Implement column hiding functionality
+                // You'll need to add a vector<bool> m_columnVisible member
+            }
+            
+            if (ImGui::MenuItem("Add Column")) {
+                // Implement adding new columns
+                // This will require restructuring the table
+            }
+            
+            if (ImGui::MenuItem("Remove Column") && m_columnNames.size() > 1) {
+                // Implement column removal
+                // This will require restructuring the table
+            }
+        }
+    }
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // BASE TABLE END
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // STRUCT START

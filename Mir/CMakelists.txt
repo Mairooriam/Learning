@@ -138,6 +138,7 @@ set(D3_SOURCE_FILES
 
         src/Mir/b&rParser/parser.cpp
         src/Mir/b&rParser/classTypes.cpp
+        src/Mir/b&rParser/UndoRedoSystem.cpp
 
         src/Mir/Opcua/OpcuaClient.cpp
 
@@ -195,7 +196,7 @@ set(D3_HEADER_FILES
 
         src/Mir/b&rParser/parser.h
         src/Mir/b&rParser/classTypes.h
-        
+        src/Mir/b&rParser/UndoRedoSystem.h
 
         src/Mir/CPython/PythonTool.h
 

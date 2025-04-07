@@ -30,6 +30,7 @@
 
 #include "ImGuiTableWidget.h"
 #include "b&rParser/classTypes.h"
+#include "b&rParser/UndoRedoSystem.h"
 // TODO:
 /*
 - CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
@@ -112,7 +113,9 @@ namespace Mir{
     float temptime = 0; 
     bool hightlight = false;
     selectableElement m_LastSelectableElement;
- 
+    static UndoRedoSystem<BaseTable> structTableUndoSystem;
+
+
     ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
 
@@ -288,9 +291,12 @@ namespace Mir{
 
         // Create the table
         static BaseTable myTable(settings);
+        
+
         static StructTable structTable("Variables");
 
         static int hihi = 0;
+        static int haha = 0;
         if (hihi == 0)
         {
             myTable.AddRow({"Test1", "test2", "test3", "test4"});
@@ -299,73 +305,41 @@ namespace Mir{
             structTable.AddRow({"counter", "int", "42", "Loop counter"});
             structTable.AddRow({"name", "string", "\"Motor\"", "Device identifier"});
             hihi++;
+        } else if (hihi == 1)
+        {
+            
+            std::vector<std::unique_ptr<BaseTable>> m_undoStack;
+            static BaseTable tableCopy(myTable);  
+            static BaseTable anotherCopy = myTable;  
+            static BaseTable* copy = myTable.Clone();
+            m_undoStack.push_back(std::unique_ptr<BaseTable>(myTable.Clone()));
+            
         }
+        if (ImGui::Button("Undo") && structTableUndoSystem.CanUndo()) {
+            structTableUndoSystem.Undo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Redo") && structTableUndoSystem.CanRedo()) {
+            structTableUndoSystem.Redo();
+        }
+        
+        static bool undoSystemInitialized = false;
+        if (!undoSystemInitialized) {
+            structTableUndoSystem = UndoRedoSystem<BaseTable>(&structTable);
+            undoSystemInitialized = true;
+        }    
        
-        structTable.Render();
+        RenderResultFlags resultofrender = structTable.Render();
+        if (resultofrender != RenderResultFlags::None)
+        {
+            MIR_INFO( Utils::RenderResultFlagsToString(resultofrender));
+            UndoRedoSystem<BaseTable> undoSystem(&myTable);
+            structTableUndoSystem.SaveSnapshot();
+        }
+
+
+
         myTable.Render();
-    //     static brStruct testStruct = brStruct("test sturct 1");
-    //     static brStruct testStruct2 = brStruct("test sturct 2");
-    //     static int hihi = 0;
-    //     if (hihi < 10)
-    //     {
-    //         testStruct.push_back("Test1", "test2", "test3", "test4");
-    //         hihi++;
-    //     }
-        
-    //     if (ImGui::Button("Delete value at index"))
-    //     {
-    //         testStruct.deleteAt(4);
-    //     }
-    //     static std::vector<StringValue> testbuf;
-    //     if (ImGui::Button("copy at index 0"))
-    //     {
-    //         testbuf = testStruct.copyAtIndex(0);
-    //     }
-    //     if (ImGui::Button("Paste to index last"))
-    //     {
-    //         testStruct.pasteToIndex(1000,testbuf);
-    //     }
-    //     testStruct.SetTypeSuggestions(dropdownOptions);
-    //     testStruct2.SetTypeSuggestions(dropdownOptions);
-    //     MIR_INFO("testStringvalue ID: {0}", testStringvalue.GetID());
-    //     MIR_INFO("testStringvalue2 ID: {0}", testStringvalue2.GetID());
-    //     MIR_INFO("testStruct ID: {0}", testStruct.GetID());
-    //     MIR_INFO("testStruct IDs: {0}", testStruct.GetAllIDsAsString());
-    //     testStruct.Render();
-    //     testStruct2.Render();
-    //     // Add dropdown to select render type
-    //     static int currentRenderType = 0;
-    //     const char* renderTypes[] = { "Default", "Input", "MultiLine", "Dropdown"};
-        
-    //     ImGui::SetNextItemWidth(150.0f);
-    //     if (ImGui::Combo("Render Type", &currentRenderType, renderTypes, IM_ARRAYSIZE(renderTypes))) {
-    //         // Set render type based on selection
-    //         switch (currentRenderType) {
-    //         case 0: 
-    //             testStringvalue.SetRenderType(StringValue::RenderType::Default); 
-    //             testStringvalue2.SetRenderType(StringValue::RenderType::Default); 
-    //         break;
-    //         case 1: 
-    //             testStringvalue.SetRenderType(StringValue::RenderType::Input); 
-    //             testStringvalue2.SetRenderType(StringValue::RenderType::Input); 
-    //             break;
-    //         case 2: 
-    //             testStringvalue.SetRenderType(StringValue::RenderType::MultiLine);
-    //             testStringvalue2.SetRenderType(StringValue::RenderType::MultiLine);  
-    //             break;
-    //         case 3: 
-    //             testStringvalue.SetRenderType(StringValue::RenderType::Dropdown);
-    //             testStringvalue2.SetRenderType(StringValue::RenderType::Dropdown);  
-
-    //             testStringvalue.SetSuggestions(dropdownOptions);
-    //             testStringvalue2.SetSuggestions(dropdownOptions);
-    //         break;
-    //         }
-    //     }
-        
-    // testStringvalue.Render();
-    // testStringvalue2.Render();
-
 
 
         brTyp myTypData;
@@ -657,18 +631,29 @@ namespace Mir{
             ValueInfo info = std::get<ValueInfo>(m_LastSelectableElement.data);
             ImGui::Text("[LAST SELECTABLE]: Value selected i: %u j: %u k: %u [%s]", info.i, info.j, info.k, info.name.c_str());
             }
+
+                // Add separator for UndoRedoSystem debug info
+            ImGui::Separator();
+            ImGui::Text("UndoRedoSystem Debug Info:");
+            
+            // Get stack sizes
+            ImGui::Text("Undo stack size: %zu items", structTableUndoSystem.GetUndoStackSize());
+            ImGui::Text("Redo stack size: %zu items", structTableUndoSystem.GetRedoStackSize());
+            
+            // Show activity status
+            ImGui::Text("Can Undo: %s", structTableUndoSystem.CanUndo() ? "Yes" : "No");
+            ImGui::Text("Can Redo: %s", structTableUndoSystem.CanRedo() ? "Yes" : "No");
+
+
             ImGui::End();
+
+
             if (m_PreviousFocus != focusedID){
                     m_PreviousFocus = focusedID;  // Single history item
                     if (brparser.m_IdMap[focusedID].type != typTypes::None)
                     {
                         m_LastSelectableElement = brparser.m_IdMap[focusedID];
                     }
-                    
-                    
-
-                        
-                  
             }
         }
         

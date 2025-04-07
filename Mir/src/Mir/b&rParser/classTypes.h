@@ -8,7 +8,76 @@
 #include <cctype>
 namespace Mir {
 
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // RENDER RESULT FLAGS START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    enum class RenderResultFlags {
+        None        = 0,
+        ValueChanged = 1 << 0,  
+        StructureChanged = 1 << 1,  
+        VisibilityChanged = 1 << 2,  
+        SelectionChanged = 1 << 3,  
+        DeleteRequested = 1 << 4,  
+        DragDropped = 1 << 5,  
+        ContextMenuOpened = 1 << 6, 
+        
+        AnyChange = ValueChanged | StructureChanged | VisibilityChanged | SelectionChanged,
+        DataModified = ValueChanged | StructureChanged
+    };
 
+    inline RenderResultFlags operator|(RenderResultFlags a, RenderResultFlags b) {
+        return static_cast<RenderResultFlags>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
+    inline RenderResultFlags& operator|=(RenderResultFlags& a, RenderResultFlags b) {
+        return a = a | b;
+    }
+
+    inline RenderResultFlags operator&(RenderResultFlags a, RenderResultFlags b) {
+        return static_cast<RenderResultFlags>(static_cast<int>(a) & static_cast<int>(b));
+    }
+
+    inline RenderResultFlags& operator&=(RenderResultFlags& a, RenderResultFlags b) {
+        return a = a & b;
+    }
+
+    inline RenderResultFlags operator~(RenderResultFlags a) {
+        return static_cast<RenderResultFlags>(~static_cast<int>(a));
+    }
+
+    // Helper function to check if flag is set
+    inline bool HasFlag(RenderResultFlags flags, RenderResultFlags flag) {
+        return (static_cast<int>(flags) & static_cast<int>(flag)) == static_cast<int>(flag);
+    }
+    namespace Utils{
+        inline std::string RenderResultFlagsToString(RenderResultFlags flags) {
+            if (flags == RenderResultFlags::None) return "None";
+            
+            std::string result;
+            if ((flags & RenderResultFlags::ValueChanged) != RenderResultFlags::None) result += "ValueChanged|";
+            if ((flags & RenderResultFlags::StructureChanged) != RenderResultFlags::None) result += "StructureChanged|";
+            if ((flags & RenderResultFlags::VisibilityChanged) != RenderResultFlags::None) result += "VisibilityChanged|";
+            if ((flags & RenderResultFlags::SelectionChanged) != RenderResultFlags::None) result += "SelectionChanged|";
+            if ((flags & RenderResultFlags::DeleteRequested) != RenderResultFlags::None) result += "DeleteRequested|";
+            if ((flags & RenderResultFlags::DragDropped) != RenderResultFlags::None) result += "DragDropped|";
+            if ((flags & RenderResultFlags::ContextMenuOpened) != RenderResultFlags::None) result += "ContextMenuOpened|";
+            
+            // Remove trailing separator if present
+            if (!result.empty()) {
+                result.pop_back();
+            }
+            
+            return result;
+        }
+    }
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // RENDER RESULT FLAGS END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // ID GENERATOR START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class IDGenerator {
         private:
             static IDGenerator* s_Instance;
@@ -33,64 +102,43 @@ namespace Mir {
                 return m_CurrentID++;
             }
     };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // ID GENERATOR END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // IbrBase START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class IbrBase
     {
     private:
         size_t m_id;
-        bool m_IsDirty;
+        bool m_Dirty;
     protected:
         void SetID(size_t id) { m_id = id; }
     public:
         virtual std::string toString() = 0;
         virtual void Clear() = 0;
         size_t GetID() const { return m_id; }
-        bool IsDirty() { return m_IsDirty; }
-        void SetDirty(bool dirty) { m_IsDirty = dirty; }
-        virtual void Render() = 0; 
+        bool IsDirty() { return m_Dirty; }
+        void SetDirty(bool dirty) { m_Dirty = dirty; }
+        virtual void ClearDirty() { m_Dirty = false; }
+        virtual RenderResultFlags Render() = 0; 
 
         IbrBase(size_t id = 0) 
         : m_id(id == 0 ? IDGenerator::GetInstance().GenerateID() : id), 
-          m_IsDirty(false) {}
+            m_Dirty(false) {}
         virtual ~IbrBase() { }
     };
-
-
-    // class StringValue : public IbrBase
-    // {
-    // public:
-    //     enum class RenderType
-    //     { 
-    //         Default, 
-    //         MultiLine, 
-    //         Input,
-    //         Dropdown
-    //     };
-
-
-    //     StringValue(size_t id = 0);
-    //     StringValue(const std::string& initialValue, RenderType type = RenderType::Default, size_t id = 0);
-    //     ~StringValue();
-
-    //     void SetValue(const std::string& val) { value = val; }
-    //     std::string GetValue() { return value; }
-    //     std::string GetValue() const { return value; }
-
-    //     void SetRenderType(RenderType type) { m_RenderType = type; }
-    //     RenderType GetRenderType() const { return m_RenderType; }
-
-    //     std::string toString() override { return value; }
-
-    //     void Clear() override { value = "N/A"; }
-    //     void Render() override;
-
-    // private:
-    //     std::string value = "N/A";
-    //     RenderType m_RenderType = RenderType::Default;
-
-    // };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // IbrBase END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     
-    // Add DropdownData as a new member in StringValue
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // STRING VALUE START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class StringValue : public IbrBase
     {
     public:
@@ -119,7 +167,7 @@ namespace Mir {
         std::string toString() override { return value; }
 
         void Clear() override { value = "N/A"; }
-        void Render() override;
+        RenderResultFlags Render() override;
 
         void SetSuggestions(const std::vector<std::string>& items) {
             m_DropdownItems = items;
@@ -129,7 +177,8 @@ namespace Mir {
         operator std::string() const { 
             return value;
         }
-
+        static StringValue CreateCopy(const StringValue& other, bool preserveID = false);
+        
         //TODO: Is this even needed?
         const std::vector<std::string>& GetDropdownItems() const { return m_DropdownItems; }
 
@@ -145,50 +194,16 @@ namespace Mir {
             bool autoCompleted = false;
         } m_DropdownState;
     };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // STRING VALUE END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-    // class FieldSuggestionProvider {
-    //     private:
-    //         static FieldSuggestionProvider* s_Instance;
-    //         std::unordered_map<std::string, std::vector<std::string>> m_SuggestionsByCategory;
-    //         FieldSuggestionProvider() = default;
-            
-    //     public:
-    //         static FieldSuggestionProvider& GetInstance() {
-    //             if (s_Instance == nullptr) {
-    //                 s_Instance = new FieldSuggestionProvider();
-    //             }
-    //             return *s_Instance;
-    //         }
-            
-    //         const std::vector<std::string>& GetSuggestions(const std::string& category) const {
-    //             static std::vector<std::string> empty;
-    //             auto it = m_SuggestionsByCategory.find(category);
-    //             return it != m_SuggestionsByCategory.end() ? it->second : empty;
-    //         }
-            
-    //         void SetSuggestions(const std::string& category, const std::vector<std::string>& suggestions) {
-    //             m_SuggestionsByCategory[category] = suggestions;
-    //         }
-            
-    //         void AddSuggestion(const std::string& category, const std::string& suggestion) {
-    //             auto& suggestions = m_SuggestionsByCategory[category];
-    //             if (std::find(suggestions.begin(), suggestions.end(), suggestion) == suggestions.end()) {
-    //                 suggestions.push_back(suggestion);
-    //             }
-    //         }
 
-    //         std::vector<std::string> GetCategories() const {
-    //             std::vector<std::string> categories;
-    //             for (const auto& [category, suggestions] : m_SuggestionsByCategory) {
-    //                 categories.push_back(category);
-    //             }
-    //             return categories;
-    //         }
-
-            
-    //     };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // TABLE SETTINGS START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class TableColumnSettings {
         public:
             std::string name;
@@ -225,50 +240,74 @@ namespace Mir {
             return *this;
         }
     };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // TABLE SETTINGS END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // BASE TABLE START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class BaseTable : public IbrBase {
-        private:
+    private:
         std::string m_tableName;
         std::vector<std::string> m_columnNames;
         std::vector<StringValue::RenderType> m_columnRenderTypes;
         std::vector<std::vector<std::string>> m_columnSuggestions;
         std::vector<float> m_columnWidths;
         bool m_isOpen = false;  
-         
-        protected:
-        std::vector<std::vector<StringValue>> m_columns;
-        
-        public:
-        BaseTable(const BaseTableSettings& settings);
-            virtual ~BaseTable() = default;
-        
-            // Column operations
-            void SetColumnNames(const std::vector<std::string>& names);
-            const std::vector<std::string>& GetColumnNames() const { return m_columnNames; };
-            size_t GetColumnCount() const { return m_columnNames.size(); };
-            
-            // Row operations
-            virtual void AddRow(const std::vector<std::string>& values);
-            virtual void RemoveRow(size_t rowIndex);
-            size_t RowCount() const;
-            
-            // Cell operations
-            StringValue& GetCell(size_t rowIndex, size_t columnIndex);
-            void SetCellValue(size_t rowIndex, size_t columnIndex, const std::string& value);
-            
-            // Utility methods
-            std::vector<StringValue> CopyRow(size_t rowIndex);
-            void PasteRow(size_t rowIndex, const std::vector<StringValue>& values);
-            
-            // IbrBase requirements
-            void Clear() override;
-            void Render() override;
-            std::vector<size_t> GetChildIDs() const;
-            std::string toString() override;
-        };
-        
+        bool m_showContextMenuHeader = false;
+        int m_activeContextMenuColumn = -1; 
+        bool m_showColumnContextMenu = false;
     
+    protected:
+        std::vector<std::vector<StringValue>> m_columns;
+    
+    public:
+        BaseTable(const BaseTableSettings& settings);
+        BaseTable(const BaseTable& other, bool preserveIDs = true);
+        virtual ~BaseTable() = default;
+    
+        // Column operations
+        void SetColumnNames(const std::vector<std::string>& names);
+        const std::vector<std::string>& GetColumnNames() const { return m_columnNames; };
+        size_t GetColumnCount() const { return m_columnNames.size(); };
+        
+        // Row operations
+        virtual void AddRow(const std::vector<std::string>& values);
+        virtual void RemoveRow(size_t rowIndex);
+        size_t RowCount() const;
+        
+        // Cell operations
+        StringValue& GetCell(size_t rowIndex, size_t columnIndex);
+        void SetCellValue(size_t rowIndex, size_t columnIndex, const std::string& value);
+        
+        // Utility methods
+        std::vector<StringValue> CopyRow(size_t rowIndex);
+        void PasteRow(size_t rowIndex, const std::vector<StringValue>& values);
+        
+        // IbrBase requirements
+        
+        RenderResultFlags Render() override;
+        virtual void RenderContextMenuHeader();
+        virtual void RenderContextMenuColumns(int column);
+        void Clear() override;
+        std::vector<size_t> GetChildIDs() const;
+        std::string toString() override;
+        void SortByColumn(int column, bool ascending);
+
+        virtual BaseTable* Clone() const {
+            return new BaseTable(*this);  // Uses copy constructor
+        }
+    };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // BASE TABLE END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+
+        
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // STRUCT TABLE START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
     class StructTable : public BaseTable {
         public:
             StructTable(const std::string& name, size_t id = 0)
@@ -284,97 +323,10 @@ namespace Mir {
                     .WithID(id);
             }
         };
-    // class brStruct : public IbrBase
-    // {
-    // private:
-    //     std::vector<StringValue> m_fields[4]; 
-    //     std::vector<std::string> m_fieldNames;
-    //     std::string m_structName;
-    //     size_t m_size = 0;
-        
-        
-    //     size_t FieldsSize() const { return m_fields[0].size(); }
-    // public:
-    //     brStruct(size_t id = 0);
-    //     brStruct(const std::string& structName, const std::vector<std::string>& fieldNames, size_t id = 0);
-    //     ~brStruct();
-        
-    //     void SetFieldNames(const std::vector<std::string>& fieldNames);
-    //     const std::vector<std::string>& GetFieldNames() const { return m_fieldNames; }
-    //     StringValue& GetField(size_t rowIndex, size_t fieldIndex) { return m_fields[fieldIndex][rowIndex]; }
-    //     StringValue& GetField(size_t rowIndex, const std::string& fieldName);
-        
-    //     void SetFieldValue(size_t rowIndex, size_t fieldIndex, const std::string& value);
-    //     void SetFieldValue(size_t rowIndex, const std::string& fieldName, const std::string& value);
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // STRUCT TABLE END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-    //     std::string GetStructName() { return m_structName; }
-    //     std::vector<StringValue> copyAtIndex(size_t i);
-    //     void pasteToIndex(size_t i, const std::vector<StringValue>& values);
-        
-    //     void push_back(const std::string& _name, const std::string& _type, const std::string& _value, const std::string& _comment);
-    //     void deleteAt(size_t i);
-        
-    //     void SetTypeSuggestions(const std::vector<std::string>& suggestions);
-
-    //     std::vector<size_t> GetChildIDs() const {
-    //         std::vector<size_t> ids;
-    //         for (auto &&field : m_fields) {
-    //             for (const auto& value : field) {
-    //                 ids.push_back(value.GetID());
-    //             }
-    //         }
-    //         return ids;
-    //     }
-        
-    //     std::vector<size_t> GetAllIds() const {
-    //         std::vector<size_t> result = {GetID()};
-    //         std::vector<size_t> childIds = GetChildIDs();
-    //         result.insert(result.end(), childIds.begin(), childIds.end());
-    //         return result;
-    //     }
-
-    //     std::string GetAllIDsAsString() const {
-    //         std::vector<size_t> ids = GetAllIds();
-    //         std::string result;
-    //         for (size_t i = 0; i < ids.size(); i++) {
-    //             result += std::to_string(ids[i]);
-    //             if (i < ids.size() - 1) {
-    //                 result += ", ";
-    //             }
-    //         }
-    //         return result;
-    //     }
-
-    //     std::string toString() override;
-    //     void Clear() override;
-    //     void Render() override;
-    // };
-
-
-
-    
-
-
-    // class brVarConfigData : public IbrData
-    // {
-    // private:
-    //     std::string m_ioAdress = "No ioAdress";                 
-    //     std::string m_processVariable = "No ProcessVariable";
-    //     std::string m_type = "No Type";
-    //     std::string m_comment = "No Comment";
-       
-    // public:
-    //     brVarConfigData();
-    //     brVarConfigData(const std::string& ioAdress, const std::string& processVariable, 
-    //             const std::string& type, const std::string& comment);
-    //     ~brVarConfigData();
-    
-    //     std::string toString() override; 
-    //     void Clear() override;    
-
-    // };
     
 
     
