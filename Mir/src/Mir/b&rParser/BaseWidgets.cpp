@@ -1,7 +1,8 @@
-#include "classTypes.h"
+#include "BaseWidgets.h"
 
 namespace Mir {
-    Mir::IDGenerator* Mir::IDGenerator::s_Instance = nullptr;
+    namespace UI {
+    Mir::UI::IDGenerator* Mir::UI::IDGenerator::s_Instance = nullptr;
 
 
     
@@ -265,8 +266,8 @@ namespace Mir {
 
         ImGui::PushID(static_cast<int>(GetID()));
         //bool wasOpen = m_isOpen;
-
-        bool headerOpen = ImGui::CollapsingHeader(m_tableName.c_str());
+        std::string label = m_tableName + "\t\t\t" + m_tableComment;
+        bool headerOpen = ImGui::CollapsingHeader(label.c_str());
         
         // if (wasOpen != m_isOpen) {
         //     result |= RenderResultFlags::VisibilityChanged;
@@ -278,9 +279,9 @@ namespace Mir {
             m_showContextMenuHeader = true;
             result |= RenderResultFlags::ContextMenuOpened;
         }
-
+         static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings;
         if (headerOpen && !m_columnNames.empty()) {
-            if (ImGui::BeginTable("TableData", m_columnNames.size())) {
+            if (ImGui::BeginTable("TableData", m_columnNames.size(), flags)) {
                 // Setup columns
                 for (size_t i = 0; i < m_columnNames.size(); i++) {
                     ImGuiTableColumnFlags flags = m_columnWidths[i] > 0 ? 
@@ -488,13 +489,10 @@ namespace Mir {
                 ImGui::Separator();
                 
                 // Example: Change column title
-                static char nameBuffer[128];
-                strncpy(nameBuffer, m_columnNames[column].c_str(), sizeof(nameBuffer) - 1);
-                nameBuffer[sizeof(nameBuffer) - 1] = '\0';
-                
-                if (ImGui::InputText("Column Name", nameBuffer, sizeof(nameBuffer), 
-                                    ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    m_columnNames[column] = nameBuffer;
+                std::string columnName = m_columnNames[column];
+                if (ImGui::InputText("Column Name", &columnName, 
+                                     ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    m_columnNames[column] = columnName;
                 }
                 
                 // Example: Show column specific data
@@ -691,4 +689,4 @@ namespace Mir {
     //--------------------------------------------------------------------------------------------------------------------------------------------------
 
    
-}
+}}

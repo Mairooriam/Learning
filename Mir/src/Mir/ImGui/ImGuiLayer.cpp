@@ -29,8 +29,10 @@
 #include <tinyxml2.h>
 
 #include "ImGuiTableWidget.h"
-#include "b&rParser/classTypes.h"
+#include "b&rParser/BaseWidgets.h"
 #include "b&rParser/UndoRedoSystem.h"
+#include "b&rParser/Tokenizer.h"
+#include "b&rParser/MirParser.h"
 // TODO:
 /*
 - CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
@@ -113,7 +115,7 @@ namespace Mir{
     float temptime = 0; 
     bool hightlight = false;
     selectableElement m_LastSelectableElement;
-    static UndoRedoSystem<BaseTable> structTableUndoSystem;
+    static UndoRedoSystem<UI::BaseTable> structTableUndoSystem;
 
 
     ImGuiLayer::ImGuiLayer()
@@ -278,41 +280,38 @@ namespace Mir{
             "Test String 1",
             "Test String 2"
         };
-        static StringValue testStringvalue = StringValue();
-        static StringValue testStringvalue2 = StringValue();
+        static UI::StringValue testStringvalue = UI::StringValue();
+        static UI::StringValue testStringvalue2 = UI::StringValue();
         
         
         // Create the settings
-        BaseTableSettings settings("My Table23222");
+        UI::BaseTableSettings settings("My Table23222");
         settings.WithColumn("Name")
                 .WithColumn("Age")
                 .WithDropdownColumn("Gender", {"Male", "Female", "Other"})
                 .WithColumn("Notes");
 
         // Create the table
-        static BaseTable myTable(settings);
-        
-
-        static StructTable structTable("Variables");
+        static UI::BaseTable myTable(settings);
 
         static int hihi = 0;
         static int haha = 0;
         if (hihi == 0)
         {
             myTable.AddRow({"Test1", "test2", "test3", "test4"});
-            structTable.AddRow({"speed", "float", "0.0", "Speed in m/s"});
-            structTable.AddRow({"isActive", "bool", "true", "Activation status"});
-            structTable.AddRow({"counter", "int", "42", "Loop counter"});
-            structTable.AddRow({"name", "string", "\"Motor\"", "Device identifier"});
+            // structTable.AddRow({"speed", "float", "0.0", "Speed in m/s"});
+            // structTable.AddRow({"isActive", "bool", "true", "Activation status"});
+            // structTable.AddRow({"counter", "int", "42", "Loop counter"});
+            // structTable.AddRow({"name", "string", "\"Motor\"", "Device identifier"});
             hihi++;
         } else if (hihi == 1)
         {
             
-            std::vector<std::unique_ptr<BaseTable>> m_undoStack;
-            static BaseTable tableCopy(myTable);  
-            static BaseTable anotherCopy = myTable;  
-            static BaseTable* copy = myTable.Clone();
-            m_undoStack.push_back(std::unique_ptr<BaseTable>(myTable.Clone()));
+            std::vector<std::unique_ptr<UI::BaseTable>> m_undoStack;
+            static UI::BaseTable tableCopy(myTable);  
+            static UI::BaseTable anotherCopy = myTable;  
+            static UI::BaseTable* copy = myTable.Clone();
+            m_undoStack.push_back(std::unique_ptr<UI::BaseTable>(myTable.Clone()));
             
         }
         if (ImGui::Button("Undo") && structTableUndoSystem.CanUndo()) {
@@ -322,68 +321,62 @@ namespace Mir{
         if (ImGui::Button("Redo") && structTableUndoSystem.CanRedo()) {
             structTableUndoSystem.Redo();
         }
-        
-        static bool undoSystemInitialized = false;
-        if (!undoSystemInitialized) {
-            structTableUndoSystem = UndoRedoSystem<BaseTable>(&structTable);
-            undoSystemInitialized = true;
-        }    
-       
-        RenderResultFlags resultofrender = structTable.Render();
-        if (resultofrender != RenderResultFlags::None)
+
+        Parser::ParseResult data2;
+        static bool parsed = false;
+        if (ImGui::Button("read typ file"))
         {
-            MIR_INFO( Utils::RenderResultFlagsToString(resultofrender));
-            UndoRedoSystem<BaseTable> undoSystem(&myTable);
-            structTableUndoSystem.SaveSnapshot();
+            std::stringstream buffer;
+            {
+                std::string path1 = "C:\\projects\\OpcUa_Sample\\Logical\\Types.typ";
+                std::string path2 = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\ImGui\\TokenizerTestData.typ";
+                std::ifstream file(path1);
+                if (!file.is_open()) {
+                    std::cerr << "Failed to open file: " << "TokenizerTestData.typ" << std::endl;
+                }
+    
+                buffer << file.rdbuf();
+                
+            }
+            Tokenizer::Tokenizer tokenizer(buffer.str());
+            auto tokens = tokenizer.tokenize();
+            
+            Parser::MirParser parser(tokens);
+            
+            for (const auto& token : tokens) {
+                if (token.type != Tokenizer::TokenType::EOF_Token) {
+                    std::cout << token.toString() << std::endl;
+                }
+            }
+            data2 = parser.parse();
+            parsed = true;
         }
-
-
-
-        myTable.Render();
-
-
-        brTyp myTypData;
-        brStructData testdata = brStructData("TestName", "TestType", "testValue", "TestComment");
-        std::vector<brStructData> testDataVector;
-        testDataVector.push_back(testdata);
-        brStructNode testNode = brStructNode("SturctTestname", testDataVector);
-        std::vector<brStructNode> testSturctVector;
-        testSturctVector.push_back(testNode);
-        myTypData.collections.push_back(brStructCollection("CollectionTestName",testSturctVector));
-        static brVarConfigCollection myConfigData;
-        static int test2 = 2;
-        // Create and configure typed table widgets
-        static Mir::Widgets::TableWidget<brTyp> typTable("BR Type Table", 3);
-        static Mir::Widgets::TableWidget<brVarConfigCollection> configTable("Var Config Table", 3);
-        static Mir::Widgets::TableWidget<int> intTable("Var Config Table", 3);
-
-        // Set data pointers
-        typTable.SetData(&myTypData);
-        configTable.SetData(&myConfigData);
-        intTable.SetData(&test2);
-        
-        // Optional: Configure table settings
-        typTable.GetSettings()
-            .ShowHeaderWidth(false)
-            .ShowLineNumbers(true);
-
-        configTable.GetSettings()
-            .ShowHeaderWidth(true)
-            .ShowLineNumbers(false);
-        
-        if (ImGui::CollapsingHeader("BR Type Data")) {
-            typTable.Render();
+        if (parsed)
+        {
+            static std::vector<UI::TypeTable*> tables;
+            for (const auto& definition : data2.typDefinitions)
+            {
+                // Create a new TypeTable pointer and add it to the vector
+                tables.push_back(new UI::TypeTable(definition));
+            }
+            
+            for (auto& table: tables)
+            {
+                UI::RenderResultFlags result = table->Render();
+            }
+            
         }
         
-        ImGui::Separator();
-        
-        if (ImGui::CollapsingHeader("Var Config Data")) {
-            configTable.Render();
-        }
 
-        if (ImGui::CollapsingHeader("int test")) {
-            intTable.Render();
-        }
+        
+        
+        
+        
+        
+        
+
+
+
 
         ImGui::End();
         ////////////////////////////////////////

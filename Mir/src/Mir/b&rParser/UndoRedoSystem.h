@@ -1,4 +1,4 @@
-#include "classTypes.h"
+#include "BaseWidgets.h"
 
 template <class T>
 class UndoRedoSystem {
