@@ -8,7 +8,10 @@ namespace Mir {
 
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-    // ABSTART SYNTAX TREE .TYP START
+    // ABSTART SYNTAX TREE  START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // TYP
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     struct MemberDefinition {
         std::string name;
@@ -28,8 +31,34 @@ namespace Mir {
         std::vector<StructDefinition> structs;  
     };
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-    // ABSTART SYNTAX TREE .TYP END
+    // IOM 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
+    struct VarConfigMemberDefinition {
+        std::string processVar;       // The process variable components
+        std::string ioAdress;
+        std::string hardwareType;         // Data type (e.g., "%IW")
+        std::string comment;              // Optional comment (e.g., "Generated with Mir")
+    };
+
+    struct VarConfigDefinition {
+        std::string comment;
+        std::vector<VarConfigMemberDefinition> members;
+    };
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // ABSTART SYNTAX TREE END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // AST UTILS START
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    // AST UTILS END
+    //--------------------------------------------------------------------------------------------------------------------------------------------------
+
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // MIR PARSER START
@@ -38,7 +67,7 @@ namespace Mir {
     namespace Parser{
         struct ParseResult {
             std::vector<TypeDefinition> typDefinitions;
-            // Add other format-specific results as needed
+            std::vector<VarConfigDefinition> varConfigDefinitions;
         };
         enum class FileFormat{
             UNKOWN,
@@ -53,11 +82,11 @@ namespace Mir {
             size_t m_CurrentPosition = 0;
             FileFormat m_FileFormat = FileFormat::UNKOWN;
             // Helper methods
-            bool isAtEnd() const { return m_CurrentPosition >= m_Tokens.size()|| 
+            bool isEnd() const { return m_CurrentPosition >= m_Tokens.size()|| 
                 m_Tokens[m_CurrentPosition].type ==  Tokenizer::TokenType::EOF_Token; }
 
-                Tokenizer::Token peek() const;
-                Tokenizer::Token peekAhead(int n) const;
+                Tokenizer::Token peek(int offset = 1) const;
+                Tokenizer::Token current() const { return m_Tokens[m_CurrentPosition]; }
                 Tokenizer::Token advance();
                 bool match(Tokenizer::TokenType type);
                 void skipUntil(Tokenizer::TokenType type, bool skipMatchedToken = true);
@@ -68,9 +97,19 @@ namespace Mir {
                 TypeDefinition parseTypTypeBlock();
                 std::vector<TypeDefinition> parseTypFile();
                 
+
+                VarConfigMemberDefinition parseVarConfigpMember();
+                VarConfigDefinition parseVarConfigBlock(); // is this needed?
+                std::vector<VarConfigDefinition> parseIomFile();
                 // Add IOM-specific parsing methods as needed
                 // void parseIomFile();
-                
+
+                // Utils
+                bool validateVarConfigMemberSyntax();
+                bool expectAndConsume(Tokenizer::TokenType type, const std::string& errorMessage);
+                bool expectAndConsume(Tokenizer::TokenType type, std::string& valueOut, const std::string& errorMessage);
+                bool expectAndConsumeValue(Tokenizer::TokenType type, const std::string& expectedValue, const std::string& errorMessage);
+                void reportError(const std::string& message);
         public:
             MirParser(const std::vector<Tokenizer::Token>& tokens);
             ~MirParser() = default;

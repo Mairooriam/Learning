@@ -322,7 +322,7 @@ namespace Mir{
             structTableUndoSystem.Redo();
         }
 
-        Parser::ParseResult data2;
+        static Parser::ParseResult data2;
         static bool parsed = false;
         if (ImGui::Button("read typ file"))
         {
@@ -351,6 +351,38 @@ namespace Mir{
             data2 = parser.parse();
             parsed = true;
         }
+        static bool parsed2 = false;
+        if (ImGui::Button("read iom file"))
+        {
+            std::stringstream buffer;
+            {
+                //std::string path1 = "C:\\projects\\OpcUa_Sample\\Logical\\Types.typ";
+                std::string path2 = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\ImGui\\exampleiom.iom";
+                std::ifstream file(path2);
+                if (!file.is_open()) {
+                    std::cerr << "Failed to open file: " << "TokenizerTestData.typ" << std::endl;
+                }
+    
+                buffer << file.rdbuf();
+                
+            }
+            Tokenizer::Tokenizer tokenizer(buffer.str());
+            auto tokens = tokenizer.tokenize();
+            
+            
+            
+            for (const auto& token : tokens) {
+                if (token.type != Tokenizer::TokenType::EOF_Token) {
+                    std::cout << token.toString() << std::endl;
+                }
+            }
+            Parser::MirParser parser(tokens);
+            data2 = parser.parse();
+
+            
+            //data2 = parser.parse();
+            parsed2 = true;
+        }
         if (parsed)
         {
             static std::vector<UI::TypeTable*> tables;
@@ -364,6 +396,28 @@ namespace Mir{
             {
                 UI::RenderResultFlags result = table->Render();
             }
+            
+        }
+        if (parsed2)
+        {
+            static bool initialized = false;
+            static std::vector<UI::IomTable> iomTables;
+            if (!initialized)
+            {
+                for (const auto& varConfig : data2.varConfigDefinitions)
+                {
+                    iomTables.emplace_back(UI::IomTable(varConfig));
+                }
+                initialized = true;
+            }
+            
+
+
+            for (auto &table : iomTables)
+            {
+                UI::RenderResultFlags result = table.Render();
+            }
+
             
         }
         

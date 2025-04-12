@@ -17,19 +17,28 @@ enum class Keyword {
     VAR,
     END_VAR,
     VAR_CONFIG,
+    AT,
     UNKNOWN
 };
+
+
 enum class TokenType {
     Keyword,        // TYPE, STRUCT, END_STRUCT, END_TYPE
     Identifier,     // Custom names
     DataType,       // USINT, BOOL, etc.
     Comment,        // (*comment*)
     Colon,          // :
+    DoubleColon,    // ::
     Semicolon,      // ;
     Dot,            // .
     Assignment,     // :=
     BoolLiteral,    // TRUE, FALSE
     EOF_Token,      // End of file
+    ProcessVariable,    // For "::Tag.Member" syntax
+    HardwareType,       // For "%IX", "%QX", etc.
+    QuotedString,       // For quoted module paths like "AF103"
+    QuotedIdentifier,     // "AF102"
+    IoAddress,      // For complete I/O addresses  
     Unknown         // Unrecognized token
 };
 
@@ -58,6 +67,7 @@ struct Token {
         if (upper == "VAR") return Keyword::VAR;
         if (upper == "END_VAR") return Keyword::END_VAR;
         if (upper == "VAR_CONFIG") return Keyword::VAR_CONFIG;
+        if (upper == "AT") return Keyword::AT;
         return Keyword::UNKNOWN;
     }
     
@@ -71,10 +81,16 @@ struct Token {
             case TokenType::Colon: typeStr = "Colon"; break;
             case TokenType::Semicolon: typeStr = "Semicolon"; break;
             case TokenType::Dot: typeStr = "Dot"; break;
+            case TokenType::DoubleColon: typeStr  = "DoubleDot"; break;
             case TokenType::Assignment: typeStr = "Assignment"; break;
             case TokenType::BoolLiteral: typeStr = "BoolLiteral"; break;
             case TokenType::EOF_Token: typeStr = "EOF"; break;
+            case TokenType::HardwareType: typeStr = "HardwareType"; break;
+            case TokenType::QuotedIdentifier: typeStr = "QuotedIdentifier"; break;
+            
             case TokenType::Unknown: typeStr = "Unknown"; break;
+            case TokenType::ProcessVariable: typeStr = "ProcessVariable"; break;
+
         }
         return typeStr + ": '" + value + "' at Line " + std::to_string(line) + ", Column " + std::to_string(column);
     }
@@ -101,6 +117,7 @@ private:
     Token nextToken();
     Token scanComment();
     Token scanIdentifierOrKeyword();
+    Token scanProcessVariable();
     bool isAtEnd() const;
     void skipWhitespace();
     std::string toLower(const std::string& s) const;

@@ -6,7 +6,7 @@ namespace Mir {
 namespace Tokenizer{
 
 const std::unordered_set<std::string> Tokenizer::keywords = {
-    "type", "struct", "end_struct", "end_type"
+    "type", "struct", "end_struct", "end_type", "var_config", "end_var", "at"
 };
 
 const std::unordered_set<std::string> Tokenizer::dataTypes = {
@@ -150,6 +150,9 @@ Token Tokenizer::nextToken() {
             if (current() == '=') {
                 advance();
                 return Token(TokenType::Assignment, ":=", startLine, startColumn);
+            } else if (current() == ':') {
+                advance();
+                return Token(TokenType::DoubleColon, "::", startLine, startColumn);
             }
             return Token(TokenType::Colon, ":", startLine, startColumn);
         }
@@ -160,6 +163,42 @@ Token Tokenizer::nextToken() {
         case '.': {
             advance();
             return Token(TokenType::Dot, ".", startLine, startColumn);
+        }case '"': {
+            std::string value = "\""; 
+            advance();
+            int quoteStartLine = line;
+            int quoteStartColumn = column;
+            
+            // Collect all characters until the closing quote
+            while (!isAtEnd() && current() != '"') {
+                value += current();
+                advance();
+            }
+            
+            if (isAtEnd()) {
+                MIR_ASSERT(false, "not implemented");
+                return Token(TokenType::EOF_Token, "Unterminated string", quoteStartLine, quoteStartColumn);
+            }
+            value += "\""; 
+            advance();
+            return Token(TokenType::QuotedIdentifier, value, startLine, startColumn);
+        }case '%':{
+            std::string value = "%";
+            advance();
+            
+            // Read the hardware type identifier (I, Q, etc.)
+            if (!isAtEnd() && std::isalpha(current())) {
+                value += current();
+                advance();
+                
+                // Read modifier (X, W, etc.)
+                if (!isAtEnd() && std::isalpha(current())) {
+                    value += current();
+                    advance();
+                }
+                return Token(TokenType::HardwareType, value, startLine, startColumn);
+            }
+                
         }
         default: {
             std::string unknown(1, current());

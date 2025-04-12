@@ -1,0 +1,13 @@
+(*AF104*)
+VAR_CONFIG
+	::CC1_Ai.WaterPumpMCT AT %IW."AF103".AnalogInput01; (*Generated with Mir*)
+	::CC1_Ai.test2 AT %IW."AF103".AnalogInput01; (*Generated with Mir*)
+	::CC1_Ai.dasd AT %IW."AF103".AnalogInput02; (*Generated with Mir*)
+	::CC1_Ao.WaterFillValve AT %QW."AF105".AnalogOutput01; (*Generated with Mir*)
+	::CC1_Ao.test5 AT %QW."AF105".AnalogOutput01; (*Generated with Mir*)
+	::CC1_Di.VacyymPumpMCT AT %IX."AF104".DigitalInput01; (*Generated with Mir*)
+	::CC1_Di.test4 AT %IX."AF104".DigitalInput01; (*Generated with Mir*)
+	::CC1_Do.ModixReadyToStart AT %QX."AF102".DigitalOutput01; (*Generated with Mir*)
+	::CC1_Do.Test1 AT %QX."AF102".DigitalOutput01; (*Generated with Mir*)
+
+END_VAR
