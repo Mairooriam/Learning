@@ -19,3 +19,6 @@
 [submodule "Mir/External/tinyxml2"]
 	path = Mir/External/tinyxml2
 	url = https://github.com/leethomason/tinyxml2
+[submodule "Mir/External/gtest"]
+	path = Mir/External/gtest
+	url = https://github.com/google/googletest.git
