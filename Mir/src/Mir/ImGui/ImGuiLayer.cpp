@@ -33,6 +33,10 @@
 #include "b&rParser/UndoRedoSystem.h"
 #include "b&rParser/Tokenizer.h"
 #include "b&rParser/MirParser.h"
+
+
+//#include "b&rParser/csvparsingtest.h"
+//#include "b&rParser/csvparsing.h"
 // TODO:
 /*
 - CTRL + C -> CTRL + V WHEN NAVIGATING WITH ARROWS
@@ -385,30 +389,49 @@ namespace Mir{
         }
         if (parsed)
         {
-            static std::vector<UI::TypeTable*> tables;
-            for (const auto& definition : data2.typDefinitions)
+            static bool initialized = false;
+            static int i = 0;
+            static std::vector<UI::TypeTable> tables;
+            if (!initialized)
             {
-                // Create a new TypeTable pointer and add it to the vector
-                tables.push_back(new UI::TypeTable(definition));
+                for (const auto& definition : data2.typDefinitions)
+                {
+                    // Create a new TypeTable pointer and add it to the vector
+                    tables.emplace_back(UI::TypeTable(definition));
+                }
+                if (i == 2)
+                {
+                    initialized = true;
+                }
+                i++;
             }
+            
+
             
             for (auto& table: tables)
             {
-                UI::RenderResultFlags result = table->Render();
+                UI::RenderResultFlags result = table.Render();
             }
             
         }
         if (parsed2)
         {
             static bool initialized = false;
+            static int i = 0;
             static std::vector<UI::IomTable> iomTables;
             if (!initialized)
             {
+                
                 for (const auto& varConfig : data2.varConfigDefinitions)
                 {
                     iomTables.emplace_back(UI::IomTable(varConfig));
                 }
-                initialized = true;
+                if (i == 2)
+                {
+                    initialized = true;
+                }
+                i++;
+                //initialized = true;
             }
             
 
@@ -420,7 +443,54 @@ namespace Mir{
 
             
         }
+        static CSV::Data csvdata;
+        if (ImGui::Button("parse CSV"))
+        {
+            
+            CSV::Settings settings;
+            settings.delimeter = ',';
+            settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
+            CSV::Parser parser2(settings);
+            csvdata = parser2.parse();
+
+
+        }
         
+        if (!csvdata.content.empty())
+        {
+            static UI::BaseTable csvTable;
+            static bool initialized = false;
+            if (!initialized)
+            {
+                std::vector<UI::TableColumnSettings> columns;
+                for (const auto &name : csvdata.header)
+                {
+                    columns.emplace_back(name);
+                }
+                
+    
+                UI::BaseTableSettings tableSettings;
+                tableSettings.columns = columns;
+                tableSettings.tableName = "CSV DATA";
+                csvTable.initializeSettings(tableSettings);
+
+                csvTable.SetColumnNames(csvdata.header);
+                for (const auto& data : csvdata.content)
+                {
+                    csvTable.AddRow(data);
+                }
+                initialized = true;
+            }
+            
+
+
+            
+
+
+            csvTable.Render();
+        }
+        
+
 
         
         

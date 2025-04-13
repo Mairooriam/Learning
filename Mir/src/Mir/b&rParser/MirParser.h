@@ -1,11 +1,11 @@
 #pragma once
-#include "Tokenizer.h"
-#include <vector>
 #include <string>
+#include <vector>
+#include <filesystem>
+#include "Tokenizer.h"
+#include "Utils/Utils.h"
+
 namespace Mir {
-
-    
-
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // ABSTART SYNTAX TREE  START
@@ -19,25 +19,25 @@ namespace Mir {
         std::string value;
         std::string comment;
     };
-    
+
     struct StructDefinition {
         std::string name;
         std::string comment;
-        std::vector<MemberDefinition> members;  
+        std::vector<MemberDefinition> members;
     };
-    
+
     struct TypeDefinition {
         std::string comment;
-        std::vector<StructDefinition> structs;  
+        std::vector<StructDefinition> structs;
     };
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-    // IOM 
+    // IOM
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     struct VarConfigMemberDefinition {
-        std::string processVar;       // The process variable components
+        std::string processVar;  // The process variable components
         std::string ioAdress;
-        std::string hardwareType;         // Data type (e.g., "%IW")
-        std::string comment;              // Optional comment (e.g., "Generated with Mir")
+        std::string hardwareType;  // Data type (e.g., "%IW")
+        std::string comment;       // Optional comment (e.g., "Generated with Mir")
     };
 
     struct VarConfigDefinition {
@@ -48,33 +48,24 @@ namespace Mir {
     // ABSTART SYNTAX TREE END
     //--------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // AST UTILS START
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-    
+
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // AST UTILS END
     //--------------------------------------------------------------------------------------------------------------------------------------------------
-
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // MIR PARSER START
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     // Parsing result wrapper
-    namespace Parser{
+    namespace Parser {
         struct ParseResult {
             std::vector<TypeDefinition> typDefinitions;
             std::vector<VarConfigDefinition> varConfigDefinitions;
         };
-        enum class FileFormat{
-            UNKOWN,
-            TYP,
-            IOM
-        };
-
+        enum class FileFormat { UNKOWN, TYP, IOM };
 
         class MirParser {
         private:
@@ -82,49 +73,79 @@ namespace Mir {
             size_t m_CurrentPosition = 0;
             FileFormat m_FileFormat = FileFormat::UNKOWN;
             // Helper methods
-            bool isEnd() const { return m_CurrentPosition >= m_Tokens.size()|| 
-                m_Tokens[m_CurrentPosition].type ==  Tokenizer::TokenType::EOF_Token; }
+            bool isEnd() const {
+                return m_CurrentPosition >= m_Tokens.size() ||
+                       m_Tokens[m_CurrentPosition].type == Tokenizer::TokenType::EOF_Token;
+            }
 
-                Tokenizer::Token peek(int offset = 1) const;
-                Tokenizer::Token current() const { return m_Tokens[m_CurrentPosition]; }
-                Tokenizer::Token advance();
-                bool match(Tokenizer::TokenType type);
-                void skipUntil(Tokenizer::TokenType type, bool skipMatchedToken = true);
-                
-                // Format-specific parsing methods
-                MemberDefinition parseTypMember();
-                StructDefinition parseTypStruct();
-                TypeDefinition parseTypTypeBlock();
-                std::vector<TypeDefinition> parseTypFile();
-                
+            Tokenizer::Token peek(int offset = 1) const;
+            Tokenizer::Token current() const {
+                return m_Tokens[m_CurrentPosition];
+            }
+            Tokenizer::Token advance();
+            bool match(Tokenizer::TokenType type);
+            void skipUntil(Tokenizer::TokenType type, bool skipMatchedToken = true);
 
-                VarConfigMemberDefinition parseVarConfigpMember();
-                VarConfigDefinition parseVarConfigBlock(); // is this needed?
-                std::vector<VarConfigDefinition> parseIomFile();
-                // Add IOM-specific parsing methods as needed
-                // void parseIomFile();
+            // .Typ file parsing
+            MemberDefinition parseTypMember();
+            StructDefinition parseTypStruct();
+            TypeDefinition parseTypTypeBlock();
+            std::vector<TypeDefinition> parseTypFile();
 
-                // Utils
-                bool validateVarConfigMemberSyntax();
-                bool expectAndConsume(Tokenizer::TokenType type, const std::string& errorMessage);
-                bool expectAndConsume(Tokenizer::TokenType type, std::string& valueOut, const std::string& errorMessage);
-                bool expectAndConsumeValue(Tokenizer::TokenType type, const std::string& expectedValue, const std::string& errorMessage);
-                void reportError(const std::string& message);
+            // .iom parsing
+            VarConfigMemberDefinition parseVarConfigpMember();
+            std::vector<VarConfigDefinition> parseIomFile();
+
+            bool expectAndConsume(Tokenizer::TokenType type, const std::string& errorMessage);
+            bool expectAndConsume(Tokenizer::TokenType type, std::string& valueOut, const std::string& errorMessage);
+            bool expectAndConsumeValue(Tokenizer::TokenType type, const std::string& expectedValue,
+                                       const std::string& errorMessage);
+            void reportError(const std::string& message);
+
         public:
             MirParser(const std::vector<Tokenizer::Token>& tokens);
             ~MirParser() = default;
-            void SetTokens(std::vector<Tokenizer::Token> _Tokens) { m_Tokens = _Tokens; }
-            
+            void SetTokens(std::vector<Tokenizer::Token> _Tokens) {
+                m_Tokens = _Tokens;
+            }
+
             // Parse based on file extension
             ParseResult parse();
         };
-    }
-    //--------------------------------------------------------------------------------------------------------------------------------------------------
-    // MIR PARSER END
-    //--------------------------------------------------------------------------------------------------------------------------------------------------
+    }  // namespace Parser
+}  // namespace Mir
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+// MIR PARSER END
+//--------------------------------------------------------------------------------------------------------------------------------------------------
 
-    
-    
 
-    
-}
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+// CSV PARSER START
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+namespace Mir {
+    namespace CSV {
+        struct Settings {
+            std::filesystem::path targetFile;
+            std::string header;
+            char delimeter;
+        };
+        struct Data {
+            std::vector<std::string> header;
+            std::vector<std::vector<std::string>> content;
+        };
+
+        class Parser {
+        private:
+            Settings m_Settings;
+            Data m_data;
+        public:
+            Parser(Settings _settings);
+            ~Parser();
+            Data parse();
+
+        };
+    }  // namespace CSV
+}  // namespace Mir
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+// CSV PARSER END
+//--------------------------------------------------------------------------------------------------------------------------------------------------

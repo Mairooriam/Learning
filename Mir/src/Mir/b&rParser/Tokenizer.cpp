@@ -18,16 +18,16 @@ const std::unordered_set<std::string> Tokenizer::boolLiterals = {
     "true", "false"
 };
 
-Tokenizer::Tokenizer(const std::string& source) : source(source) {}
+Tokenizer::Tokenizer(const std::string& source) : m_source(source) {}
 
 char Tokenizer::current() const {
     if (isAtEnd()) return '\0';
-    return source[position];
+    return m_source[position];
 }
 
 char Tokenizer::peek(int offset) const {
-    if (position + offset >= source.length()) return '\0';
-    return source[position + offset];
+    if (position + offset >= m_source.length()) return '\0';
+    return m_source[position + offset];
 }
 
 void Tokenizer::advance() {
@@ -41,7 +41,7 @@ void Tokenizer::advance() {
 }
 
 bool Tokenizer::isAtEnd() const {
-    return position >= source.length();
+    return position >= m_source.length();
 }
 
 void Tokenizer::skipWhitespace() {
@@ -57,7 +57,87 @@ std::string Tokenizer::toLower(const std::string& s) const {
     return result;
 }
 
-Token Tokenizer::scanComment() {
+// std::vector<Token> Tokenizer::tokenizeCSV() {
+//     std::vector<Token> tokens;
+    
+//     std::istringstream stream(m_source);
+//     std::string line;
+//       std::vector<std::string> headers;
+//     int lineNumber = 1;
+
+//     // get header
+//     std::getline(stream, line);
+//     if (lineNumber == 1 && !line.empty())
+//     {
+//         headers = splitCsvLine(line, ',');
+//         int column = 1;
+//         for (const std::string& header : headers)
+//         {
+//             tokens.push_back(Token(TokenType::CSV_HEADER, header, lineNumber, column));
+//             column++;
+//         }
+        
+        
+
+//         lineNumber++;
+        
+//     }
+
+//     // Fields
+//     while (std::getline(stream, line)) {
+//         std::vector<std::string> fields = splitCsvLine(line, ',');
+//         int column = 1;
+//         for (const std::string& field : fields)
+//         {
+//             tokens.push_back(Token(TokenType::CSV_FIELD, field, lineNumber, column));
+//             column++;
+//         }
+
+//         lineNumber++;
+//     }
+    
+//     tokens.push_back(Token(TokenType::EOF_Token, "", lineNumber, 1));
+//     return tokens;
+// }
+std::vector<Token> Tokenizer::tokenizeGeneral()
+{
+    std::vector<Token> tokens;
+    while (!isAtEnd()) {
+        Token token = nextToken();
+        tokens.push_back(token);
+        
+        if (token.type == TokenType::EOF_Token) {
+            break;
+        }
+    }
+    return tokens;
+}
+// std::vector<std::string> Tokenizer::splitCsvLine(const std::string &line, const char delimeter)
+// {
+//     std::vector<std::string> fields;
+//     std::string field;
+//     std::istringstream lineStream(line);
+
+//     bool inQuotes = false;
+//     for (size_t i = 0; i < line.length(); ++i) {
+//         char c = line[i];
+        
+//         if (c == '"') {
+//             inQuotes = !inQuotes;
+//         } else if (c == delimeter && !inQuotes) {
+//             fields.push_back(field);
+//             field.clear();
+//         } else {
+//             field += c;
+//         }
+//     }
+
+//     fields.push_back(field);
+    
+//     return fields;
+// }
+Token Tokenizer::scanComment()
+{
     int startLine = line;
     int startColumn = column;
     std::string value = "";
@@ -209,18 +289,12 @@ Token Tokenizer::nextToken() {
 }
 
 std::vector<Token> Tokenizer::tokenize() {
-    std::vector<Token> tokens;
+    if (m_source.empty()) { MIR_ASSERT(false, "Tokenizer source empty!"); }
     
-    while (!isAtEnd()) {
-        Token token = nextToken();
-        tokens.push_back(token);
-        
-        if (token.type == TokenType::EOF_Token) {
-            break;
-        }
-    }
+
+    tokenizeGeneral();
+
     
-    return tokens;
 }
 
 } 

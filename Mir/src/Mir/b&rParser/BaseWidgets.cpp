@@ -178,7 +178,7 @@ namespace Mir {
     // BASE TABLE START
     //--------------------------------------------------------------------------------------------------------------------------------------------------
     BaseTable::BaseTable(const BaseTableSettings& settings)
-    : IbrBase(settings.id), m_tableName(settings.tableName)
+    : IbrBase(settings.id), m_tableName(settings.tableName), m_LinkingTableID(settings.m_tableLinkingID)
     {
         size_t columnCount = settings.columns.size();
         
@@ -220,6 +220,25 @@ namespace Mir {
     }
     }
 
+    void BaseTable::initializeSettings(const BaseTableSettings& settings) {
+        m_tableName = settings.tableName;
+        m_LinkingTableID = settings.m_tableLinkingID;
+        
+        size_t columnCount = settings.columns.size();
+        
+        m_columnNames.resize(columnCount);
+        m_columnRenderTypes.resize(columnCount);
+        m_columnSuggestions.resize(columnCount);
+        m_columnWidths.resize(columnCount);
+        m_columns.resize(columnCount);
+        
+        for (size_t i = 0; i < columnCount; i++) {
+            m_columnNames[i] = settings.columns[i].name;
+            m_columnRenderTypes[i] = settings.columns[i].renderType;
+            m_columnSuggestions[i] = settings.columns[i].suggestions;
+            m_columnWidths[i] = settings.columns[i].width;
+        }
+    }
 
     void BaseTable::SetColumnNames(const std::vector<std::string> &names)
     {
@@ -263,6 +282,7 @@ namespace Mir {
     RenderResultFlags BaseTable::Render()
     {
         RenderResultFlags result = RenderResultFlags::None;
+        
 
         ImGui::PushID(static_cast<int>(GetID()));
         //bool wasOpen = m_isOpen;
@@ -281,6 +301,8 @@ namespace Mir {
         }
          static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings;
         if (headerOpen && !m_columnNames.empty()) {
+
+            ImGui::PushOverrideID(m_LinkingTableID);
             if (ImGui::BeginTable("TableData", m_columnNames.size(), flags)) {
                 // Setup columns
                 for (size_t i = 0; i < m_columnNames.size(); i++) {
@@ -320,6 +342,7 @@ namespace Mir {
                 
                 ImGui::EndTable();
             }
+            ImGui::PopID();
         }
         
         // Show context menu if activated

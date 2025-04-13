@@ -4,72 +4,120 @@ namespace Mir {
     namespace Parser{
 
 
-   
-
-        bool MirParser::expectAndConsume(Tokenizer::TokenType type, const std::string &errorMessage)
-        {
-            if (current().type != type) {
-                reportError(errorMessage);
-                return false;
-            }
-            advance();
-            return true;
-        }
-
-        bool MirParser::expectAndConsume(Tokenizer::TokenType type, std::string &valueOut, const std::string &errorMessage)
-        {
-            if (current().type != type) {
-                reportError(errorMessage);
-                return false;
-            }
-            valueOut = current().value;
-            advance();
-            return true;
-
-        }
-
-        bool MirParser::expectAndConsumeValue(Tokenizer::TokenType type, const std::string &expectedValue, const std::string &errorMessage)
-        {
-            if (current().type != type || current().value != expectedValue) {
-                reportError(errorMessage);
-                return false;
-            }
-            advance();
-            return true;
-        }
-
-        void MirParser::reportError(const std::string &message)
-        {
-            // Replace assertion with better error reporting
-            std::string errorMsg = message + " at line " + 
-                                  std::to_string(current().line) + ", column " + 
-                                  std::to_string(current().column);
-            MIR_CORE_ERROR(errorMsg);
-
-        }
+    // void MirParser::parseMirCsv()
+    // {
+    //     TypeDefinition typdef;
+    //     StructDefinition structdef;
+    //     MemberDefinition memberdef;
+    //     std::vector<std::string> headerbuf;
         
-        MirParser::MirParser(const std::vector<Tokenizer::Token> &tokens)
-            : m_Tokens(tokens)
-        {
 
-            skipUntil(Tokenizer::TokenType::Keyword, false);
-            std::string value = m_Tokens[m_CurrentPosition].value;
-            if (value == "TYPE")
-            {
-                m_FileFormat = FileFormat::TYP;
-                m_CurrentPosition = 0;
-                parse();
-            }
-            else if (value == "VAR_CONFIG")
-            {
-                m_FileFormat = FileFormat::IOM;
-            }
-            else
-            {
-                MIR_ASSERT(false, "NOT IMPLEMENTED UNKOWN")
-            }
-            m_CurrentPosition = 0;
+    // }
+
+    // // bool MirParser::validHeaderAtColumn(const std::string& headerValue, size_t columnIndex)
+    // // {
+    // //     const std::vector<std::string> expectedHeaders = {
+    // //     "Location", "Type", "BR Name", "Card", "Eplan name"
+    // //     };
+        
+    // //     if (columnIndex >= expectedHeaders.size()) {
+    // //     MIR_ASSERT(false, "Invalid column index: " + std::to_string(columnIndex) + 
+    // //             " exceeds expected header count " + std::to_string(expectedHeaders.size()));
+    // //     return false;
+    // //     }
+        
+    // //     if (headerValue != expectedHeaders[columnIndex]) {
+    // //     MIR_ASSERT(false, "Invalid header at column " + std::to_string(columnIndex) + 
+    // //             ": Expected '" + expectedHeaders[columnIndex] + "', got '" + headerValue + "'");
+    // //     return false;
+    // //     }
+        
+    // //     return true;
+    // // }
+
+    // // bool MirParser::isValidHeader(const std::vector<std::string> &header)
+    // // {
+    // //     const std::vector<std::string> expectedHeaders = {
+    // //     "Location", "Type", "BR Name", "Card", "Eplan name"
+    // //     };
+        
+    // //     if (header.size() != expectedHeaders.size()) {
+    // //     MIR_ASSERT(false,"Invalid header: Expected " + std::to_string(expectedHeaders.size()) + 
+    // //             " fields, got " + std::to_string(header.size()));
+    // //     return false;
+    // //     }
+    
+    // //     for (size_t i = 0; i < header.size(); ++i) {
+    // //     if (!validHeaderAtColumn(header[i], i)) {
+    // //         return false;
+    // //     }
+    // //     }
+        
+    // //     return true;
+    // // }
+
+    bool MirParser::expectAndConsume(Tokenizer::TokenType type, const std::string &errorMessage)
+    {
+        if (current().type != type) {
+            reportError(errorMessage);
+            return false;
         }
+        advance();
+        return true;
+    }
+
+    bool MirParser::expectAndConsume(Tokenizer::TokenType type, std::string &valueOut, const std::string &errorMessage)
+    {
+        if (current().type != type) {
+            reportError(errorMessage);
+            return false;
+        }
+        valueOut = current().value;
+        advance();
+        return true;
+
+    }
+
+    bool MirParser::expectAndConsumeValue(Tokenizer::TokenType type, const std::string &expectedValue, const std::string &errorMessage)
+    {
+        if (current().type != type || current().value != expectedValue) {
+            reportError(errorMessage);
+            return false;
+        }
+        advance();
+        return true;
+    }
+
+    void MirParser::reportError(const std::string &message)
+    {
+        // Replace assertion with better error reporting
+        std::string errorMsg = message + " at line " + 
+                                std::to_string(current().line) + ", column " + 
+                                std::to_string(current().column);
+        MIR_CORE_ERROR(errorMsg);
+
+    }
+    
+    MirParser::MirParser(const std::vector<Tokenizer::Token> &tokens)
+        : m_Tokens(tokens)
+    {
+
+        skipUntil(Tokenizer::TokenType::Keyword, false);
+        std::string value = m_Tokens[m_CurrentPosition].value;
+        if (value == "TYPE")
+        {
+            m_FileFormat = FileFormat::TYP;
+        }
+        else if (value == "VAR_CONFIG")
+        {
+            m_FileFormat = FileFormat::IOM;
+        }
+        else
+        {
+            MIR_ASSERT(false, "NOT IMPLEMENTED UNKOWN")
+        }
+        m_CurrentPosition = 0;
+    }
 
     ParseResult MirParser::parse()
     {
@@ -146,17 +194,19 @@ namespace Mir {
                     }
                 }
             }
-            
+
             // Check for comment
-            if (current().type == Tokenizer::TokenType::Comment) {
-                result.comment = current().value;
-                advance();
+            if (match(Tokenizer::TokenType::Semicolon)) {
+                
+                if (current().type == Tokenizer::TokenType::Comment) {
+                    result.comment = current().value;
+                    advance();
+                }
             }
+
             
             // Skip semicolon
-            if (match(Tokenizer::TokenType::Semicolon)) {
-                // Semicolon consumed
-            }
+
         }
         
         return result;
@@ -398,7 +448,39 @@ namespace Mir {
         return result;
     }
 
+    }  // namespace Parser
+    namespace CSV {
+        Parser::Parser(Settings _settings) {
+            if (!Utils::File::hasExtension(_settings.targetFile, ".csv"))
+            {
+                MIR_ASSERT(false, "CSV::Parser was intialized with correct file format");
+            } else{
+                m_Settings = _settings;
+            }
+            
 
-    
-    }
-}
+        }
+        Parser::~Parser() {}
+
+
+        
+        Data Parser::parse() {
+            std::ifstream file = Utils::File::openFile(m_Settings.targetFile);
+            std::string line;
+        
+            if (std::getline(file, line)) {
+                m_data.header = Utils::Text::splitLine(line, ',');
+            }
+        
+            // Read data lines
+            while (std::getline(file, line)) {
+                m_data.content.push_back(Utils::Text::splitLine(line, ','));
+            }
+            
+            return m_data;
+        }
+    }  // namespace CSV
+
+} // namespace Mir
+
+

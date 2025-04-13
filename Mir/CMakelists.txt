@@ -121,6 +121,9 @@ add_subdirectory(External/jsonParser)
 ## TinyXML2 ## 
 add_subdirectory(External/tinyxml2)
 
+## GTEST
+add_subdirectory(External/gtest)
+
 # Find Python
 find_package(Python3 COMPONENTS Development REQUIRED)
 
@@ -141,6 +144,7 @@ set(D3_SOURCE_FILES
         src/Mir/b&rParser/UndoRedoSystem.cpp
         src/Mir/b&rParser/Tokenizer.cpp
         src/Mir/b&rParser/MirParser.cpp
+        src/Mir/Utils/Utils.cpp
 
         src/Mir/Opcua/OpcuaClient.cpp
 
@@ -201,6 +205,7 @@ set(D3_HEADER_FILES
         src/Mir/b&rParser/UndoRedoSystem.h
         src/Mir/b&rParser/Tokenizer.h
         src/Mir/b&rParser/MirParser.h
+        src/Mir/Utils/Utils.h
 
         src/Mir/CPython/PythonTool.h
 
@@ -259,6 +264,11 @@ target_include_directories(Mir
     ${CMAKE_CURRENT_SOURCE_DIR}/External/IconsFontAwesome5
 )
 
+
+# Enable testing
+enable_testing()
+include(CTest)
+add_subdirectory(tests)
 
 
 # Define macros

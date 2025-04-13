@@ -1,7 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-
+#include "imgui_internal.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -211,16 +211,26 @@ namespace Mir {
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         class TableColumnSettings {
             public:
-                std::string name;
-                StringValue::RenderType renderType = StringValue::RenderType::Input;
-                std::vector<std::string> suggestions;
-                float width = 0.0f; // 0 means auto/stretch
+            std::string name;
+            StringValue::RenderType renderType = StringValue::RenderType::Input;
+            std::vector<std::string> suggestions;
+            float width = 0.0f; // 0 means auto/stretch
+
+            TableColumnSettings(const std::string& columnName = "", 
+                       StringValue::RenderType type = StringValue::RenderType::Input,
+                       const std::vector<std::string>& columnSuggestions = {},
+                       float columnWidth = 0.0f)
+                : name(columnName), 
+                  renderType(type), 
+                  suggestions(columnSuggestions),
+                  width(columnWidth) {}
             };
             
         class BaseTableSettings {
         public:
             std::string tableName;
             std::vector<TableColumnSettings> columns;
+            ImGuiID m_tableLinkingID;
             size_t id = 0;
         
             // Constructor for convenience
@@ -244,6 +254,11 @@ namespace Mir {
                 id = tableID;
                 return *this;
             }
+
+            BaseTableSettings& WithTableLinkingTo(const std::string& name){
+                m_tableLinkingID = ImHashStr(name.c_str(),0);
+                return *this;
+            }
         };
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // TABLE SETTINGS END
@@ -265,13 +280,16 @@ namespace Mir {
             bool m_showContextMenuHeader = false;
             int m_activeContextMenuColumn = -1; 
             bool m_showColumnContextMenu = false;
+            ImGuiID m_LinkingTableID;
         
         protected:
             std::vector<std::vector<StringValue>> m_columns;
         
         public:
+            BaseTable() = default;
             BaseTable(const BaseTableSettings& settings);
             BaseTable(const BaseTable& other, bool preserveIDs = true);
+            void initializeSettings(const BaseTableSettings& settings);
             virtual ~BaseTable() = default;
         
             // Column operations
@@ -295,7 +313,7 @@ namespace Mir {
             // Utility methods
             std::vector<StringValue> CopyRow(size_t rowIndex);
             void PasteRow(size_t rowIndex, const std::vector<StringValue>& values);
-            
+            ImGuiID getGlobalTableID() { return m_LinkingTableID; }
             // IbrBase requirements
             
             RenderResultFlags Render() override;
@@ -368,7 +386,8 @@ namespace Mir {
                         .WithDropdownColumn("Type", {"BOOL", "INT", "UINT", "REAL", "USINT", "STRING"})
                         .WithColumn("Value", StringValue::RenderType::Input)
                         .WithColumn("Comment", StringValue::RenderType::Input)
-                        .WithID(id);
+                        .WithID(id)
+                        .WithTableLinkingTo("structTable");
                 }
             };
         //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,7 +417,23 @@ namespace Mir {
             ~TypeTable() {
                 Clear();
             }
-            
+            TypeTable(TypeTable&& other) noexcept
+                : IbrBase(other.GetID()),
+                m_name(std::move(other.m_name)),
+                m_comment(std::move(other.m_comment)),
+                m_structTables(std::move(other.m_structTables)),
+                m_isOpen(other.m_isOpen) {}
+
+            TypeTable& operator=(TypeTable&& other) noexcept {
+                if (this != &other) {
+                    m_name = std::move(other.m_name);
+                    m_comment = std::move(other.m_comment);
+                    m_structTables = std::move(other.m_structTables);
+                    m_isOpen = other.m_isOpen;
+                    SetID(other.GetID());
+                }
+                return *this;
+            }
             void AddStructTable(std::unique_ptr<StructTable> table) {
                 if (table) {
                     m_structTables.push_back(std::move(table));
@@ -507,7 +542,8 @@ namespace Mir {
                     .WithColumn("IO Adress", StringValue::RenderType::Input)
                     .WithColumn("Process Variable", StringValue::RenderType::Input)
                     .WithColumn("Comment", StringValue::RenderType::Input)
-                    .WithID(id);
+                    .WithID(id)
+                    .WithTableLinkingTo("iomTable");;
                 }
             };
         //--------------------------------------------------------------------------------------------------------------------------------------------------

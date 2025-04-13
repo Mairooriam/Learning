@@ -9,6 +9,9 @@
 
 namespace Mir {
 namespace Tokenizer{
+
+
+
 enum class Keyword {
     TYPE,
     END_TYPE,
@@ -39,6 +42,13 @@ enum class TokenType {
     QuotedString,       // For quoted module paths like "AF103"
     QuotedIdentifier,     // "AF102"
     IoAddress,      // For complete I/O addresses  
+    CSV_LOCATION,    //CC_1
+    CSV_TYPE,
+    CSV_NAME,
+    CSV_FIELD,
+    CSV_CARD,
+    CSV_HEADER,
+    CSV_EPLANNAME,   
     Unknown         // Unrecognized token
 };
 
@@ -87,7 +97,16 @@ struct Token {
             case TokenType::EOF_Token: typeStr = "EOF"; break;
             case TokenType::HardwareType: typeStr = "HardwareType"; break;
             case TokenType::QuotedIdentifier: typeStr = "QuotedIdentifier"; break;
+            case TokenType::CSV_LOCATION: typeStr = "CSV_LOCATION"; break;
+            case TokenType::CSV_TYPE: typeStr = "CSV_TYPE"; break;
+            case TokenType::CSV_NAME: typeStr = "CSV_NAME"; break;
+            case TokenType::CSV_FIELD: typeStr = "CSV_FIELD"; break;
+            case TokenType::CSV_CARD: typeStr = "CSV_CARD"; break;
             
+            case TokenType::CSV_HEADER: typeStr = "CSV_HEADER"; break;
+            case TokenType::CSV_EPLANNAME: typeStr = "CSV_EPLANNAME"; break;
+            case TokenType::IoAddress: typeStr = "IoAddress"; break;
+            case TokenType::QuotedString: typeStr = "QuotedString"; break;
             case TokenType::Unknown: typeStr = "Unknown"; break;
             case TokenType::ProcessVariable: typeStr = "ProcessVariable"; break;
 
@@ -102,7 +121,7 @@ public:
     std::vector<Token> tokenize();
 
 private:
-    std::string source;
+    std::string m_source;
     size_t position = 0;
     int line = 1;
     int column = 1;
@@ -121,6 +140,10 @@ private:
     bool isAtEnd() const;
     void skipWhitespace();
     std::string toLower(const std::string& s) const;
+
+    std::vector<Token> tokenizeCSV();
+    std::vector<Token> tokenizeGeneral();
+    std::vector<std::string> splitCsvLine(const std::string& line, const char delimeter);
 };
 
 } // tokenizer ns
