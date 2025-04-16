@@ -1,0 +1,9 @@
+{
+    "TypConfigs": {
+        "structNameConfig": "{location}_{type}_{suffix1}_typ",
+        "structCommentConfig": "{suffix2}",
+        "memberCommentConfig": "{location}_{name}_{card}_{type}"
+
+    }
+
+}

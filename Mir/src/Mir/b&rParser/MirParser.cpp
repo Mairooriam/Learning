@@ -304,7 +304,7 @@ namespace Mir {
                         advance();
                     }
                 }
-                
+                 
                 // Skip END_TYPE
                 if (current().type == Tokenizer::TokenType::Keyword && 
                     current().keywordType == Tokenizer::Keyword::END_TYPE) {
@@ -482,5 +482,47 @@ namespace Mir {
     }  // namespace CSV
 
 } // namespace Mir
+namespace Mir {
+    namespace Mapper {
+        CsvToTypeDefinition::CsvToTypeDefinition() { }
 
+        TypeDefinition CsvToTypeDefinition::Map(const CSV::Data &source) {
+            TypeDefinition typeDef;
+            typeDef.comment = "Generated With Mir from CSV";
 
+            for (const auto& row : source.content)
+            {
+                StructDefinition structDef = MapRowToSturct(row);
+                typeDef.structs.push_back(structDef);
+            }
+            
+            return typeDef;
+        }
+
+        StructDefinition CsvToTypeDefinition::MapRowToSturct(const std::vector<std::string> &row) {
+            StructDefinition structDef;
+            
+            if (row.size() < 3) return structDef; 
+            
+            structDef.name = row[0];
+            
+            MemberDefinition member;
+            member.name = row[0]; // Column 0: Name
+            member.type = row[1]; // Column 1: Type
+            member.comment = row[2]; // Column 2: Comment
+            
+            if (row.size() > 3) {
+                member.value = row[3];
+            }
+            
+            // Add the member to the struct
+            structDef.members.push_back(member);
+            
+            return structDef;
+        }
+
+        CsvToTypeDefinition::~CsvToTypeDefinition() {}
+
+    }  // namespace Mapper
+
+}  // namespace Mir

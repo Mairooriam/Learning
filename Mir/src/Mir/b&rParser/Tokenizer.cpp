@@ -292,7 +292,7 @@ std::vector<Token> Tokenizer::tokenize() {
     if (m_source.empty()) { MIR_ASSERT(false, "Tokenizer source empty!"); }
     
 
-    tokenizeGeneral();
+    return tokenizeGeneral();
 
     
 }

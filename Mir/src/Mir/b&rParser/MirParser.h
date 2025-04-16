@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <unordered_map>
 #include "Tokenizer.h"
 #include "Utils/Utils.h"
 
@@ -144,8 +145,38 @@ namespace Mir {
             Data parse();
 
         };
+
+
     }  // namespace CSV
 }  // namespace Mir
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 // CSV PARSER END
 //--------------------------------------------------------------------------------------------------------------------------------------------------
+
+namespace Mir {
+    namespace Mapper {
+        template<typename TSource, typename TDestination>
+        class IMapper {
+        public:
+            virtual ~IMapper() = default;
+            virtual TDestination Map(const TSource& source) = 0;
+            
+
+            // Might not use
+            virtual bool Validate(const TSource& source, std::vector<std::string>& errors) {
+                return true; 
+            }
+        };
+
+        class CsvToTypeDefinition : public IMapper<CSV::Data, TypeDefinition>
+        {
+        private:
+            std::unordered_map<std::string, size_t> m_columnIndices;
+        public:
+            CsvToTypeDefinition ();
+            TypeDefinition Map(const CSV::Data& source) override;
+            StructDefinition MapRowToSturct(const std::vector<std::string>& row);
+            ~CsvToTypeDefinition ();
+        };
+    } // Namespace Mapper
+} //namespade Mir
