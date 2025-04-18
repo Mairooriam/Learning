@@ -4,58 +4,6 @@ namespace Mir {
     namespace Parser{
 
 
-    // void MirParser::parseMirCsv()
-    // {
-    //     TypeDefinition typdef;
-    //     StructDefinition structdef;
-    //     MemberDefinition memberdef;
-    //     std::vector<std::string> headerbuf;
-        
-
-    // }
-
-    // // bool MirParser::validHeaderAtColumn(const std::string& headerValue, size_t columnIndex)
-    // // {
-    // //     const std::vector<std::string> expectedHeaders = {
-    // //     "Location", "Type", "BR Name", "Card", "Eplan name"
-    // //     };
-        
-    // //     if (columnIndex >= expectedHeaders.size()) {
-    // //     MIR_ASSERT(false, "Invalid column index: " + std::to_string(columnIndex) + 
-    // //             " exceeds expected header count " + std::to_string(expectedHeaders.size()));
-    // //     return false;
-    // //     }
-        
-    // //     if (headerValue != expectedHeaders[columnIndex]) {
-    // //     MIR_ASSERT(false, "Invalid header at column " + std::to_string(columnIndex) + 
-    // //             ": Expected '" + expectedHeaders[columnIndex] + "', got '" + headerValue + "'");
-    // //     return false;
-    // //     }
-        
-    // //     return true;
-    // // }
-
-    // // bool MirParser::isValidHeader(const std::vector<std::string> &header)
-    // // {
-    // //     const std::vector<std::string> expectedHeaders = {
-    // //     "Location", "Type", "BR Name", "Card", "Eplan name"
-    // //     };
-        
-    // //     if (header.size() != expectedHeaders.size()) {
-    // //     MIR_ASSERT(false,"Invalid header: Expected " + std::to_string(expectedHeaders.size()) + 
-    // //             " fields, got " + std::to_string(header.size()));
-    // //     return false;
-    // //     }
-    
-    // //     for (size_t i = 0; i < header.size(); ++i) {
-    // //     if (!validHeaderAtColumn(header[i], i)) {
-    // //         return false;
-    // //     }
-    // //     }
-        
-    // //     return true;
-    // // }
-
     bool MirParser::expectAndConsume(Tokenizer::TokenType type, const std::string &errorMessage)
     {
         if (current().type != type) {
@@ -472,7 +420,6 @@ namespace Mir {
                 m_data.header = Utils::Text::splitLine(line, ',');
             }
         
-            // Read data lines
             while (std::getline(file, line)) {
                 m_data.content.push_back(Utils::Text::splitLine(line, ','));
             }
@@ -482,47 +429,4 @@ namespace Mir {
     }  // namespace CSV
 
 } // namespace Mir
-namespace Mir {
-    namespace Mapper {
-        CsvToTypeDefinition::CsvToTypeDefinition() { }
 
-        TypeDefinition CsvToTypeDefinition::Map(const CSV::Data &source) {
-            TypeDefinition typeDef;
-            typeDef.comment = "Generated With Mir from CSV";
-
-            for (const auto& row : source.content)
-            {
-                StructDefinition structDef = MapRowToSturct(row);
-                typeDef.structs.push_back(structDef);
-            }
-            
-            return typeDef;
-        }
-
-        StructDefinition CsvToTypeDefinition::MapRowToSturct(const std::vector<std::string> &row) {
-            StructDefinition structDef;
-            
-            if (row.size() < 3) return structDef; 
-            
-            structDef.name = row[0];
-            
-            MemberDefinition member;
-            member.name = row[0]; // Column 0: Name
-            member.type = row[1]; // Column 1: Type
-            member.comment = row[2]; // Column 2: Comment
-            
-            if (row.size() > 3) {
-                member.value = row[3];
-            }
-            
-            // Add the member to the struct
-            structDef.members.push_back(member);
-            
-            return structDef;
-        }
-
-        CsvToTypeDefinition::~CsvToTypeDefinition() {}
-
-    }  // namespace Mapper
-
-}  // namespace Mir

@@ -110,6 +110,82 @@ namespace Mir {
 
                 return tokens;
             }
+            std::string findNumbers(const std::string& str) {
+                std::string result;
+                for (char c : str) {
+                    if (std::isdigit(c)) {
+                        result += c;
+                    }
+                }
+                return result;
+            }
+            void toLowerCase(std::string& str) {
+                std::transform(str.begin(), str.end(), str.begin(),
+                    [](unsigned char c) { return std::tolower(c); });
+            }
+            std::string toLowerCase(const std::string& str) {
+                std::string result = str;
+                std::transform(result.begin(), result.end(), result.begin(),
+                    [](unsigned char c) { return std::tolower(c); });
+                return result;
+            }
+            std::string findNumbersAConsume(std::string& str) {
+                std::string result;
+                std::string newStr;
+
+                for (char c : str) {
+                    if (std::isdigit(c)) {
+                        result += c;
+                    } else {
+                        newStr += c;
+                    }
+                }
+
+                str = newStr;
+                return result;
+            }
+            std::pair<std::string, std::string> splitCharsFromNums(const std::string& str) {
+                std::string chars;
+                std::string nums;
+                
+                for (char c : str) {
+                    if (std::isdigit(c)) {
+                        nums += c;
+                    } else {
+                        chars += c;
+                    }
+                }
+                
+                return std::make_pair(chars, nums);
+            }
+            std::string filterNumbers(const std::string& str) {
+                std::string result;
+                for (char c : str) {
+                    if (!std::isdigit(c)) {
+                        result += c;
+                    } 
+                }
+                return result;
+            }
+
+            void replacePlaceholderIf(std::string& str,const std::string& placeholder, const std::string& replaceStr, const char oChar, const char cChar ) {
+                size_t startPos = 0;
+                while ((startPos = str.find(oChar, startPos)) != std::string::npos) {
+                    size_t endPos = str.find(cChar, startPos);
+                    if (endPos == std::string::npos) {
+                        MIR_ASSERT(false,"Didn't find closing symbol");
+                        break;
+                    }
+                    std::string foundStr = str.substr(startPos + 1, endPos - startPos - 1);
+                    if (foundStr == placeholder) {   
+                        str.replace(startPos, endPos - startPos + 1, replaceStr);
+                        startPos += replaceStr.length();
+                    } else {
+                        // if not correct ifStr skip
+                        startPos = endPos + 1; 
+                    }
+                }
+            }
         }  // namespace Text
 
     }  // namespace Utils

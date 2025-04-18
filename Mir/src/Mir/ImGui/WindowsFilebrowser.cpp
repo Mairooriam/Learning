@@ -1,5 +1,9 @@
 ﻿#include "WindowsFilebrowser.h"
 
+
+//         OPENFILENAMEA add this 
+// https://stackoverflow.com/questions/65444688/default-filename-in-save-file-dialog-with-openfilenamea-class-in-c
+
 namespace Mir {
 
     WindowsFileBrowser::WindowsFileBrowser() : isInitialized(false) {

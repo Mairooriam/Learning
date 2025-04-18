@@ -22,7 +22,26 @@ namespace Utils{
     namespace Text
     {
         std::vector<std::string> splitLine(const std::string& line, char delimeter = ' ');
+        std::string findNumbers(const std::string& str);
+        void toLowerCase(std::string& str);
+        std::string toLowerCase(const std::string& str);
+        // Modifies the original & returns numbers as string.
+        std::string findNumbersAConsume(std::string& str);
+        std::pair<std::string, std::string> splitCharsFromNums(const std::string& str);
+        std::string filterNumbers(const std::string& str);
+        void replacePlaceholderIf(std::string& str, const std::string& placeholder, const std::string& replaceStr, const char oChar = '{', const char cChar = '}' );
     } // namespace String
     
+
+    template<typename MapType, typename KeyType>
+    bool mapContains(const MapType& map, const KeyType& key)
+    {
+        return map.find(key) != map.end();
+    }
+
+
+
+
+
 } // namespace Utils
 } // Namepsace Mir

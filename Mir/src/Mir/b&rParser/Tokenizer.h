@@ -48,7 +48,11 @@ enum class TokenType {
     CSV_FIELD,
     CSV_CARD,
     CSV_HEADER,
-    CSV_EPLANNAME,   
+    CSV_EPLANNAME,
+    TemplateOpen,      // {
+    TemplateClose,     // }
+    TemplateVariable,  // location, name, etc. inside braces
+    TemplateText,   
     Unknown         // Unrecognized token
 };
 
@@ -102,7 +106,10 @@ struct Token {
             case TokenType::CSV_NAME: typeStr = "CSV_NAME"; break;
             case TokenType::CSV_FIELD: typeStr = "CSV_FIELD"; break;
             case TokenType::CSV_CARD: typeStr = "CSV_CARD"; break;
-            
+            case TokenType::TemplateOpen: typeStr = "TemplateOpen"; break;
+            case TokenType::TemplateClose: typeStr = "TemplateClose"; break;
+            case TokenType::TemplateVariable: typeStr = "TemplateVariable"; break;
+            case TokenType::TemplateText: typeStr = "TemplateText"; break;
             case TokenType::CSV_HEADER: typeStr = "CSV_HEADER"; break;
             case TokenType::CSV_EPLANNAME: typeStr = "CSV_EPLANNAME"; break;
             case TokenType::IoAddress: typeStr = "IoAddress"; break;
@@ -118,33 +125,103 @@ struct Token {
 class Tokenizer {
 public:
     Tokenizer(const std::string& source);
-    std::vector<Token> tokenize();
+    virtual std::vector<Token> tokenize();
 
-private:
+protected:
     std::string m_source;
     size_t position = 0;
     int line = 1;
     int column = 1;
+    bool isAtEnd() const;
+    char peek(int offset = 1) const;
+    char current() const;
+    void advance();
+
+private:
 
     static const std::unordered_set<std::string> keywords;
     static const std::unordered_set<std::string> dataTypes;
     static const std::unordered_set<std::string> boolLiterals;
 
-    char current() const;
-    char peek(int offset = 1) const;
-    void advance();
     Token nextToken();
     Token scanComment();
     Token scanIdentifierOrKeyword();
-    Token scanProcessVariable();
-    bool isAtEnd() const;
     void skipWhitespace();
     std::string toLower(const std::string& s) const;
 
-    std::vector<Token> tokenizeCSV();
+
     std::vector<Token> tokenizeGeneral();
-    std::vector<std::string> splitCsvLine(const std::string& line, const char delimeter);
+
 };
+
+class TemplateTokenizer : public Tokenizer {
+    private:
+        std::unordered_set<std::string> m_templateVars;
+    public:
+        TemplateTokenizer(const std::string& templateStr, const std::vector<std::string>& templateVars) : Tokenizer(templateStr) {
+            // just for nicer syntax on lookup
+            m_templateVars = std::unordered_set<std::string>(templateVars.begin(), templateVars.end());
+        }
+        
+        std::vector<Token> tokenize() override {
+            std::vector<Token> tokens;
+            
+            position = 0;
+            line = 1;
+            column = 1;
+            
+            while (!isAtEnd()) {
+                char c = current();
+                
+                if (c == '{') {
+                    // For now dont need to tokenize the brackets
+                    //tokens.push_back(Token(TokenType::TemplateOpen, "{", line, column));
+                    advance();
+                    
+                    size_t startPos = position;
+                    int startCol = column;
+                    
+                    while (!isAtEnd() && current() != '}') {
+                        advance();
+                    }
+                    
+                    if (isAtEnd()) {
+                        tokens.push_back(Token(TokenType::Unknown, "Unclosed template variable", line, startCol));
+                        break;
+                    }
+                    
+                    std::string varName = m_source.substr(startPos, position - startPos);
+                    if (m_templateVars.find(varName) != m_templateVars.end() )
+                    {
+                        tokens.push_back(Token(TokenType::TemplateVariable, varName, line, startCol));
+                    } else {
+                        tokens.push_back(Token(TokenType::Unknown, "Not valid variable", line, startCol));
+                    }
+                    
+                    
+                    // For now dont need to tokenize the brackets
+                    //tokens.push_back(Token(TokenType::TemplateClose, "}", line, column));
+                    advance();
+                } 
+                else {
+                    size_t startPos = position;
+                    int startCol = column;
+                    
+                    while (!isAtEnd() && current() != '{') {
+                        advance();
+                    }
+                    
+                    std::string text = m_source.substr(startPos, position - startPos);
+                    if (!text.empty()) {
+                        tokens.push_back(Token(TokenType::TemplateText, text, line, startCol));
+                    }
+                }
+            }
+            
+            return tokens;
+        }
+    };
+
 
 } // tokenizer ns
 } // mir ns

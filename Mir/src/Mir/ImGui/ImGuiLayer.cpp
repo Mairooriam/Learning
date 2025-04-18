@@ -33,8 +33,10 @@
 #include "b&rParser/UndoRedoSystem.h"
 #include "b&rParser/Tokenizer.h"
 #include "b&rParser/MirParser.h"
+#include "b&rParser/Mapper.h"
 
-
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 //#include "b&rParser/csvparsingtest.h"
 //#include "b&rParser/csvparsing.h"
 // TODO:
@@ -72,6 +74,25 @@
 
 
 namespace Mir{
+
+    std::pair<std::string, std::string> extractCardType(const std::string& typeAbbrev, const json& config) {
+        if (!config.contains("ioCardAbbreviations")) {
+            return std::pair<std::string, std::string>();
+        }
+        
+        // Convert the type abbreviation to lowercase for case-insensitive comparison
+        std::string num = Utils::Text::findNumbers(typeAbbrev);
+        std::string lowerType =  Utils::Text::filterNumbers(typeAbbrev);
+
+        std::transform(lowerType.begin(), lowerType.end(), lowerType.begin(), 
+                      [](unsigned char c) { return std::tolower(c); });
+        
+        // Check each IO type's abbreviations list
+        for (auto& [ioType, abbreviations] : config["ioCardAbbreviations"].items()) {}
+
+        
+        return std::make_pair(lowerType, num);
+    }
 
 
     bool shouldIgnoreModule(const char* namePtr) {
@@ -145,7 +166,6 @@ namespace Mir{
 
         // disables clipboard error msg GLFW ERROR 65545
         g_PreviousErrorCallback = glfwSetErrorCallback(CustomGLFWErrorCallback);
-
 
         Mir::SetStyle(m_currentStyle);
         ImGuiStyle& style = ImGui::GetStyle();
@@ -303,10 +323,6 @@ namespace Mir{
         if (hihi == 0)
         {
             myTable.AddRow({"Test1", "test2", "test3", "test4"});
-            // structTable.AddRow({"speed", "float", "0.0", "Speed in m/s"});
-            // structTable.AddRow({"isActive", "bool", "true", "Activation status"});
-            // structTable.AddRow({"counter", "int", "42", "Loop counter"});
-            // structTable.AddRow({"name", "string", "\"Motor\"", "Device identifier"});
             hihi++;
         } else if (hihi == 1)
         {
@@ -405,13 +421,16 @@ namespace Mir{
                 }
                 i++;
             }
-            
+        
 
-            
+
+
+
             for (auto& table: tables)
             {
                 UI::RenderResultFlags result = table.Render();
             }
+
             
         }
         if (parsed2)
@@ -452,13 +471,17 @@ namespace Mir{
             settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
             CSV::Parser parser2(settings);
             csvdata = parser2.parse();
-
+            if (csvdata.header.size() > 11)
+            {
+                MIR_ASSERT(false, "shouldnt happen. not valid Header.");
+            }
+            
 
         }
         
         if (!csvdata.content.empty())
         {
-            static UI::BaseTable csvTable;
+            static UI::CsvTable csvTable;
             static bool initialized = false;
             if (!initialized)
             {
@@ -466,6 +489,7 @@ namespace Mir{
                 for (const auto &name : csvdata.header)
                 {
                     columns.emplace_back(name);
+                    
                 }
                 
     
@@ -491,14 +515,156 @@ namespace Mir{
         }
         
 
+        static json config;
+        static bool configInitialized = false;
+        if (ImGui::Button("Process Template")) {
+            // Read JSON configuration
+            std::ifstream f = Utils::File::openFile("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\b&rParser\\csvMapping.json");
+            if (f.is_open()) {
+               // try {
+                    config = json::parse(f);
+                    
+                    // Get templates
+                    std::string structNameConfig = config["TypConfigs"]["structName"];
+                    std::string structCommentConfig = config["TypConfigs"]["structComment"];
+                    std::string memberCommentConfig = config["TypConfigs"]["memberComment"];
+                    std::vector<std::string> csvHeaders = config["csvHeader"];
+                    
+                    // Parse CSV data
+                    CSV::Settings settings;
+                    settings.delimeter = ',';
+                    settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
+                    CSV::Parser parser(settings);
+                    CSV::Data csvData = parser.parse();
+                    
+                //     // Group rows by structure type for organizing
+                //     std::unordered_map<std::string, std::vector<size_t>> structGroups;
+                    
+                //     // Process each row
+                //     for (size_t i = 0; i < csvData.content.size(); ++i) {
+                //         const auto& row = csvData.content[i];
+                        
+                //         // Find type column index
+                //         size_t typeColIndex = 0;
+                //         for (size_t j = 0; j < csvHeaders.size(); ++j) {
+                //             if (csvHeaders[j] == "type") {
+                //                 typeColIndex = j;
+                //                 break;
+                //             }
+                //         }
+                        
+                //         // Get the type from the row and determine its standard name
+                //         std::string typeAbbrev = (typeColIndex < row.size()) ? row[typeColIndex] : "";
+                //         auto standardType = extractCardType(typeAbbrev, config);
+                        
 
+                        
+                //         // // Process templates
+                //         // std::string structName = processTemplate(structNameConfig, csvHeaders, row);
+                //         // std::string structComment = processTemplate(structCommentConfig, csvHeaders, row);
+                //         // std::string memberComment = processTemplate(memberCommentConfig, csvHeaders, row); // Use original row for member comment
+                        
+                //         // Log results
+                //         MIR_INFO("Row {0}: Type '{1}' => '{2}', StructName: {3}", 
+                //                  i, typeAbbrev, standardType.first, structName);
+                        
+                //         // Group by structure name for organizing
+                //         structGroups[structName].push_back(i);
+                //     }
+                    
+                //     // Now you can create structures based on the groups
+                //     MIR_INFO("Created {0} unique structures", structGroups.size());
+                    
+                //     configInitialized = true;
+                // }
+                // catch (json::parse_error& e) {
+                //     MIR_ERROR("JSON parse error: {0}", e.what());
+                // }
+            }
+        }
+        
+        
+        if (ImGui::CollapsingHeader("IO Abbreviation Settings")) {
+            if (configInitialized)
+            {
+                
+                static bool dirty = false;
+                static json configCopy = config["ioCardAbbreviations"];
+                for (auto& [ioType, abbreviations] : configCopy.items()) {
+                    if (ImGui::TreeNode(ioType.c_str())) {
+                        for (int i = 0; i < abbreviations.size(); i++) {
+                            std::string label = "##" + ioType + std::to_string(i);
+                            std::string value = abbreviations[i];
+                            
+                            ImGui::PushItemWidth(200);
+                            if (ImGui::InputText(label.c_str(), &value)) {
+                                abbreviations[i] = value;
+                                dirty = true;
+                            }
+                            ImGui::PopItemWidth();
+                            
+                            ImGui::SameLine();
+                            if (ImGui::Button(("X##" + ioType + std::to_string(i)).c_str())) {
+                                abbreviations.erase(abbreviations.begin() + i);
+                                dirty = true;
+                                break;
+                            }
+                        }
+                        
+                        if (ImGui::Button("Add New Abbreviation")) {
+                            abbreviations.push_back("");
+                            dirty = true;
+                        }
+                        
+                        ImGui::TreePop();
+                    }
+                }
+                if (dirty && ImGui::Button("Save Changes")) {
+                    config["ioCardAbbreviations"] = configCopy;
+                    
+                    // Write back to file
+                    std::ofstream f("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\b&rParser\\csvMapping.json");
+                    f << std::setw(4) << config << std::endl;
+                    
+                    dirty = false;
+                }
+            }
+        }
         
         
         
-        
-        
-        
+        if (ImGui::Button("Maper tihngy"))
+        {          
+            json configtest;     
+            std::ifstream f = Utils::File::openFile("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\b&rParser\\csvMapping.json");
+            if (f.is_open()) {
+                configtest = json::parse(f);
+            }
+            Mapper mapper(configtest);
 
+            // Parse CSV data
+            CSV::Settings settings;
+            settings.delimeter = ',';
+            settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
+            CSV::Parser parser(settings);
+            CSV::Data csvData = parser.parse();
+
+            for (auto &row : csvData.content)
+            {
+                mapper.processTemplate("{location}_{card}_randomtext", csvData.header,row);
+            }
+            }
+            //simple test
+            //mapper.processTemplate("{location}_{card}_randomtext", {"location","card"},{ "CC1", "Analoginput01" });
+            
+        
+        if (ImGui::Button("utils test"))
+        {
+            std::string test99 = "{location}_{card}_randomtext";
+            Utils::Text::replacePlaceholderIf(test99, "location", "testreplace");
+            Utils::Text::replacePlaceholderIf(test99, "card", "cardRtest");
+        }
+        
 
 
 
@@ -640,7 +806,7 @@ namespace Mir{
         if (ImGui::Button("Read file")){ 
             if (selectedFile.fileName != "") {
                 if (currentItem == 0) {
-                    auto csvData = brparser.readPlcDataCsv(selectedFile.filePath, "Location,Type,BR Name,Card,Eplan name");
+                    auto csvData = brparser.readPlcDataCsv(selectedFile.filePath, "location,type,name,card,Eplan name");
                     brStructCollection col =brparser.parseCsvIntoBrCollection(csvData);
                     brparser.addCollection(col);
                     

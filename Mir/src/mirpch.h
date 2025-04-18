@@ -15,6 +15,7 @@
 // include the formatter specialization
 #include "Mir/Log.h"
 #include "spdlog/fmt/ostr.h"
+#include "Mir/Utils/Utils.h"
 
 #ifdef MIR_PLATFORM_WINDOWS
     #include <Windows.h>

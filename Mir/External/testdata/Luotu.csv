@@ -1,4 +1,4 @@
-Location,Type,BR Name,Card,Eplan name
+location,type,name,card,Eplan name
 CC1,DigitalOutput01,Pump1_start,AF102,READY TO START FOR EXTERNAL  PROCESS
 CC1,AnalogInput01,Pump1_speed,AF103,WATER CIRCULATION PUMP CONTACTOR
 CC1,DigitalInput01,Pump1_running,AF104,VACUUM PUMP CONTACTOR
