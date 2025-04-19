@@ -2,7 +2,7 @@
 
 namespace Mir
 {
-    Mapper::Mapper(const json& config) {
+    Mapper::Mapper(const json& config, const CSV::Data& data): m_data(data) {
         if (isValidConfig(config))
         {
             m_config = config;
@@ -14,14 +14,40 @@ namespace Mir
 
     Mapper::~Mapper() {}
 
-    std::string Mapper::process(CSV::Data data) {
-        for (size_t i = 0; i < data.content.size(); i++)
-        {
-            processTemplate(,,data.content[i]);
-        }
+    // const std::string& templateStr,          // for example                         {location}_{card}_randomtext
+    // const std::vector<std::string>& headers, // csv headers "available templates"   { "location", "card"        etc. }
+    // const std::vector<std::string>& row   // the actual row to process.             { "CC1"     , "Analoginput" etc. }
+    // "typComment": "Generated with Mir",
+    // "structName": "{location}_{type}_{suffix1}_typ",
+    // "structComment": "{suffix2}",
+    // "memberComment": "{card}.{type}",
+    // "memberName": "{name}",
+    // "memberType": "{type}"
+    StructDefinition Mapper::process() {
         
+        StructDefinition sDef;
+        for (size_t i = 0; i < m_data.content.size(); i++)
+        {
+
+            MemberDefinition mDef;
+            std::string CommentTemplate =m_config["TypConfigs"]["memberComment"];
+            mDef.comment = processTemplate(CommentTemplate,m_data.header,m_data.content[i]);
+            
+            std::string NameTemplate = m_config["TypConfigs"]["memberName"];
+            mDef.name = processTemplate(NameTemplate,m_data.header,m_data.content[i]);
+
+            std::string TypeTempalate =m_config["TypConfigs"]["memberType"];
+            mDef.type = processTemplate(TypeTempalate,m_data.header,m_data.content[i]);
+
+
+
+            sDef.members.push_back(mDef);
+            
+        }
+        sDef.comment = "Generated with mapper";
+        sDef.name = "Gay";
      
-        return std::string();
+        return sDef;
     }
 
     bool Mapper::isValidConfig(const json& config) {
@@ -70,6 +96,7 @@ namespace Mir
         auto [cardType, cardIndex] = Utils::Text::splitCharsFromNums(card);
         Utils::Text::toLowerCase(cardType);
         result["cardType"] = cardType;
+        result["cardTypeShort"] = m_config["ioCardAbbreviations"][cardType];
         result["cardIndex"] = cardIndex;
         result["cardDataType"] = m_config["ioCardDataTypes"][cardType];
 
@@ -79,7 +106,7 @@ namespace Mir
     std::string Mapper::processTemplate(const std::string& templateStr, const std::vector<std::string>& headers,
                                         const std::vector<std::string>& row) {
         std::string result = templateStr;
-        
+
         std::unordered_map<std::string, size_t> headerMap;
         for (size_t i = 0; i < headers.size(); ++i) {
             headerMap[headers[i]] = i;
@@ -90,35 +117,42 @@ namespace Mir
             size_t endPos = result.find('}', startPos);
             if (endPos == std::string::npos) break;
             
-            std::string fieldName = result.substr(startPos + 1, endPos - startPos - 1);
-           
-
-            // if fieldname is valid ->> replace {location} -> CC1 etc.
+            std::string placeholder = result.substr(startPos + 1, endPos - startPos - 1);
+            std::string fieldName = placeholder;
+            std::string formatName = "default"; 
+            
+            size_t colonPos = placeholder.find(':');
+            if (colonPos != std::string::npos) {
+                fieldName = placeholder.substr(0, colonPos);
+                formatName = placeholder.substr(colonPos + 1);
+            }
+            
             if (Utils::mapContains(headerMap, fieldName)) {
                 size_t columnIndex = headerMap[fieldName];
                 if (columnIndex < row.size()) {
-                    std::string placeholder = "{" + fieldName + "}";
+                    std::string fullPlaceholder = "{" + placeholder + "}";
                     
-                    // If formatting {card}
-                    // Formatting card: {name}{number}{cardDataType}
-                    if (fieldName == "card")
-                    {
-
-                        auto test22 =  processCard(row[columnIndex]);
-                        std::string cardTemplate = m_config["Formatting"]["card"];
-                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardType", test22["cardType"]);
-                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardDataType", test22["cardDataType"]);
-                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardIndex", test22["cardIndex"]);
-                        result.replace(startPos, placeholder.length(), cardTemplate);
-
-                    }else {
-                        result.replace(startPos, placeholder.length(), row[columnIndex]);
+                    if (fieldName == "type") {
+                        auto cardInfo = processCard(row[columnIndex]);
+                        
+                        std::string cardTemplate;
+                        if (m_config["placeholders"]["Formatting"]["type"].contains(formatName)) {
+                            cardTemplate = m_config["placeholders"]["Formatting"]["type"][formatName];
+                        } else {
+                            cardTemplate = m_config["placeholders"]["Formatting"]["type"]["default"];
+                        }
+                        
+                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardType", cardInfo["cardType"]);
+                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardDataType", cardInfo["cardDataType"]);
+                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardIndex", cardInfo["cardIndex"]);
+                        Utils::Text::replacePlaceholderIf(cardTemplate, "cardTypeShort", cardInfo["cardTypeShort"]);
+                        
+                        result.replace(startPos, fullPlaceholder.length(), cardTemplate);
+                        startPos += cardTemplate.length();
+                    } else {
+                        result.replace(startPos, fullPlaceholder.length(), row[columnIndex]);
+                        startPos += row[columnIndex].length();
                     }
-                    
-
-                    
-                    
-                    startPos += row[columnIndex].length();
                 } else {
                     startPos = endPos + 1;
                 }

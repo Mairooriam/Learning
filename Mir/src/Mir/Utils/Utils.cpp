@@ -90,7 +90,7 @@ namespace Mir {
 
         }  // namespace File
         namespace Text {
-            std::vector<std::string> splitLine(const std::string& line, char delimiter) {
+            std::vector<std::string> splitAt(const std::string& line, char delimiter) {
                 std::vector<std::string> tokens;
                 std::string token;
                 bool inQuotes = false;

@@ -356,6 +356,10 @@ namespace Mir {
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         class StructTable : public BaseTable {
             public:
+                StructTable(size_t id = 0)
+                    : BaseTable(CreateStructSettings("New Struct", id)) {
+                }
+
                 StructTable(const Mir::StructDefinition& structDef, size_t id = 0)
                     : BaseTable(CreateStructSettings(structDef.name, id)) {
 
@@ -371,6 +375,22 @@ namespace Mir {
                             AddRow(row);
                         }
                     }
+                void InitializeFromStructDef(const Mir::StructDefinition& structDef) {
+                    Clear(); 
+                    SetTableName(structDef.name);
+                    SetTableComment(structDef.comment);
+                    
+                    for (const auto& member : structDef.members) {
+                        std::vector<std::string> row = {
+                            member.name,       
+                            member.type,       
+                            member.value,      
+                            member.comment     
+                        };
+                        AddRow(row);
+                    }
+                }
+                
                 Mir::StructDefinition ToStructDefinition() const {
                 Mir::StructDefinition structDef;
                 structDef.name = GetTableName();

@@ -632,15 +632,19 @@ namespace Mir{
         }
         
         
-        
+        StructDefinition test9090;
+        static bool mapperinitialized = false;
+        static bool intializedtable = false; 
         if (ImGui::Button("Maper tihngy"))
-        {          
+        {         
+            intializedtable = false;
+            mapperinitialized = false;
             json configtest;     
             std::ifstream f = Utils::File::openFile("C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\src\\Mir\\b&rParser\\csvMapping.json");
             if (f.is_open()) {
                 configtest = json::parse(f);
             }
-            Mapper mapper(configtest);
+            
 
             // Parse CSV data
             CSV::Settings settings;
@@ -648,12 +652,27 @@ namespace Mir{
             settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
             CSV::Parser parser(settings);
             CSV::Data csvData = parser.parse();
+            Mapper mapper(configtest,csvData);
 
-            for (auto &row : csvData.content)
+            test9090 = mapper.process();
+            mapperinitialized = true;
+        }
+        static UI::StructTable testtable;
+        
+        if (mapperinitialized)
+        {
+            if (!intializedtable)
             {
-                mapper.processTemplate("{location}_{card}_randomtext", csvData.header,row);
+                testtable.InitializeFromStructDef(test9090);
+                intializedtable = true;
+            } else {
+                testtable.Render();
             }
-            }
+            
+            
+        }
+        
+
             //simple test
             //mapper.processTemplate("{location}_{card}_randomtext", {"location","card"},{ "CC1", "Analoginput01" });
             

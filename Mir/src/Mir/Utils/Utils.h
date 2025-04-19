@@ -21,7 +21,7 @@ namespace Utils{
     } // namespace File
     namespace Text
     {
-        std::vector<std::string> splitLine(const std::string& line, char delimeter = ' ');
+        std::vector<std::string> splitAt(const std::string& line, char delimeter = ' ');
         std::string findNumbers(const std::string& str);
         void toLowerCase(std::string& str);
         std::string toLowerCase(const std::string& str);

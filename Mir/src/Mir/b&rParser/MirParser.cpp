@@ -417,11 +417,11 @@ namespace Mir {
             std::string line;
         
             if (std::getline(file, line)) {
-                m_data.header = Utils::Text::splitLine(line, ',');
+                m_data.header = Utils::Text::splitAt(line, ',');
             }
-        
+            
             while (std::getline(file, line)) {
-                m_data.content.push_back(Utils::Text::splitLine(line, ','));
+                m_data.content.push_back(Utils::Text::splitAt(line, ','));
             }
             
             return m_data;

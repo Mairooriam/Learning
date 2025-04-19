@@ -11,7 +11,7 @@ namespace Mir
     {
     private:
         json m_config;
-
+        CSV::Data m_data;
         bool isValidConfig(const json& config);
         std::unordered_map<std::string, std::string> processCard(const std::string& card);
         std::string processTemplate(       
@@ -19,11 +19,11 @@ namespace Mir
             const std::vector<std::string>& headers, // csv headers "available templates"   { "location", "card"        etc. }
             const std::vector<std::string>& row   // the actual row to process.             { "CC1"     , "Analoginput" etc. }
         );
-    public:
-        Mapper(const json& config);
+        public:
+        Mapper(const json& config, const CSV::Data& data);
         ~Mapper();
-        std::string process(CSV::Data data);
-
-         
+        StructDefinition process();
+        
+        
     };
 } // namespace Mir

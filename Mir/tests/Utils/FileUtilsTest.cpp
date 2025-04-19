@@ -81,16 +81,16 @@ TEST_F(FileUtilsTest, ReadFromBadStream) {
     EXPECT_TRUE(content.empty());
 }
 
-TEST_F(FileUtilsTest, SplitLine) {
+TEST_F(FileUtilsTest, splitAt) {
     std::string testString = "\"data1,data2\",data3,data4";
     std::string testString2 = "data1,data2,data3,data4";
-    std::vector<std::string> tokens = Mir::Utils::Text::splitLine(testString, ',');
+    std::vector<std::string> tokens = Mir::Utils::Text::splitAt(testString, ',');
     EXPECT_EQ(3,tokens.size());
     
-    tokens = Mir::Utils::Text::splitLine(testString2, ',');
+    tokens = Mir::Utils::Text::splitAt(testString2, ',');
     EXPECT_EQ(4, tokens.size());
 
-    tokens = Mir::Utils::Text::splitLine(testString2);
+    tokens = Mir::Utils::Text::splitAt(testString2);
     EXPECT_EQ(1, tokens.size());
 
 }
