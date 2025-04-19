@@ -3,6 +3,7 @@
 #include <filesystem>
 namespace Mir
 {
+    namespace Types{
     namespace CSV
     {
         struct Settings {
@@ -46,5 +47,6 @@ namespace Mir
         std::string comment;
         std::vector<VarConfigMemberDefinition> members;
     };
+}
 } // namespace Mir
 

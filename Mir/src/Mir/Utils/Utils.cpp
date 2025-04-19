@@ -110,6 +110,23 @@ namespace Mir {
 
                 return tokens;
             }
+            std::string getFirstCleanString(const std::string& str) {
+                std::string result;
+                for (const char& c : str) {
+                    if (!isalnum(c))
+                    {
+                        // skip weird chars before alph
+                        if (!result.size() == 0)
+                        {
+                            return result;
+                        }
+                    } else {
+                        result += c;
+                    }
+                }
+                return result;
+            }
+            
             std::string findNumbers(const std::string& str) {
                 std::string result;
                 for (char c : str) {

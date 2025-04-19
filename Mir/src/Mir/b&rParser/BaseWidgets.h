@@ -309,7 +309,8 @@ namespace Mir {
             // Cell operations
             StringValue& GetCell(size_t rowIndex, size_t columnIndex);
             void SetCellValue(size_t rowIndex, size_t columnIndex, const std::string& value);
-            
+            void AddElement(size_t rowIndex, size_t columnIndex, const std::string& value);
+
             // Utility methods
             std::vector<StringValue> CopyRow(size_t rowIndex);
             void PasteRow(size_t rowIndex, const std::vector<StringValue>& values);
@@ -360,7 +361,7 @@ namespace Mir {
                     : BaseTable(CreateStructSettings("New Struct", id)) {
                 }
 
-                StructTable(const Mir::StructDefinition& structDef, size_t id = 0)
+                StructTable(const Mir::Types::StructDefinition& structDef, size_t id = 0)
                     : BaseTable(CreateStructSettings(structDef.name, id)) {
 
                         SetTableComment(structDef.comment);
@@ -375,30 +376,28 @@ namespace Mir {
                             AddRow(row);
                         }
                     }
-                void InitializeFromStructDef(const Mir::StructDefinition& structDef) {
+                void InitializeFromStructDef(const Mir::Types::StructDefinition& structDef) {
                     Clear(); 
                     SetTableName(structDef.name);
                     SetTableComment(structDef.comment);
                     
-                    for (const auto& member : structDef.members) {
-                        std::vector<std::string> row = {
-                            member.name,       
-                            member.type,       
-                            member.value,      
-                            member.comment     
-                        };
-                        AddRow(row);
+                    for (size_t i = 0; i < structDef.members.size(); i++) {
+                        const auto& member = structDef.members[i];
+                        AddElement(i, 0, member.name);
+                        AddElement(i, 1, member.type);
+                        AddElement(i, 2, member.value);
+                        AddElement(i, 3, member.comment);
                     }
                 }
                 
-                Mir::StructDefinition ToStructDefinition() const {
-                Mir::StructDefinition structDef;
+                Types::StructDefinition ToStructDefinition() const {
+                Types::StructDefinition structDef;
                 structDef.name = GetTableName();
                 structDef.comment = GetTableComment();
                 
                 // Convert rows back to members
                 for (size_t i = 0; i < RowCount(); i++) {
-                    Mir::MemberDefinition member;
+                    Types::MemberDefinition member;
                     member.name = GetCell(i, 0).GetValue();
                     member.type = GetCell(i, 1).GetValue();
                     member.value = GetCell(i, 2).GetValue();
@@ -435,7 +434,7 @@ namespace Mir {
             bool m_isOpen = true;
         
         public:
-        TypeTable(const TypeDefinition& typeDef, size_t id = 0)
+        TypeTable(const Types::TypeDefinition& typeDef, size_t id = 0)
         : IbrBase(id), m_comment(typeDef.comment) {
         
             m_name = "Type" + std::to_string(GetID());
@@ -488,8 +487,8 @@ namespace Mir {
             void SetName(const std::string& name) { m_name = name; }
             
             // Convert back to a TypeDefinition
-            TypeDefinition ToTypeDefinition() const {
-                TypeDefinition typeDef;
+            Types::TypeDefinition ToTypeDefinition() const {
+                Types::TypeDefinition typeDef;
                 typeDef.comment = m_comment;
                 
                 for (const auto& structTable : m_structTables) {
@@ -537,7 +536,7 @@ namespace Mir {
             bool m_isOpen = true;
         
         public:
-            IomTable(const VarConfigDefinition& varConfig, size_t id = 0)
+            IomTable(const Types::VarConfigDefinition& varConfig, size_t id = 0)
             : BaseTable(CreateSettings(varConfig.comment, id)) {
 
                 SetTableComment(varConfig.comment);

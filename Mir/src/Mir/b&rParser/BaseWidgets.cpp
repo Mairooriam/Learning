@@ -260,7 +260,6 @@ namespace Mir {
         for (size_t i = 0; i < m_columns.size(); i++) {
             m_columns[i].emplace_back(values[i], m_columnRenderTypes[i], 0);
             
-            // Apply suggestions if column is a dropdown
             if (m_columnRenderTypes[i] == StringValue::RenderType::Dropdown && 
                 !m_columnSuggestions[i].empty()) {
                 m_columns[i].back().SetSuggestions(m_columnSuggestions[i]);
@@ -413,6 +412,36 @@ namespace Mir {
     {
         if (rowIndex < RowCount() && columnIndex < m_columns.size()) {
             m_columns[columnIndex][rowIndex].SetValue(value);
+        }
+    }
+
+    void BaseTable::AddElement(size_t rowIndex, size_t columnIndex, const std::string& value) {
+        if (columnIndex >= m_columns.size()) {
+            MIR_ASSERT(false, "Column index out of range");
+            return;
+        }
+    
+        if (rowIndex >= RowCount()) {
+            size_t currentRows = RowCount();
+            size_t newRows = rowIndex + 1;
+            
+            for (size_t i = 0; i < m_columns.size(); i++) {
+                m_columns[i].resize(newRows, StringValue("", m_columnRenderTypes[i], 0));
+                
+                if (m_columnRenderTypes[i] == StringValue::RenderType::Dropdown && 
+                    !m_columnSuggestions[i].empty()) {
+                    for (size_t r = currentRows; r < newRows; r++) {
+                        m_columns[i][r].SetSuggestions(m_columnSuggestions[i]);
+                    }
+                }
+            }
+        }
+    
+        m_columns[columnIndex][rowIndex].SetValue(value);
+        
+        if (m_columnRenderTypes[columnIndex] == StringValue::RenderType::Dropdown && 
+            !m_columnSuggestions[columnIndex].empty()) {
+            m_columns[columnIndex][rowIndex].SetSuggestions(m_columnSuggestions[columnIndex]);
         }
     }
 

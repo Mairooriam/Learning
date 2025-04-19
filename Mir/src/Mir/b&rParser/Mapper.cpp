@@ -2,7 +2,7 @@
 
 namespace Mir
 {
-    Mapper::Mapper(const json& config, const CSV::Data& data): m_data(data) {
+    Mapper::Mapper(const json& config, const Types::CSV::Data& data): m_data(data) {
         if (isValidConfig(config))
         {
             m_config = config;
@@ -23,13 +23,13 @@ namespace Mir
     // "memberComment": "{card}.{type}",
     // "memberName": "{name}",
     // "memberType": "{type}"
-    StructDefinition Mapper::process() {
+    Types::StructDefinition Mapper::process() {
         
-        StructDefinition sDef;
+        Types::StructDefinition sDef;
         for (size_t i = 0; i < m_data.content.size(); i++)
         {
 
-            MemberDefinition mDef;
+            Types::MemberDefinition mDef;
             std::string CommentTemplate =m_config["TypConfigs"]["memberComment"];
             mDef.comment = processTemplate(CommentTemplate,m_data.header,m_data.content[i]);
             

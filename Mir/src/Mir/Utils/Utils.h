@@ -22,6 +22,7 @@ namespace Utils{
     namespace Text
     {
         std::vector<std::string> splitAt(const std::string& line, char delimeter = ' ');
+        std::string getFirstCleanString(const std::string& str);
         std::string findNumbers(const std::string& str);
         void toLowerCase(std::string& str);
         std::string toLowerCase(const std::string& str);

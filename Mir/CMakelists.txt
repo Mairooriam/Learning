@@ -122,6 +122,7 @@ set(D3_SOURCE_FILES
         src/Mir/ImGui/ImguiWidgets.cpp
         src/Mir/ImGui/WindowsFilebrowser.cpp
         src/Mir/ImGui/ImGuiTableWidget.cpp
+        src/Mir/ImGui/playground.cpp
 
         src/Mir/b&rParser/parser.cpp
         src/Mir/b&rParser/BaseWidgets.cpp
@@ -129,6 +130,10 @@ set(D3_SOURCE_FILES
         src/Mir/b&rParser/Tokenizer.cpp
         src/Mir/b&rParser/MirParser.cpp
         src/Mir/b&rParser/Mapper.cpp
+        
+
+        src/Mir/TypeUtils/Serializers.cpp
+        src/Mir/TypeUtils/Sorting.cpp
 
         src/Mir/Utils/Utils.cpp
 
@@ -185,15 +190,20 @@ set(D3_HEADER_FILES
         src/Mir/ImGui/styles.h
         src/Mir/ImGui/IconsFontAwesome6.h
         src/Mir/ImGui/ImGuiTableWidget.h
-
+        src/Mir/ImGui/playground.h
+        
         src/Mir/b&rParser/parser.h
         src/Mir/b&rParser/BaseWidgets.h
         src/Mir/b&rParser/UndoRedoSystem.h
         src/Mir/b&rParser/Tokenizer.h
         src/Mir/b&rParser/MirParser.h
         src/Mir/b&rParser/Mapper.h
-        src/Mir/b&rParser/MirTypes.h
+
+        src/Mir/Types/MirTypes.h
         
+        src/Mir/TypeUtils/Serializers.h
+        src/Mir/TypeUtils/Sorting.h
+
         src/Mir/Utils/Utils.h
 
         src/Mir/CPython/PythonTool.h

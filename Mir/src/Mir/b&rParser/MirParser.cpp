@@ -115,9 +115,9 @@ namespace Mir {
         }
     }
 
-    MemberDefinition MirParser::parseTypMember()
+    Types::MemberDefinition MirParser::parseTypMember()
     {
-        MemberDefinition result;
+        Types::MemberDefinition result;
         
         // We expect to be at an identifier (member name)
         if (current().type == Tokenizer::TokenType::Identifier) {
@@ -160,9 +160,9 @@ namespace Mir {
         return result;
     }
 
-    StructDefinition MirParser::parseTypStruct()
+    Types::StructDefinition MirParser::parseTypStruct()
     {
-        StructDefinition result;
+        Types::StructDefinition result;
         
         // We expect to be at an identifier (struct name)
         if (current().type == Tokenizer::TokenType::Identifier) {
@@ -189,7 +189,7 @@ namespace Mir {
                              current().keywordType == Tokenizer::Keyword::END_STRUCT)) {
                         
                         if (current().type == Tokenizer::TokenType::Identifier) {
-                            MemberDefinition member = parseTypMember();
+                            Types::MemberDefinition member = parseTypMember();
                             result.members.push_back(member);
                         } else {
                             advance(); // Skip unexpected tokens
@@ -214,15 +214,15 @@ namespace Mir {
     }
 
 
-    std::vector<TypeDefinition> MirParser::parseTypFile()
+    std::vector<Types::TypeDefinition> MirParser::parseTypFile()
     {
-        std::vector<TypeDefinition> result;
+        std::vector<Types::TypeDefinition> result;
         
         // Reset position to start from beginning
         m_CurrentPosition = 0;
         
         while (!isEnd()) {
-            TypeDefinition typeDefinition;
+            Types::TypeDefinition typeDefinition;
             
             // Look for comments before TYPE
             if (current().type == Tokenizer::TokenType::Comment) {
@@ -243,7 +243,7 @@ namespace Mir {
                     
                     // Check for struct definition
                     if (current().type == Tokenizer::TokenType::Identifier) {
-                        StructDefinition structDef = parseTypStruct();
+                        Types::StructDefinition structDef = parseTypStruct();
                         if (!structDef.name.empty()) {
                             typeDefinition.structs.push_back(structDef);
                         }
@@ -271,9 +271,9 @@ namespace Mir {
         
         return result;
     }
-    VarConfigMemberDefinition MirParser::parseVarConfigpMember()
+    Types::VarConfigMemberDefinition MirParser::parseVarConfigpMember()
     {
-        VarConfigMemberDefinition memberDef;
+        Types::VarConfigMemberDefinition memberDef;
 
         std::string processVar;
     
@@ -343,13 +343,13 @@ namespace Mir {
 
         return memberDef;
     }
-    std::vector<VarConfigDefinition> MirParser::parseIomFile()
+    std::vector<Types::VarConfigDefinition> MirParser::parseIomFile()
     {
-        std::vector<VarConfigDefinition> result;
+        std::vector<Types::VarConfigDefinition> result;
         m_CurrentPosition = 0;
         
         while (!isEnd()) {
-            VarConfigDefinition varConfigDefinition;
+            Types::VarConfigDefinition varConfigDefinition;
             
             if (current().type == Tokenizer::TokenType::Comment) {
                 varConfigDefinition.comment = current().value;
@@ -367,7 +367,7 @@ namespace Mir {
                     
                     // Check for ::
                     if (current().type == Tokenizer::TokenType::DoubleColon) {
-                        VarConfigMemberDefinition varConfigDef = parseVarConfigpMember();
+                        Types::VarConfigMemberDefinition varConfigDef = parseVarConfigpMember();
                         if (!varConfigDef.ioAdress.empty()) {
                             varConfigDefinition.members.push_back(varConfigDef);
                         }
@@ -396,37 +396,37 @@ namespace Mir {
         return result;
     }
 
+
+
+    CsvParser::CsvParser(Types::CSV::Settings _settings) {
+        if (!Utils::File::hasExtension(_settings.targetFile, ".csv"))
+        {
+            MIR_ASSERT(false, "CSV::Parser was intialized with correct file format");
+        } else{
+            m_Settings = _settings;
+        }
+        
+
+    }
+    CsvParser::~CsvParser() {}
+
+
+    
+    Types::CSV::Data CsvParser::parse() {
+        std::ifstream file = Utils::File::openFile(m_Settings.targetFile);
+        std::string line;
+    
+        if (std::getline(file, line)) {
+            m_data.header = Utils::Text::splitAt(line, ',');
+        }
+        
+        while (std::getline(file, line)) {
+            m_data.content.push_back(Utils::Text::splitAt(line, ','));
+        }
+        
+        return m_data;
+    }
     }  // namespace Parser
-    namespace CSV {
-        Parser::Parser(Settings _settings) {
-            if (!Utils::File::hasExtension(_settings.targetFile, ".csv"))
-            {
-                MIR_ASSERT(false, "CSV::Parser was intialized with correct file format");
-            } else{
-                m_Settings = _settings;
-            }
-            
-
-        }
-        Parser::~Parser() {}
-
-
-        
-        Data Parser::parse() {
-            std::ifstream file = Utils::File::openFile(m_Settings.targetFile);
-            std::string line;
-        
-            if (std::getline(file, line)) {
-                m_data.header = Utils::Text::splitAt(line, ',');
-            }
-            
-            while (std::getline(file, line)) {
-                m_data.content.push_back(Utils::Text::splitAt(line, ','));
-            }
-            
-            return m_data;
-        }
-    }  // namespace CSV
 
 } // namespace Mir
 

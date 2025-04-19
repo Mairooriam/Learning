@@ -36,6 +36,8 @@
 #include "b&rParser/Mapper.h"
 
 #include <nlohmann/json.hpp>
+
+#include "playground.h"
 using json = nlohmann::json;
 //#include "b&rParser/csvparsingtest.h"
 //#include "b&rParser/csvparsing.h"
@@ -247,7 +249,7 @@ namespace Mir{
     void ImGuiLayer::OnImGuiRender(){
         static bool dooockkk = true;
         MirUI::ShowExampleAppDockSpace(&dooockkk);
-        
+        playground();
 
         ////////////////////////////////////////
         //////// READ XML TEST//////////////////
@@ -462,14 +464,14 @@ namespace Mir{
 
             
         }
-        static CSV::Data csvdata;
+        static Types::CSV::Data csvdata;
         if (ImGui::Button("parse CSV"))
         {
             
-            CSV::Settings settings;
+            Types::CSV::Settings settings;
             settings.delimeter = ',';
             settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
-            CSV::Parser parser2(settings);
+            Parser::CsvParser parser2(settings);
             csvdata = parser2.parse();
             if (csvdata.header.size() > 11)
             {
@@ -531,11 +533,11 @@ namespace Mir{
                     std::vector<std::string> csvHeaders = config["csvHeader"];
                     
                     // Parse CSV data
-                    CSV::Settings settings;
+                    Types::CSV::Settings settings;
                     settings.delimeter = ',';
                     settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
-                    CSV::Parser parser(settings);
-                    CSV::Data csvData = parser.parse();
+                    Parser::CsvParser parser(settings);
+                    Types::CSV::Data csvData = parser.parse();
                     
                 //     // Group rows by structure type for organizing
                 //     std::unordered_map<std::string, std::vector<size_t>> structGroups;
@@ -632,7 +634,7 @@ namespace Mir{
         }
         
         
-        StructDefinition test9090;
+        Types::StructDefinition test9090;
         static bool mapperinitialized = false;
         static bool intializedtable = false; 
         if (ImGui::Button("Maper tihngy"))
@@ -647,11 +649,11 @@ namespace Mir{
             
 
             // Parse CSV data
-            CSV::Settings settings;
+            Types::CSV::Settings settings;
             settings.delimeter = ',';
             settings.targetFile = "C:\\Users\\35850\\Desktop\\repositories\\learning2\\Learning\\Mir\\External\\testdata\\Luotu.csv";
-            CSV::Parser parser(settings);
-            CSV::Data csvData = parser.parse();
+            Parser::CsvParser parser(settings);
+            Types::CSV::Data csvData = parser.parse();
             Mapper mapper(configtest,csvData);
 
             test9090 = mapper.process();
@@ -671,10 +673,7 @@ namespace Mir{
             
             
         }
-        
 
-            //simple test
-            //mapper.processTemplate("{location}_{card}_randomtext", {"location","card"},{ "CC1", "Analoginput01" });
             
         
         if (ImGui::Button("utils test"))
@@ -685,7 +684,8 @@ namespace Mir{
         }
         
 
-
+        static float col1[3] = { 1.0f, 0.0f, 0.2f };
+        ImGui::ColorEdit3("color 1", col1);
 
         ImGui::End();
         ////////////////////////////////////////
@@ -959,7 +959,7 @@ namespace Mir{
             }
         }
         
-       
+      
         
 
         selectableElement focusedElement = brparser.getId(ImGui::GetFocusID());

@@ -4,7 +4,8 @@
 #include <filesystem>
 #include <unordered_map>
 #include "Tokenizer.h"
-#include "MirTypes.h"
+#include "Types/MirTypes.h"
+
 
 namespace Mir {
 
@@ -15,8 +16,8 @@ namespace Mir {
     // Parsing result wrapper
     namespace Parser {
         struct ParseResult {
-            std::vector<TypeDefinition> typDefinitions;
-            std::vector<VarConfigDefinition> varConfigDefinitions;
+            std::vector<Types::TypeDefinition> typDefinitions;
+            std::vector<Types::VarConfigDefinition> varConfigDefinitions;
         };
         enum class FileFormat { UNKOWN, TYP, IOM };
 
@@ -40,14 +41,14 @@ namespace Mir {
             void skipUntil(Tokenizer::TokenType type, bool skipMatchedToken = true);
 
             // .Typ file parsing
-            MemberDefinition parseTypMember();
-            StructDefinition parseTypStruct();
-            TypeDefinition parseTypTypeBlock();
-            std::vector<TypeDefinition> parseTypFile();
+            Types::MemberDefinition parseTypMember();
+            Types::StructDefinition parseTypStruct();
+            Types::TypeDefinition parseTypTypeBlock();
+            std::vector<Types::TypeDefinition> parseTypFile();
 
             // .iom parsing
-            VarConfigMemberDefinition parseVarConfigpMember();
-            std::vector<VarConfigDefinition> parseIomFile();
+            Types::VarConfigMemberDefinition parseVarConfigpMember();
+            std::vector<Types::VarConfigDefinition> parseIomFile();
 
             bool expectAndConsume(Tokenizer::TokenType type, const std::string& errorMessage);
             bool expectAndConsume(Tokenizer::TokenType type, std::string& valueOut, const std::string& errorMessage);
@@ -65,39 +66,23 @@ namespace Mir {
             // Parse based on file extension
             ParseResult parse();
         };
+
+    class CsvParser {
+        private:
+            Types::CSV::Settings m_Settings;
+            Types::CSV::Data m_data;
+        public:
+            CsvParser(Types::CSV::Settings _settings);
+            ~CsvParser();
+            Types::CSV::Data parse();
+
+        };
+
     }  // namespace Parser
 }  // namespace Mir
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 // MIR PARSER END
 //--------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//--------------------------------------------------------------------------------------------------------------------------------------------------
-// CSV PARSER START
-//--------------------------------------------------------------------------------------------------------------------------------------------------
-namespace Mir {
-    namespace CSV {
-
-        class Parser {
-        private:
-            Settings m_Settings;
-            Data m_data;
-        public:
-            Parser(Settings _settings);
-            ~Parser();
-            Data parse();
-
-        };
-
-
-    }  // namespace CSV
-}  // namespace Mir
-//--------------------------------------------------------------------------------------------------------------------------------------------------
-// CSV PARSER END
-//--------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 

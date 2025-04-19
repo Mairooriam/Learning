@@ -1,7 +1,7 @@
 #pragma once
 #include "Mirpch.h"
 #include <nlohmann/json.hpp>
-#include "MirTypes.h"
+#include "Types/MirTypes.h"
 using json = nlohmann::json;
 namespace Mir
 {
@@ -11,7 +11,7 @@ namespace Mir
     {
     private:
         json m_config;
-        CSV::Data m_data;
+        Types::CSV::Data m_data;
         bool isValidConfig(const json& config);
         std::unordered_map<std::string, std::string> processCard(const std::string& card);
         std::string processTemplate(       
@@ -20,10 +20,13 @@ namespace Mir
             const std::vector<std::string>& row   // the actual row to process.             { "CC1"     , "Analoginput" etc. }
         );
         public:
-        Mapper(const json& config, const CSV::Data& data);
+        Mapper(const json& config, const Types::CSV::Data& data);
         ~Mapper();
-        StructDefinition process();
+        Types::StructDefinition process();
         
         
     };
+
+
+    
 } // namespace Mir
